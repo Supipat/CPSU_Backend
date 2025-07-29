@@ -1,14 +1,17 @@
 package repository
 
 import (
-	"cpsu/internal/models"
 	"database/sql"
+	"strconv"
+	"strings"
+
+	"cpsu/internal/news/models"
 
 	"github.com/lib/pq"
 )
 
 type CPSURepository interface {
-	GetAllNews(param interface{}) ([]models.News, error)
+	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
 	GetNewsDetail(id int) (*models.News, error)
 	CreateNews(news *models.News) (*models.News, error)
 	UpdateNews(id int, news *models.News) (*models.News, error)
@@ -25,18 +28,45 @@ func NewCPSURepository(db *sql.DB) CPSURepository {
 	return &cpsuRepository{db: db}
 }
 
-func (r *cpsuRepository) GetAllNews(param interface{}) ([]models.News, error) {
-	query := `
+func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
+	baseQuery := `
 		SELECT n.news_id, n.title, n.content, n.news_type,
-		       n.detail_url, n.create_at, n.updated_at,
+		       n.detail_url, n.created_at, n.updated_at,
 		       COALESCE(array_agg(ni.image_id) FILTER (WHERE ni.image_id IS NOT NULL), '{}'),
 		       COALESCE(array_agg(ni.image_url) FILTER (WHERE ni.image_url IS NOT NULL), '{}')
 		FROM news n
 		LEFT JOIN news_image ni ON n.news_id = ni.news_id
-		GROUP BY n.news_id
-		ORDER BY n.create_at DESC
 	`
-	rows, err := r.db.Query(query)
+
+	conditions := []string{}
+	args := []interface{}{}
+	argIndex := 1
+
+	if param.NewsType != "" {
+		conditions = append(conditions, "n.news_type = $"+strconv.Itoa(argIndex))
+		args = append(args, param.NewsType)
+		argIndex++
+	}
+
+	if len(conditions) > 0 {
+		baseQuery += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	baseQuery += " GROUP BY n.news_id"
+
+	sortField := "n.created_at"
+	if param.Sort != "" {
+		sortField = "n." + param.Sort
+	}
+
+	order := "DESC"
+	if strings.ToUpper(param.Order) == "ASC" {
+		order = "ASC"
+	}
+
+	baseQuery += " ORDER BY " + sortField + " " + order
+
+	rows, err := r.db.Query(baseQuery, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,13 +98,14 @@ func (r *cpsuRepository) GetAllNews(param interface{}) ([]models.News, error) {
 		}
 		allNews = append(allNews, news)
 	}
+
 	return allNews, nil
 }
 
 func (r *cpsuRepository) GetNewsDetail(id int) (*models.News, error) {
 	query := `
 		SELECT n.news_id, n.title, n.content, n.news_type,
-		       n.detail_url, n.create_at, n.updated_at,
+		       n.detail_url, n.created_at, n.updated_at,
 		       COALESCE(array_agg(ni.image_id) FILTER (WHERE ni.image_id IS NOT NULL), '{}'),
 		       COALESCE(array_agg(ni.image_url) FILTER (WHERE ni.image_url IS NOT NULL), '{}')
 		FROM news n
@@ -113,7 +144,7 @@ func (r *cpsuRepository) CreateNews(news *models.News) (*models.News, error) {
 	query := `
 		INSERT INTO news (title, content, news_type, detail_url)
 		VALUES ($1, $2, $3, $4)
-		RETURNING news_id, create_at, updated_at
+		RETURNING news_id, created_at, updated_at
 	`
 	err := r.db.QueryRow(
 		query,
@@ -130,7 +161,7 @@ func (r *cpsuRepository) UpdateNews(id int, news *models.News) (*models.News, er
 		UPDATE news
 		SET title = $1, content = $2, news_type = $3, detail_url = $4, updated_at = NOW()
 		WHERE news_id = $5
-		RETURNING news_id, create_at, updated_at
+		RETURNING news_id, created_at, updated_at
 	`
 	err := r.db.QueryRow(
 		query,

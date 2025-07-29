@@ -1,24 +1,15 @@
 package service
 
 import (
-	"cpsu/internal/models"
-	"cpsu/internal/repository"
 	"errors"
 	"strings"
+
+	"cpsu/internal/news/models"
+	"cpsu/internal/news/repository"
 )
 
-type NewsQueryParam struct {
-	Search   string `json:"search"`
-	Limit    int    `json:"limit"`
-	NewsID   int    `json:"news_id"`
-	Title    string `json:"title"`
-	Sort     string `json:"sort"`
-	Order    string `json:"order"`
-	NewsType string `json:"news_type"`
-}
-
 type CPSUService interface {
-	GetAllNews(param NewsQueryParam) ([]models.News, error)
+	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
 	GetNewsDetail(id int) (*models.News, error)
 	CreateNews(title, content, newsType, detailURL string, images []string) (*models.News, error)
 	UpdateNews(id int, title, content, newsType, detailURL string, images []string) (*models.News, error)
@@ -33,10 +24,22 @@ func NewCPSUService(repo repository.CPSURepository) CPSUService {
 	return &cpsuService{repo: repo}
 }
 
-func (s *cpsuService) GetAllNews(param NewsQueryParam) ([]models.News, error) {
-	param.Sort = "create_at"
-	param.Order = "desc"
-	return s.repo.GetAllNews(param)
+func (s *cpsuService) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
+	if param.Sort == "" {
+		param.Sort = "created_at"
+	}
+	if param.Order == "" {
+		param.Order = "desc"
+	}
+	newsList, err := s.repo.GetAllNews(param)
+	if err != nil {
+		return nil, err
+	}
+	if len(newsList) == 0 && param.NewsType != "" {
+		return nil, errors.New("news type not found")
+	}
+
+	return newsList, nil
 }
 
 func (s *cpsuService) GetNewsDetail(id int) (*models.News, error) {

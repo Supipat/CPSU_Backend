@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"cpsu/internal/service"
+	"cpsu/internal/news/models"
+	"cpsu/internal/news/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,7 @@ func NewCPSUHandler(cpsuService service.CPSUService) *CPSUHandler {
 }
 
 func (h *CPSUHandler) GetAllNews(c *gin.Context) {
-	var param service.NewsQueryParam
+	var param models.NewsQueryParam
 	if err := c.BindQuery(&param); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query parameter"})
 		return
@@ -28,7 +29,11 @@ func (h *CPSUHandler) GetAllNews(c *gin.Context) {
 
 	newsList, err := h.cpsuService.GetAllNews(param)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get news"})
+		if err.Error() == "news type not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get news"})
+		}
 		return
 	}
 	c.JSON(http.StatusOK, newsList)

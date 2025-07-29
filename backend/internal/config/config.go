@@ -18,7 +18,6 @@ type Config struct {
 }
 
 func LoadConfig() (Config, error) {
-	// viper.SetEnvPrefix("POSTGRES")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
