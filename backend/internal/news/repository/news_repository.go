@@ -6,18 +6,16 @@ import (
 	"strings"
 
 	"cpsu/internal/news/models"
-
-	"github.com/lib/pq"
 )
 
 type CPSURepository interface {
 	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
-	GetNewsDetail(id int) (*models.News, error)
-	CreateNews(news *models.News) (*models.News, error)
-	UpdateNews(id int, news *models.News) (*models.News, error)
+	GetNewsByID(id int) (*models.News, error)
+	CreateNews(news *models.NewsRequest) (*models.News, error)
+	UpdateNews(id int, news *models.NewsRequest) (*models.News, error)
 	DeleteNews(id int) error
 	AddNewsImages(newsID int, images []string) error
-	ReplaceNewsImages(newsID int, images []string) error
+	UpdateNewsImages(newsID int, images []string) ([]models.NewsImage, error)
 }
 
 type cpsuRepository struct {
@@ -29,148 +27,229 @@ func NewCPSURepository(db *sql.DB) CPSURepository {
 }
 
 func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
-	baseQuery := `
-		SELECT n.news_id, n.title, n.content, n.news_type,
-		       n.detail_url, n.created_at, n.updated_at,
-		       COALESCE(array_agg(ni.image_id) FILTER (WHERE ni.image_id IS NOT NULL), '{}'),
-		       COALESCE(array_agg(ni.image_url) FILTER (WHERE ni.image_url IS NOT NULL), '{}')
+	query := `
+		SELECT n.news_id, n.title, n.content, nt.type_id, nt.type_name,
+			n.detail_url, ni.image_id, ni.image_url,
+			n.created_at, n.updated_at
 		FROM news n
 		LEFT JOIN news_image ni ON n.news_id = ni.news_id
+		LEFT JOIN news_type nt ON n.type_id = nt.type_id
 	`
 
 	conditions := []string{}
 	args := []interface{}{}
 	argIndex := 1
 
-	if param.NewsType != "" {
-		conditions = append(conditions, "n.news_type = $"+strconv.Itoa(argIndex))
-		args = append(args, param.NewsType)
+	if param.TypeID > 0 {
+		conditions = append(conditions, "nt.type_id = $"+strconv.Itoa(argIndex))
+		args = append(args, param.TypeID)
 		argIndex++
 	}
 
 	if len(conditions) > 0 {
-		baseQuery += " WHERE " + strings.Join(conditions, " AND ")
+		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	baseQuery += " GROUP BY n.news_id"
-
-	sortField := "n.created_at"
+	sort := "n.created_at"
 	if param.Sort != "" {
-		sortField = "n." + param.Sort
+		sort = "n." + param.Sort
 	}
-
 	order := "DESC"
 	if strings.ToUpper(param.Order) == "ASC" {
 		order = "ASC"
 	}
+	query += " ORDER BY " + sort + " " + order
 
-	baseQuery += " ORDER BY " + sortField + " " + order
+	if param.Limit > 0 {
+		query += " LIMIT " + strconv.Itoa(param.Limit)
+	}
 
-	rows, err := r.db.Query(baseQuery, args...)
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var allNews []models.News
+	newsMap := make(map[int]*models.News)
+	var allNewsPt []*models.News
+
 	for rows.Next() {
-		var news models.News
-		var imageIDs []sql.NullInt64
-		var imageURLs []sql.NullString
+		var (
+			newsID                              int
+			title, content, typeName, detailURL string
+			typeID, imageID                     sql.NullInt64
+			imageURL                            sql.NullString
+			createdAt, updatedAt                sql.NullTime
+		)
 
 		err := rows.Scan(
-			&news.NewsID, &news.Title, &news.Content, &news.NewsType,
-			&news.DetailURL, &news.CreatedAt, &news.UpdatedAt,
-			pq.Array(&imageIDs), pq.Array(&imageURLs),
+			&newsID, &title, &content, &typeID, &typeName,
+			&detailURL, &imageID, &imageURL,
+			&createdAt, &updatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range imageIDs {
-			if imageIDs[i].Valid && imageURLs[i].Valid {
-				news.Images = append(news.Images, models.NewsImage{
-					ImageID:  int(imageIDs[i].Int64),
-					NewsID:   news.NewsID,
-					ImageURL: imageURLs[i].String,
-				})
+		n, exists := newsMap[newsID]
+		if !exists {
+			n = &models.News{
+				NewsID:    newsID,
+				Title:     title,
+				Content:   content,
+				TypeID:    int(typeID.Int64),
+				TypeName:  typeName,
+				DetailURL: detailURL,
+				CreatedAt: createdAt.Time,
+				UpdatedAt: updatedAt.Time,
+				Images:    []models.NewsImage{},
 			}
+			newsMap[newsID] = n
+			allNewsPt = append(allNewsPt, n)
 		}
-		allNews = append(allNews, news)
+
+		if imageID.Valid && imageURL.Valid {
+			n.Images = append(n.Images, models.NewsImage{
+				ImageID:  int(imageID.Int64),
+				NewsID:   newsID,
+				ImageURL: imageURL.String,
+			})
+		}
+	}
+
+	var allNews []models.News
+	for _, p := range allNewsPt {
+		allNews = append(allNews, *p)
 	}
 
 	return allNews, nil
 }
 
-func (r *cpsuRepository) GetNewsDetail(id int) (*models.News, error) {
+func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 	query := `
-		SELECT n.news_id, n.title, n.content, n.news_type,
-		       n.detail_url, n.created_at, n.updated_at,
-		       COALESCE(array_agg(ni.image_id) FILTER (WHERE ni.image_id IS NOT NULL), '{}'),
-		       COALESCE(array_agg(ni.image_url) FILTER (WHERE ni.image_url IS NOT NULL), '{}')
+		SELECT n.news_id, n.title, n.content, nt.type_id, nt.type_name,
+			n.detail_url, ni.image_id, ni.image_url,
+			n.created_at, n.updated_at
 		FROM news n
 		LEFT JOIN news_image ni ON n.news_id = ni.news_id
+		LEFT JOIN news_type nt ON n.type_id = nt.type_id
 		WHERE n.news_id = $1
-		GROUP BY n.news_id
 	`
-	row := r.db.QueryRow(query, id)
-
-	var news models.News
-	var imageIDs []sql.NullInt64
-	var imageURLs []sql.NullString
-
-	err := row.Scan(
-		&news.NewsID, &news.Title, &news.Content, &news.NewsType,
-		&news.DetailURL, &news.CreatedAt, &news.UpdatedAt,
-		pq.Array(&imageIDs), pq.Array(&imageURLs),
-	)
+	rows, err := r.db.Query(query, id)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	for i := range imageIDs {
-		if imageIDs[i].Valid && imageURLs[i].Valid {
+	var news *models.News
+
+	for rows.Next() {
+		var (
+			newsID                              int
+			title, content, typeName, detailURL string
+			typeID, imageID                     sql.NullInt64
+			imageURL                            sql.NullString
+			createdAt, updatedAt                sql.NullTime
+		)
+
+		err := rows.Scan(
+			&newsID, &title, &content, &typeID, &typeName,
+			&detailURL, &imageID, &imageURL,
+			&createdAt, &updatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if news == nil {
+			news = &models.News{
+				NewsID:    newsID,
+				Title:     title,
+				Content:   content,
+				TypeID:    int(typeID.Int64),
+				TypeName:  typeName,
+				DetailURL: detailURL,
+				CreatedAt: createdAt.Time,
+				UpdatedAt: updatedAt.Time,
+				Images:    []models.NewsImage{},
+			}
+		}
+
+		if imageID.Valid && imageURL.Valid {
 			news.Images = append(news.Images, models.NewsImage{
-				ImageID:  int(imageIDs[i].Int64),
-				NewsID:   news.NewsID,
-				ImageURL: imageURLs[i].String,
+				ImageID:  int(imageID.Int64),
+				NewsID:   newsID,
+				ImageURL: imageURL.String,
 			})
 		}
 	}
-	return &news, nil
+
+	if news == nil {
+		return nil, sql.ErrNoRows
+	}
+
+	return news, nil
 }
 
-func (r *cpsuRepository) CreateNews(news *models.News) (*models.News, error) {
+func (r *cpsuRepository) CreateNews(req *models.NewsRequest) (*models.News, error) {
 	query := `
-		INSERT INTO news (title, content, news_type, detail_url)
+		INSERT INTO news (title, content, type_id, detail_url)
 		VALUES ($1, $2, $3, $4)
 		RETURNING news_id, created_at, updated_at
 	`
+	var news models.News
 	err := r.db.QueryRow(
 		query,
-		news.Title, news.Content, news.NewsType, news.DetailURL,
+		req.Title, req.Content, req.TypeID, req.DetailURL,
 	).Scan(&news.NewsID, &news.CreatedAt, &news.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
-	return news, nil
+
+	news.Title = req.Title
+	news.Content = req.Content
+	news.TypeID = req.TypeID
+	news.DetailURL = req.DetailURL
+	news.Images = req.Images
+
+	if len(req.Images) > 0 {
+		var imageURLs []string
+		for _, img := range news.Images {
+			imageURLs = append(imageURLs, img.ImageURL)
+		}
+
+		err := r.AddNewsImages(news.NewsID, imageURLs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &news, nil
 }
 
-func (r *cpsuRepository) UpdateNews(id int, news *models.News) (*models.News, error) {
+func (r *cpsuRepository) UpdateNews(id int, newsreq *models.NewsRequest) (*models.News, error) {
 	query := `
 		UPDATE news
-		SET title = $1, content = $2, news_type = $3, detail_url = $4, updated_at = NOW()
+		SET title = $1, content = $2, type_id = $3, detail_url = $4, updated_at = NOW()
 		WHERE news_id = $5
 		RETURNING news_id, created_at, updated_at
 	`
+	var news models.News
 	err := r.db.QueryRow(
 		query,
-		news.Title, news.Content, news.NewsType, news.DetailURL, id,
+		newsreq.Title, newsreq.Content, newsreq.TypeID, newsreq.DetailURL, id,
 	).Scan(&news.NewsID, &news.CreatedAt, &news.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
-	return news, nil
+
+	news.Title = newsreq.Title
+	news.Content = newsreq.Content
+	news.TypeID = newsreq.TypeID
+	news.DetailURL = newsreq.DetailURL
+	news.Images = newsreq.Images
+
+	return &news, nil
 }
 
 func (r *cpsuRepository) DeleteNews(id int) error {
@@ -198,10 +277,42 @@ func (r *cpsuRepository) AddNewsImages(newsID int, images []string) error {
 	return nil
 }
 
-func (r *cpsuRepository) ReplaceNewsImages(newsID int, images []string) error {
+func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models.NewsImage, error) {
 	_, err := r.db.Exec("DELETE FROM news_image WHERE news_id = $1", newsID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return r.AddNewsImages(newsID, images)
+
+	for _, img := range images {
+		_, err := r.db.Exec("INSERT INTO news_image (news_id, image_url) VALUES ($1, $2)", newsID, img)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	rows, err := r.db.Query("SELECT image_id, news_id, image_url FROM news_image WHERE news_id = $1", newsID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.NewsImage
+	for rows.Next() {
+		var img models.NewsImage
+		if err := rows.Scan(&img.ImageID, &img.NewsID, &img.ImageURL); err != nil {
+			return nil, err
+		}
+		result = append(result, img)
+	}
+
+	return result, nil
+}
+
+func (r *cpsuRepository) GetTypeNameByID(typeID int) (string, error) {
+	var typeName string
+	err := r.db.QueryRow("SELECT type_name FROM news_type WHERE type_id = $1", typeID).Scan(&typeName)
+	if err != nil {
+		return "", err
+	}
+	return typeName, nil
 }

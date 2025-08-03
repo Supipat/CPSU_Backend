@@ -10,9 +10,9 @@ import (
 
 type CPSUService interface {
 	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
-	GetNewsDetail(id int) (*models.News, error)
-	CreateNews(title, content, newsType, detailURL string, images []string) (*models.News, error)
-	UpdateNews(id int, title, content, newsType, detailURL string, images []string) (*models.News, error)
+	GetNewsByID(id int) (*models.News, error)
+	CreateNews(title, content string, typeID int, typeName, detailURL string, images []string) (*models.News, error)
+	UpdateNews(id int, title, content string, type_id int, typeName, detailURL string, images []string) (*models.News, error)
 	DeleteNews(id int) error
 }
 
@@ -35,30 +35,30 @@ func (s *cpsuService) GetAllNews(param models.NewsQueryParam) ([]models.News, er
 	if err != nil {
 		return nil, err
 	}
-	if len(newsList) == 0 && param.NewsType != "" {
+	if len(newsList) == 0 && param.TypeName != "" {
 		return nil, errors.New("news type not found")
 	}
 
 	return newsList, nil
 }
 
-func (s *cpsuService) GetNewsDetail(id int) (*models.News, error) {
-	return s.repo.GetNewsDetail(id)
+func (s *cpsuService) GetNewsByID(id int) (*models.News, error) {
+	return s.repo.GetNewsByID(id)
 }
 
-func (s *cpsuService) CreateNews(title, content, newsType, detailURL string, images []string) (*models.News, error) {
+func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, detailURL string, images []string) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
 
-	news := &models.News{
+	newsreq := &models.NewsRequest{
 		Title:     title,
 		Content:   content,
-		NewsType:  newsType,
+		TypeID:    typeID,
 		DetailURL: detailURL,
 	}
 
-	created, err := s.repo.CreateNews(news)
+	created, err := s.repo.CreateNews(newsreq)
 	if err != nil {
 		return nil, err
 	}
@@ -70,38 +70,32 @@ func (s *cpsuService) CreateNews(title, content, newsType, detailURL string, ima
 		}
 	}
 
-	return s.repo.GetNewsDetail(created.NewsID)
+	return s.repo.GetNewsByID(created.NewsID)
 }
 
-func (s *cpsuService) UpdateNews(id int, title, content, newsType, detailURL string, images []string) (*models.News, error) {
+func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, images []string) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
 
-	news := &models.News{
+	newsreq := &models.NewsRequest{
 		Title:     title,
 		Content:   content,
-		NewsType:  newsType,
+		TypeID:    typeID,
 		DetailURL: detailURL,
 	}
 
-	updated, err := s.repo.UpdateNews(id, news)
+	_, err := s.repo.UpdateNews(id, newsreq)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(images) > 0 {
-		err = s.repo.ReplaceNewsImages(id, images)
-		if err != nil {
-			return nil, err
-		}
-		updated.Images = []models.NewsImage{}
-		for _, img := range images {
-			updated.Images = append(updated.Images, models.NewsImage{ImageURL: img})
-		}
+	_, err = s.repo.UpdateNewsImages(id, images)
+	if err != nil {
+		return nil, err
 	}
 
-	return updated, nil
+	return s.repo.GetNewsByID(id)
 }
 
 func (s *cpsuService) DeleteNews(id int) error {

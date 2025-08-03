@@ -39,7 +39,7 @@ func (h *CPSUHandler) GetAllNews(c *gin.Context) {
 	c.JSON(http.StatusOK, newsList)
 }
 
-func (h *CPSUHandler) GetNewsDetail(c *gin.Context) {
+func (h *CPSUHandler) GetNewsByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -47,7 +47,7 @@ func (h *CPSUHandler) GetNewsDetail(c *gin.Context) {
 		return
 	}
 
-	news, err := h.cpsuService.GetNewsDetail(id)
+	news, err := h.cpsuService.GetNewsByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})
@@ -59,27 +59,24 @@ func (h *CPSUHandler) GetNewsDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, news)
 }
 
-type NewsRequest struct {
-	Title     string   `json:"title"`
-	Content   string   `json:"content"`
-	NewsType  string   `json:"news_type"`
-	DetailURL string   `json:"detail_url"`
-	Images    []string `json:"images"`
-}
-
 func (h *CPSUHandler) CreateNews(c *gin.Context) {
-	var req NewsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var news models.NewsRequest
+	if err := c.ShouldBindJSON(&news); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 		return
 	}
 
-	news, err := h.cpsuService.CreateNews(req.Title, req.Content, req.NewsType, req.DetailURL, req.Images)
+	imageURLs := []string{}
+	for _, img := range news.Images {
+		imageURLs = append(imageURLs, img.ImageURL)
+	}
+
+	created, err := h.cpsuService.CreateNews(news.Title, news.Content, news.TypeID, "", news.DetailURL, imageURLs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, news)
+	c.JSON(http.StatusCreated, created)
 }
 
 func (h *CPSUHandler) UpdateNews(c *gin.Context) {
@@ -90,13 +87,18 @@ func (h *CPSUHandler) UpdateNews(c *gin.Context) {
 		return
 	}
 
-	var req NewsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var news models.News
+	if err := c.ShouldBindJSON(&news); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 		return
 	}
 
-	updated, err := h.cpsuService.UpdateNews(id, req.Title, req.Content, req.NewsType, req.DetailURL, req.Images)
+	imageURLs := []string{}
+	for _, img := range news.Images {
+		imageURLs = append(imageURLs, img.ImageURL)
+	}
+
+	updated, err := h.cpsuService.UpdateNews(id, news.Title, news.Content, news.TypeID, news.TypeName, news.DetailURL, imageURLs)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})

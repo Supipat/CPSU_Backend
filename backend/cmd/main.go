@@ -10,9 +10,9 @@ import (
 
 	"cpsu/internal/config"
 	"cpsu/internal/connectdb"
-	"cpsu/internal/handler"
-	"cpsu/internal/repository"
-	"cpsu/internal/service"
+	"cpsu/internal/news/handler"
+	"cpsu/internal/news/repository"
+	"cpsu/internal/news/service"
 )
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
@@ -81,7 +81,7 @@ func main() {
 		news := v1.Group("admin/news")
 		{
 			news.GET("", cpsuHandler.GetAllNews)
-			news.GET("/:id", cpsuHandler.GetNewsDetail)
+			news.GET("/:id", cpsuHandler.GetNewsByID)
 			news.POST("", cpsuHandler.CreateNews)
 			news.PUT("/:id", cpsuHandler.UpdateNews)
 			news.DELETE("/:id", cpsuHandler.DeleteNews)

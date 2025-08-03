@@ -6,11 +6,12 @@ type News struct {
 	NewsID    int         `json:"news_id"`
 	Title     string      `json:"title"`
 	Content   string      `json:"content"`
-	NewsType  string      `json:"news_type"`
+	TypeID    int         `json:"type_id"`
+	TypeName  string      `json:"type_name"`
 	DetailURL string      `json:"detail_url"`
+	Images    []NewsImage `json:"images"`
 	CreatedAt time.Time   `json:"created_at"`
 	UpdatedAt time.Time   `json:"update_at"`
-	Images    []NewsImage `json:"images"`
 }
 
 type NewsImage struct {
@@ -19,12 +20,28 @@ type NewsImage struct {
 	ImageURL string `json:"image_url"`
 }
 
+type News_Type struct {
+	TypeID   string `json:"type_id"`
+	NewsID   int    `json:"news_id"`
+	TypeName string `json:"type_name"`
+}
+
 type NewsQueryParam struct {
 	Search   string `form:"search"`
 	Limit    int    `form:"limit"`
-	NewsID   int    `form:"news_id"`
-	Title    string `form:"title"`
+	TypeID   int    `form:"type_id"`
+	TypeName string `form:"type_name"`
 	Sort     string `form:"sort"`
 	Order    string `form:"order"`
-	NewsType string `form:"news_type"`
+}
+
+type NewsRequest struct {
+	NewsID    int         `json:"news_id"`
+	Title     string      `json:"title"`
+	Content   string      `json:"content"`
+	TypeID    int         `json:"type_id"`
+	DetailURL string      `json:"detail_url"`
+	Images    []NewsImage `json:"images"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"update_at"`
 }
