@@ -15,9 +15,9 @@ type News struct {
 }
 
 type NewsImage struct {
-	ImageID  int    `json:"image_id"`
-	NewsID   int    `json:"news_id"`
-	ImageURL string `json:"image_url"`
+	ImageID   int    `json:"image_id"`
+	NewsID    int    `json:"news_id"`
+	FileImage string `json:"file_image"`
 }
 
 type News_Type struct {

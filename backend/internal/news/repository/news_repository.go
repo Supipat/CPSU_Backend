@@ -78,13 +78,13 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 			newsID                              int
 			title, content, typeName, detailURL string
 			typeID, imageID                     sql.NullInt64
-			imageURL                            sql.NullString
+			fileImage                           sql.NullString
 			createdAt, updatedAt                sql.NullTime
 		)
 
 		err := rows.Scan(
 			&newsID, &title, &content, &typeID, &typeName,
-			&detailURL, &imageID, &imageURL,
+			&detailURL, &imageID, &fileImage,
 			&createdAt, &updatedAt,
 		)
 		if err != nil {
@@ -108,11 +108,11 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 			allNewsPt = append(allNewsPt, n)
 		}
 
-		if imageID.Valid && imageURL.Valid {
+		if imageID.Valid && fileImage.Valid {
 			n.Images = append(n.Images, models.NewsImage{
-				ImageID:  int(imageID.Int64),
-				NewsID:   newsID,
-				ImageURL: imageURL.String,
+				ImageID:   int(imageID.Int64),
+				NewsID:    newsID,
+				FileImage: fileImage.String,
 			})
 		}
 	}
@@ -148,13 +148,13 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 			newsID                              int
 			title, content, typeName, detailURL string
 			typeID, imageID                     sql.NullInt64
-			imageURL                            sql.NullString
+			fileImage                           sql.NullString
 			createdAt, updatedAt                sql.NullTime
 		)
 
 		err := rows.Scan(
 			&newsID, &title, &content, &typeID, &typeName,
-			&detailURL, &imageID, &imageURL,
+			&detailURL, &imageID, &fileImage,
 			&createdAt, &updatedAt,
 		)
 		if err != nil {
@@ -175,11 +175,11 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 			}
 		}
 
-		if imageID.Valid && imageURL.Valid {
+		if imageID.Valid && fileImage.Valid {
 			news.Images = append(news.Images, models.NewsImage{
-				ImageID:  int(imageID.Int64),
-				NewsID:   newsID,
-				ImageURL: imageURL.String,
+				ImageID:   int(imageID.Int64),
+				NewsID:    newsID,
+				FileImage: fileImage.String,
 			})
 		}
 	}
@@ -213,12 +213,12 @@ func (r *cpsuRepository) CreateNews(req *models.NewsRequest) (*models.News, erro
 	news.Images = req.Images
 
 	if len(req.Images) > 0 {
-		var imageURLs []string
+		var fileImage []string
 		for _, img := range news.Images {
-			imageURLs = append(imageURLs, img.ImageURL)
+			fileImage = append(fileImage, img.FileImage)
 		}
 
-		err := r.AddNewsImages(news.NewsID, imageURLs)
+		err := r.AddNewsImages(news.NewsID, fileImage)
 		if err != nil {
 			return nil, err
 		}
@@ -299,7 +299,7 @@ func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models
 	var result []models.NewsImage
 	for rows.Next() {
 		var img models.NewsImage
-		if err := rows.Scan(&img.ImageID, &img.NewsID, &img.ImageURL); err != nil {
+		if err := rows.Scan(&img.ImageID, &img.NewsID, &img.FileImage); err != nil {
 			return nil, err
 		}
 		result = append(result, img)

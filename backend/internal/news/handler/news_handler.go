@@ -66,12 +66,12 @@ func (h *CPSUHandler) CreateNews(c *gin.Context) {
 		return
 	}
 
-	imageURLs := []string{}
+	fileImage := []string{}
 	for _, img := range news.Images {
-		imageURLs = append(imageURLs, img.ImageURL)
+		fileImage = append(fileImage, img.FileImage)
 	}
 
-	created, err := h.cpsuService.CreateNews(news.Title, news.Content, news.TypeID, "", news.DetailURL, imageURLs)
+	created, err := h.cpsuService.CreateNews(news.Title, news.Content, news.TypeID, "", news.DetailURL, fileImage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -93,12 +93,12 @@ func (h *CPSUHandler) UpdateNews(c *gin.Context) {
 		return
 	}
 
-	imageURLs := []string{}
+	fileImage := []string{}
 	for _, img := range news.Images {
-		imageURLs = append(imageURLs, img.ImageURL)
+		fileImage = append(fileImage, img.FileImage)
 	}
 
-	updated, err := h.cpsuService.UpdateNews(id, news.Title, news.Content, news.TypeID, news.TypeName, news.DetailURL, imageURLs)
+	updated, err := h.cpsuService.UpdateNews(id, news.Title, news.Content, news.TypeID, news.TypeName, news.DetailURL, fileImage)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS news (
 CREATE TABLE IF NOT EXISTS news_image (
     image_id SERIAL PRIMARY KEY,
     news_id INT NOT NULL,
-    image_url TEXT NOT NULL,
+    file_image TEXT NOT NULL,
     FOREIGN KEY (news_id) REFERENCES news(news_id) ON DELETE CASCADE
 );
 
@@ -80,7 +80,7 @@ INSERT INTO news(title,content,type_id,detail_url) VALUES
     (SELECT type_id FROM news_type WHERE type_name = 'กิจกรรมของภาควิชา' LIMIT 1),
     '');
 
-INSERT INTO news_image(news_id,image_url) VALUES
+INSERT INTO news_image(news_id,file_image) VALUES
 ((SELECT news_id FROM news WHERE title = 'คู่มือแนะนำนักศึกษาใหม่ ปีการศึกษา 2568' LIMIT 1),
     'https://i.postimg.cc/d1p9Dsf1/manual.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
@@ -109,3 +109,4 @@ INSERT INTO news_image(news_id,image_url) VALUES
     'https://i.postimg.cc/1t5dD3Mr/reward2nd3.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
     'https://i.postimg.cc/cLy5XmXH/reward2nd4.jpg');
+
