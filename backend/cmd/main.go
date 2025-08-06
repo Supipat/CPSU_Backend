@@ -88,6 +88,8 @@ func main() {
 		}
 	}
 
+	r.Static("/images", "./images")
+
 	if err := r.Run(":" + cfg.AppPort); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}

@@ -60,22 +60,41 @@ func (h *CPSUHandler) GetNewsByID(c *gin.Context) {
 }
 
 func (h *CPSUHandler) CreateNews(c *gin.Context) {
-	var news models.NewsRequest
-	if err := c.ShouldBindJSON(&news); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+	title := c.PostForm("title")
+	content := c.PostForm("content")
+	typeIDStr := c.PostForm("type_id")
+	detailURL := c.PostForm("detail_url")
+
+	typeID, err := strconv.Atoi(typeIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid type ID"})
 		return
 	}
 
-	fileImage := []string{}
-	for _, img := range news.Images {
-		fileImage = append(fileImage, img.FileImage)
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse form"})
+		return
 	}
 
-	created, err := h.cpsuService.CreateNews(news.Title, news.Content, news.TypeID, "", news.DetailURL, fileImage)
+	files := form.File["images"]
+	var filePaths []string
+
+	for _, file := range files {
+		filename := "images/news/" + file.Filename
+		if err := c.SaveUploadedFile(file, filename); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image"})
+			return
+		}
+		filePaths = append(filePaths, filename)
+	}
+
+	created, err := h.cpsuService.CreateNews(title, content, typeID, "", detailURL, filePaths)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusCreated, created)
 }
 
@@ -87,18 +106,36 @@ func (h *CPSUHandler) UpdateNews(c *gin.Context) {
 		return
 	}
 
-	var news models.News
-	if err := c.ShouldBindJSON(&news); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+	title := c.PostForm("title")
+	content := c.PostForm("content")
+	typeIDStr := c.PostForm("type_id")
+	detailURL := c.PostForm("detail_url")
+
+	typeID, err := strconv.Atoi(typeIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid type ID"})
 		return
 	}
 
-	fileImage := []string{}
-	for _, img := range news.Images {
-		fileImage = append(fileImage, img.FileImage)
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse form"})
+		return
 	}
 
-	updated, err := h.cpsuService.UpdateNews(id, news.Title, news.Content, news.TypeID, news.TypeName, news.DetailURL, fileImage)
+	files := form.File["images"]
+	var filePaths []string
+
+	for _, file := range files {
+		filename := "images/news/" + file.Filename
+		if err := c.SaveUploadedFile(file, filename); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image"})
+			return
+		}
+		filePaths = append(filePaths, filename)
+	}
+
+	updated, err := h.cpsuService.UpdateNews(id, title, content, typeID, "", detailURL, filePaths)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})
@@ -107,6 +144,7 @@ func (h *CPSUHandler) UpdateNews(c *gin.Context) {
 		}
 		return
 	}
+
 	c.JSON(http.StatusOK, updated)
 }
 
