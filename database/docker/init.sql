@@ -16,12 +16,16 @@ CREATE TABLE IF NOT EXISTS news (
     FOREIGN KEY (type_id) REFERENCES news_type(type_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS news_image (
+CREATE TABLE IF NOT EXISTS news_images (
     image_id SERIAL PRIMARY KEY,
     news_id INT NOT NULL,
     file_image TEXT NOT NULL,
     FOREIGN KEY (news_id) REFERENCES news(news_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS personnels (
+
+)
 
 -- TRIGGER
 

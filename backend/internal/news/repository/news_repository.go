@@ -15,7 +15,7 @@ type CPSURepository interface {
 	UpdateNews(id int, news *models.NewsRequest) (*models.News, error)
 	DeleteNews(id int) error
 	AddNewsImages(newsID int, images []string) error
-	UpdateNewsImages(newsID int, images []string) ([]models.NewsImage, error)
+	UpdateNewsImages(newsID int, images []string) ([]models.NewsImages, error)
 }
 
 type cpsuRepository struct {
@@ -102,14 +102,14 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 				DetailURL: detailURL,
 				CreatedAt: createdAt.Time,
 				UpdatedAt: updatedAt.Time,
-				Images:    []models.NewsImage{},
+				Images:    []models.NewsImages{},
 			}
 			newsMap[newsID] = n
 			allNewsPt = append(allNewsPt, n)
 		}
 
 		if imageID.Valid && fileImage.Valid {
-			n.Images = append(n.Images, models.NewsImage{
+			n.Images = append(n.Images, models.NewsImages{
 				ImageID:   int(imageID.Int64),
 				NewsID:    newsID,
 				FileImage: fileImage.String,
@@ -171,12 +171,12 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 				DetailURL: detailURL,
 				CreatedAt: createdAt.Time,
 				UpdatedAt: updatedAt.Time,
-				Images:    []models.NewsImage{},
+				Images:    []models.NewsImages{},
 			}
 		}
 
 		if imageID.Valid && fileImage.Valid {
-			news.Images = append(news.Images, models.NewsImage{
+			news.Images = append(news.Images, models.NewsImages{
 				ImageID:   int(imageID.Int64),
 				NewsID:    newsID,
 				FileImage: fileImage.String,
@@ -277,7 +277,7 @@ func (r *cpsuRepository) AddNewsImages(newsID int, images []string) error {
 	return nil
 }
 
-func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models.NewsImage, error) {
+func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models.NewsImages, error) {
 	_, err := r.db.Exec("DELETE FROM news_image WHERE news_id = $1", newsID)
 	if err != nil {
 		return nil, err
@@ -296,9 +296,9 @@ func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models
 	}
 	defer rows.Close()
 
-	var result []models.NewsImage
+	var result []models.NewsImages
 	for rows.Next() {
-		var img models.NewsImage
+		var img models.NewsImages
 		if err := rows.Scan(&img.ImageID, &img.NewsID, &img.FileImage); err != nil {
 			return nil, err
 		}
