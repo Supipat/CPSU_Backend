@@ -32,8 +32,8 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 			n.detail_url, ni.image_id, ni.file_image,
 			n.created_at, n.updated_at
 		FROM news n
-		LEFT JOIN news_image ni ON n.news_id = ni.news_id
-		LEFT JOIN news_type nt ON n.type_id = nt.type_id
+		LEFT JOIN news_images ni ON n.news_id = ni.news_id
+		LEFT JOIN news_types nt ON n.type_id = nt.type_id
 	`
 
 	conditions := []string{}
@@ -131,8 +131,8 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 			n.detail_url, ni.image_id, ni.file_image,
 			n.created_at, n.updated_at
 		FROM news n
-		LEFT JOIN news_image ni ON n.news_id = ni.news_id
-		LEFT JOIN news_type nt ON n.type_id = nt.type_id
+		LEFT JOIN news_images ni ON n.news_id = ni.news_id
+		LEFT JOIN news_types nt ON n.type_id = nt.type_id
 		WHERE n.news_id = $1
 	`
 	rows, err := r.db.Query(query, id)
@@ -269,7 +269,7 @@ func (r *cpsuRepository) DeleteNews(id int) error {
 
 func (r *cpsuRepository) AddNewsImages(newsID int, images []string) error {
 	for _, img := range images {
-		_, err := r.db.Exec("INSERT INTO news_image (news_id, file_image) VALUES ($1, $2)", newsID, img)
+		_, err := r.db.Exec("INSERT INTO news_images (news_id, file_image) VALUES ($1, $2)", newsID, img)
 		if err != nil {
 			return err
 		}
@@ -278,19 +278,19 @@ func (r *cpsuRepository) AddNewsImages(newsID int, images []string) error {
 }
 
 func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models.NewsImages, error) {
-	_, err := r.db.Exec("DELETE FROM news_image WHERE news_id = $1", newsID)
+	_, err := r.db.Exec("DELETE FROM news_images WHERE news_id = $1", newsID)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, img := range images {
-		_, err := r.db.Exec("INSERT INTO news_image (news_id, file_image) VALUES ($1, $2)", newsID, img)
+		_, err := r.db.Exec("INSERT INTO news_images (news_id, file_image) VALUES ($1, $2)", newsID, img)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	rows, err := r.db.Query("SELECT image_id, news_id, file_image FROM news_image WHERE news_id = $1", newsID)
+	rows, err := r.db.Query("SELECT image_id, news_id, file_image FROM news_images WHERE news_id = $1", newsID)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models
 
 func (r *cpsuRepository) GetTypeNameByID(typeID int) (string, error) {
 	var typeName string
-	err := r.db.QueryRow("SELECT type_name FROM news_type WHERE type_id = $1", typeID).Scan(&typeName)
+	err := r.db.QueryRow("SELECT type_name FROM news_types WHERE type_id = $1", typeID).Scan(&typeName)
 	if err != nil {
 		return "", err
 	}
