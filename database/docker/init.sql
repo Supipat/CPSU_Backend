@@ -23,9 +23,6 @@ CREATE TABLE IF NOT EXISTS news_images (
     FOREIGN KEY (news_id) REFERENCES news(news_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS personnels (
-
-)
 
 -- TRIGGER
 
