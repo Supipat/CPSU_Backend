@@ -2,26 +2,44 @@ package service
 
 import (
 	"errors"
+	"mime/multipart"
 	"strings"
 
 	"cpsu/internal/news/models"
 	"cpsu/internal/news/repository"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type CPSUService interface {
 	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
 	GetNewsByID(id int) (*models.News, error)
-	CreateNews(title, content string, typeID int, typeName, detailURL string, images []string) (*models.News, error)
-	UpdateNews(id int, title, content string, type_id int, typeName, detailURL string, images []string) (*models.News, error)
+	CreateNews(title, content string, typeID int, typeName, detailURL string, images []*multipart.FileHeader) (*models.News, error)
+	UpdateNews(id int, title, content string, type_id int, typeName, detailURL string, images []*multipart.FileHeader) (*models.News, error)
 	DeleteNews(id int) error
 }
 
 type cpsuService struct {
-	repo repository.CPSURepository
+	repo   repository.CPSURepository
+	upload *s3manager.Uploader
+	bucket string
 }
 
-func NewCPSUService(repo repository.CPSURepository) CPSUService {
-	return &cpsuService{repo: repo}
+func NewCPSUService(repo repository.CPSURepository, awsRegion, awsAccessKeyID, awsSecretAccessKey, bucket string) CPSUService {
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region:      aws.String(awsRegion),
+		Credentials: credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, ""),
+	}))
+	upload := s3manager.NewUploader(sess)
+
+	return &cpsuService{
+		repo:   repo,
+		upload: upload,
+		bucket: bucket,
+	}
 }
 
 func (s *cpsuService) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
@@ -46,51 +64,70 @@ func (s *cpsuService) GetNewsByID(id int) (*models.News, error) {
 	return s.repo.GetNewsByID(id)
 }
 
-func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, detailURL string, images []string) (*models.News, error) {
+func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, detailURL string, images []*multipart.FileHeader) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
 
-	newsreq := &models.NewsRequest{
+	var uploadedFlies []string
+	for _, fileHeader := range images {
+		url, err := s.UploadImages(fileHeader)
+		if err != nil {
+			return nil, err
+		}
+		uploadedFlies = append(uploadedFlies, url)
+	}
+
+	newsReq := &models.NewsRequest{
 		Title:     title,
 		Content:   content,
 		TypeID:    typeID,
 		DetailURL: detailURL,
 	}
 
-	created, err := s.repo.CreateNews(newsreq)
-	if err != nil {
-		return nil, err
+	for _, url := range uploadedFlies {
+		newsReq.Images = append(newsReq.Images, models.NewsImages{FileImage: url})
 	}
 
-	if len(images) > 0 {
-		err = s.repo.AddNewsImages(created.NewsID, images)
-		if err != nil {
-			return nil, err
-		}
+	created, err := s.repo.CreateNews(newsReq)
+	if err != nil {
+		return nil, err
 	}
 
 	return s.repo.GetNewsByID(created.NewsID)
 }
 
-func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, images []string) (*models.News, error) {
+func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, images []*multipart.FileHeader) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
 
-	newsreq := &models.NewsRequest{
+	var uploadedFlies []string
+	for _, fileHeader := range images {
+		url, err := s.UploadImages(fileHeader)
+		if err != nil {
+			return nil, err
+		}
+		uploadedFlies = append(uploadedFlies, url)
+	}
+
+	newsReq := &models.NewsRequest{
 		Title:     title,
 		Content:   content,
 		TypeID:    typeID,
 		DetailURL: detailURL,
 	}
 
-	_, err := s.repo.UpdateNews(id, newsreq)
+	for _, url := range uploadedFlies {
+		newsReq.Images = append(newsReq.Images, models.NewsImages{FileImage: url})
+	}
+
+	_, err := s.repo.UpdateNews(id, newsReq)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.repo.UpdateNewsImages(id, images)
+	_, err = s.repo.UpdateNewsImages(id, repository.ImagesAsStrings(newsReq.Images))
 	if err != nil {
 		return nil, err
 	}
@@ -100,4 +137,27 @@ func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, type
 
 func (s *cpsuService) DeleteNews(id int) error {
 	return s.repo.DeleteNews(id)
+}
+
+func (s *cpsuService) UploadImages(fileHeader *multipart.FileHeader) (string, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	key := "images/news/" + fileHeader.Filename
+
+	newsImage := &s3manager.UploadInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+		Body:   file,
+	}
+
+	result, err := s.upload.Upload(newsImage)
+	if err != nil {
+		return "", err
+	}
+
+	return result.Location, nil
 }

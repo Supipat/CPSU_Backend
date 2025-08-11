@@ -42,19 +42,25 @@ CREATE TABLE IF NOT EXISTS office_hours (
     personnel_id INT NOT NULL,
     days VARCHAR(15) NOT NULL,
     times VARCHAR(15) NOT NULL,
-    Contact VARCHAR(255) NOT NULL
+    contact VARCHAR(255) NOT NULL
 )
 
 -- create courses
 
 CREATE TABLE IF NOT EXISTS courses (
-
+    
 )
 
 -- create subjects
 
 CREATE TABLE IF NOT EXISTS subjects (
-    subject_id
+    subject_id VARCHAR(6) PRIMARY KEY,
+    thai_subject VARCHAR(255) NOT NULL,
+    eng_subject VARCHAR(255) NOT NULL,
+    credits int NOT NULL,
+    condition VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    clo TEXT NOT NULL
 )
 
 -- create documents
@@ -126,32 +132,32 @@ INSERT INTO news(title,content,type_id,detail_url) VALUES
 
 INSERT INTO news_images(news_id,file_image) VALUES
 ((SELECT news_id FROM news WHERE title = 'คู่มือแนะนำนักศึกษาใหม่ ปีการศึกษา 2568' LIMIT 1),
-    'images/news/manual.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/manual.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'images/news/degree1.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree1.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'images/news/degree2.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree2.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'images/news/degree3.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree3.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'images/news/degree4.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree4.jpg'),
 ((SELECT news_id FROM news WHERE title = 'กำหนดการรับสมัครและสัมภาษณ์ทุนการศึกษา ประจำปีการศึกษา 2568 (ครั้งที่ 1)' LIMIT 1),
-    'images/news/scholarship.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/scholarship.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ ผู้ช่วยศาสตราจารย์ ดร.อรวรรณ เชาวลิต อาจารย์ประจำภาควิชาคอมพิวเตอร์' LIMIT 1),
-    'images/news/reward-orawan.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-orawan.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์ ดร.ปัญญนัท อ้นพงษ์ เนื่องในโอกาสได้รับการแต่งตั้งให้ดำรงตำแหน่งทางวิชาการ' LIMIT 1),
-    'images/news/reward-panyanut.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-panyanut.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'images/news/reward-phakon1.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-phakon1.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'images/news/reward-phakon2.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-phakon2.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'images/news/reward2nd1.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd1.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'images/news/reward2nd2.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd2.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'images/news/reward2nd3.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd3.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'images/news/reward2nd4.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd4.jpg'),
 ((SELECT news_id FROM news WHERE title = 'งานสานสัมพันธ์ภาคคอมพิวเตอร์' LIMIT 1),
-    'images/news/cpsu_event.png');
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/cpsu_event.png');

@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -77,19 +78,12 @@ func (h *CPSUHandler) CreateNews(c *gin.Context) {
 		return
 	}
 
-	files := form.File["images"]
-	var filePaths []string
-
-	for _, file := range files {
-		filename := "images/news/" + file.Filename
-		if err := c.SaveUploadedFile(file, filename); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image"})
-			return
-		}
-		filePaths = append(filePaths, filename)
+	var fileImages []*multipart.FileHeader
+	if form != nil {
+		fileImages = form.File["images"]
 	}
 
-	created, err := h.cpsuService.CreateNews(title, content, typeID, "", detailURL, filePaths)
+	created, err := h.cpsuService.CreateNews(title, content, typeID, "", detailURL, fileImages)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -123,19 +117,12 @@ func (h *CPSUHandler) UpdateNews(c *gin.Context) {
 		return
 	}
 
-	files := form.File["images"]
-	var filePaths []string
-
-	for _, file := range files {
-		filename := "images/news/" + file.Filename
-		if err := c.SaveUploadedFile(file, filename); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image"})
-			return
-		}
-		filePaths = append(filePaths, filename)
+	var fileImages []*multipart.FileHeader
+	if form != nil {
+		fileImages = form.File["images"]
 	}
 
-	updated, err := h.cpsuService.UpdateNews(id, title, content, typeID, "", detailURL, filePaths)
+	updated, err := h.cpsuService.UpdateNews(id, title, content, typeID, "", detailURL, fileImages)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})

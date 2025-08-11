@@ -37,7 +37,7 @@ func main() {
 	defer db.Close()
 
 	cpsuRepo := repository.NewCPSURepository(db.GetDB())
-	cpsuService := service.NewCPSUService(cpsuRepo)
+	cpsuService := service.NewCPSUService(cpsuRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
 	cpsuHandler := handler.NewCPSUHandler(cpsuService)
 
 	go func() {
@@ -78,17 +78,20 @@ func main() {
 
 	v1 := r.Group("/api/v1")
 	{
-		news := v1.Group("admin/news")
+		newsAdmin := v1.Group("admin/news")
 		{
-			news.GET("", cpsuHandler.GetAllNews)
-			news.GET("/:id", cpsuHandler.GetNewsByID)
-			news.POST("", cpsuHandler.CreateNews)
-			news.PUT("/:id", cpsuHandler.UpdateNews)
-			news.DELETE("/:id", cpsuHandler.DeleteNews)
+			newsAdmin.GET("", cpsuHandler.GetAllNews)
+			newsAdmin.GET("/:id", cpsuHandler.GetNewsByID)
+			newsAdmin.POST("", cpsuHandler.CreateNews)
+			newsAdmin.PUT("/:id", cpsuHandler.UpdateNews)
+			newsAdmin.DELETE("/:id", cpsuHandler.DeleteNews)
 		}
+		/*newsUser := v1.Group("user/news")
+		{
+			newsUser.GET("", cpsuHandler.GetAllNews)
+			newsUser.GET("/:id", cpsuHandler.GetNewsByID)
+		}*/
 	}
-
-	r.Static("/images", "./images")
 
 	if err := r.Run(":" + cfg.AppPort); err != nil {
 		log.Fatalf("Failed to run server: %v", err)

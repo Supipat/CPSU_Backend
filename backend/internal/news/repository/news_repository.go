@@ -54,10 +54,12 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 	if param.Sort != "" {
 		sort = "n." + param.Sort
 	}
+
 	order := "DESC"
 	if strings.ToUpper(param.Order) == "ASC" {
 		order = "ASC"
 	}
+
 	query += " ORDER BY " + sort + " " + order
 
 	if param.Limit > 0 {
@@ -68,6 +70,7 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
 	newsMap := make(map[int]*models.News)
@@ -139,6 +142,7 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
 	var news *models.News
@@ -213,12 +217,7 @@ func (r *cpsuRepository) CreateNews(req *models.NewsRequest) (*models.News, erro
 	news.Images = req.Images
 
 	if len(req.Images) > 0 {
-		var fileImage []string
-		for _, img := range news.Images {
-			fileImage = append(fileImage, img.FileImage)
-		}
-
-		err := r.AddNewsImages(news.NewsID, fileImage)
+		err := r.AddNewsImages(news.NewsID, ImagesAsStrings(req.Images))
 		if err != nil {
 			return nil, err
 		}
@@ -315,4 +314,12 @@ func (r *cpsuRepository) GetTypeNameByID(typeID int) (string, error) {
 		return "", err
 	}
 	return typeName, nil
+}
+
+func ImagesAsStrings(images []models.NewsImages) []string {
+	var files []string
+	for _, img := range images {
+		files = append(files, img.FileImage)
+	}
+	return files
 }

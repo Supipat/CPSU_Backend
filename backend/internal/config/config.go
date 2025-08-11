@@ -16,6 +16,11 @@ type Config struct {
 	DatabasePassword string
 	DatabaseName     string
 	DatabaseSSLMode  string
+
+	AWSRegion          string
+	AWSAccessKeyID     string
+	AWSSecretAccessKey string
+	S3BucketName       string
 }
 
 func LoadConfig() (Config, error) {
@@ -33,15 +38,22 @@ func LoadConfig() (Config, error) {
 	viper.SetDefault("POSTGRES.DBNAME", "cpsu")
 	viper.SetDefault("POSTGRES.SSLMODE", "disable")
 
+	viper.SetDefault("AWS.REGION", "ap-southeast-2")
+	viper.SetDefault("S3.BUCKET_NAME", "cpsu-website")
+
 	// Set config values
 	config := Config{
-		AppPort:          viper.GetString("APP.PORT"),
-		DatabaseHost:     viper.GetString("POSTGRES.HOST"),
-		DatabasePort:     viper.GetInt("POSTGRES.PORT"),
-		DatabaseUser:     viper.GetString("POSTGRES.USER"),
-		DatabasePassword: viper.GetString("POSTGRES.PASSWORD"),
-		DatabaseName:     viper.GetString("POSTGRES.DBNAME"),
-		DatabaseSSLMode:  viper.GetString("POSTGRES.SSLMODE"),
+		AppPort:            viper.GetString("APP.PORT"),
+		DatabaseHost:       viper.GetString("POSTGRES.HOST"),
+		DatabasePort:       viper.GetInt("POSTGRES.PORT"),
+		DatabaseUser:       viper.GetString("POSTGRES.USER"),
+		DatabasePassword:   viper.GetString("POSTGRES.PASSWORD"),
+		DatabaseName:       viper.GetString("POSTGRES.DBNAME"),
+		DatabaseSSLMode:    viper.GetString("POSTGRES.SSLMODE"),
+		AWSRegion:          viper.GetString("AWS.REGION"),
+		AWSAccessKeyID:     viper.GetString("AWS.ACCESS_KEY_ID"),
+		AWSSecretAccessKey: viper.GetString("AWS.SECRET_ACCESS_KEY"),
+		S3BucketName:       viper.GetString("S3.BUCKET_NAME"),
 	}
 
 	return config, nil
