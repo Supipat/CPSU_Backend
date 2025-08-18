@@ -17,8 +17,8 @@ import (
 type CPSUService interface {
 	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
 	GetNewsByID(id int) (*models.News, error)
-	CreateNews(title, content string, typeID int, typeName, detailURL string, images []*multipart.FileHeader) (*models.News, error)
-	UpdateNews(id int, title, content string, type_id int, typeName, detailURL string, images []*multipart.FileHeader) (*models.News, error)
+	CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error)
+	UpdateNews(id int, title, content string, type_id int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error)
 	DeleteNews(id int) error
 }
 
@@ -64,7 +64,7 @@ func (s *cpsuService) GetNewsByID(id int) (*models.News, error) {
 	return s.repo.GetNewsByID(id)
 }
 
-func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, detailURL string, images []*multipart.FileHeader) (*models.News, error) {
+func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
@@ -78,11 +78,21 @@ func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, de
 		uploadedFlies = append(uploadedFlies, url)
 	}
 
+	var coverURL string
+	if coverImage != nil {
+		url, err := s.UploadImages(coverImage)
+		if err != nil {
+			return nil, err
+		}
+		coverURL = url
+	}
+
 	newsReq := &models.NewsRequest{
-		Title:     title,
-		Content:   content,
-		TypeID:    typeID,
-		DetailURL: detailURL,
+		Title:      title,
+		Content:    content,
+		TypeID:     typeID,
+		DetailURL:  detailURL,
+		CoverImage: coverURL,
 	}
 
 	for _, url := range uploadedFlies {
@@ -97,7 +107,7 @@ func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, de
 	return s.repo.GetNewsByID(created.NewsID)
 }
 
-func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, images []*multipart.FileHeader) (*models.News, error) {
+func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
@@ -111,11 +121,21 @@ func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, type
 		uploadedFlies = append(uploadedFlies, url)
 	}
 
+	var coverURL string
+	if coverImage != nil {
+		url, err := s.UploadImages(coverImage)
+		if err != nil {
+			return nil, err
+		}
+		coverURL = url
+	}
+
 	newsReq := &models.NewsRequest{
-		Title:     title,
-		Content:   content,
-		TypeID:    typeID,
-		DetailURL: detailURL,
+		Title:      title,
+		Content:    content,
+		TypeID:     typeID,
+		DetailURL:  detailURL,
+		CoverImage: coverURL,
 	}
 
 	for _, url := range uploadedFlies {

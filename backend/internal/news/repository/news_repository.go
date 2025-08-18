@@ -29,7 +29,7 @@ func NewCPSURepository(db *sql.DB) CPSURepository {
 func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
 	query := `
 		SELECT n.news_id, n.title, n.content, nt.type_id, nt.type_name,
-			n.detail_url, ni.image_id, ni.file_image,
+			n.detail_url, n.cover_image, ni.image_id, ni.file_image,
 			n.created_at, n.updated_at
 		FROM news n
 		LEFT JOIN news_images ni ON n.news_id = ni.news_id
@@ -78,16 +78,16 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 
 	for rows.Next() {
 		var (
-			newsID                              int
-			title, content, typeName, detailURL string
-			typeID, imageID                     sql.NullInt64
-			fileImage                           sql.NullString
-			createdAt, updatedAt                sql.NullTime
+			newsID                                          int
+			title, content, typeName, detailURL, coverImage string
+			typeID, imageID                                 sql.NullInt64
+			fileImage                                       sql.NullString
+			createdAt, updatedAt                            sql.NullTime
 		)
 
 		err := rows.Scan(
 			&newsID, &title, &content, &typeID, &typeName,
-			&detailURL, &imageID, &fileImage,
+			&detailURL, &coverImage, &imageID, &fileImage,
 			&createdAt, &updatedAt,
 		)
 		if err != nil {
@@ -97,15 +97,16 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 		n, exists := newsMap[newsID]
 		if !exists {
 			n = &models.News{
-				NewsID:    newsID,
-				Title:     title,
-				Content:   content,
-				TypeID:    int(typeID.Int64),
-				TypeName:  typeName,
-				DetailURL: detailURL,
-				CreatedAt: createdAt.Time,
-				UpdatedAt: updatedAt.Time,
-				Images:    []models.NewsImages{},
+				NewsID:     newsID,
+				Title:      title,
+				Content:    content,
+				TypeID:     int(typeID.Int64),
+				TypeName:   typeName,
+				DetailURL:  detailURL,
+				CoverImage: coverImage,
+				CreatedAt:  createdAt.Time,
+				UpdatedAt:  updatedAt.Time,
+				Images:     []models.NewsImages{},
 			}
 			newsMap[newsID] = n
 			allNewsPt = append(allNewsPt, n)
@@ -131,7 +132,7 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 	query := `
 		SELECT n.news_id, n.title, n.content, nt.type_id, nt.type_name,
-			n.detail_url, ni.image_id, ni.file_image,
+			n.detail_url, n.cover_image, ni.image_id, ni.file_image,
 			n.created_at, n.updated_at
 		FROM news n
 		LEFT JOIN news_images ni ON n.news_id = ni.news_id
@@ -149,16 +150,16 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 
 	for rows.Next() {
 		var (
-			newsID                              int
-			title, content, typeName, detailURL string
-			typeID, imageID                     sql.NullInt64
-			fileImage                           sql.NullString
-			createdAt, updatedAt                sql.NullTime
+			newsID                                          int
+			title, content, typeName, detailURL, coverImage string
+			typeID, imageID                                 sql.NullInt64
+			fileImage                                       sql.NullString
+			createdAt, updatedAt                            sql.NullTime
 		)
 
 		err := rows.Scan(
 			&newsID, &title, &content, &typeID, &typeName,
-			&detailURL, &imageID, &fileImage,
+			&detailURL, &coverImage, &imageID, &fileImage,
 			&createdAt, &updatedAt,
 		)
 		if err != nil {
@@ -167,15 +168,16 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 
 		if news == nil {
 			news = &models.News{
-				NewsID:    newsID,
-				Title:     title,
-				Content:   content,
-				TypeID:    int(typeID.Int64),
-				TypeName:  typeName,
-				DetailURL: detailURL,
-				CreatedAt: createdAt.Time,
-				UpdatedAt: updatedAt.Time,
-				Images:    []models.NewsImages{},
+				NewsID:     newsID,
+				Title:      title,
+				Content:    content,
+				TypeID:     int(typeID.Int64),
+				TypeName:   typeName,
+				DetailURL:  detailURL,
+				CoverImage: coverImage,
+				CreatedAt:  createdAt.Time,
+				UpdatedAt:  updatedAt.Time,
+				Images:     []models.NewsImages{},
 			}
 		}
 
@@ -197,14 +199,14 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 
 func (r *cpsuRepository) CreateNews(req *models.NewsRequest) (*models.News, error) {
 	query := `
-		INSERT INTO news (title, content, type_id, detail_url)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO news (title, content, type_id, detail_url, cover_image)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING news_id, created_at, updated_at
 	`
 	var news models.News
 	err := r.db.QueryRow(
 		query,
-		req.Title, req.Content, req.TypeID, req.DetailURL,
+		req.Title, req.Content, req.TypeID, req.DetailURL, req.CoverImage,
 	).Scan(&news.NewsID, &news.CreatedAt, &news.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -214,6 +216,7 @@ func (r *cpsuRepository) CreateNews(req *models.NewsRequest) (*models.News, erro
 	news.Content = req.Content
 	news.TypeID = req.TypeID
 	news.DetailURL = req.DetailURL
+	news.CoverImage = req.CoverImage
 	news.Images = req.Images
 
 	if len(req.Images) > 0 {
@@ -229,14 +232,14 @@ func (r *cpsuRepository) CreateNews(req *models.NewsRequest) (*models.News, erro
 func (r *cpsuRepository) UpdateNews(id int, newsreq *models.NewsRequest) (*models.News, error) {
 	query := `
 		UPDATE news
-		SET title = $1, content = $2, type_id = $3, detail_url = $4, updated_at = NOW()
-		WHERE news_id = $5
+		SET title = $1, content = $2, type_id = $3, detail_url = $4, cover_image = $5, updated_at = NOW()
+		WHERE news_id = $6
 		RETURNING news_id, created_at, updated_at
 	`
 	var news models.News
 	err := r.db.QueryRow(
 		query,
-		newsreq.Title, newsreq.Content, newsreq.TypeID, newsreq.DetailURL, id,
+		newsreq.Title, newsreq.Content, newsreq.TypeID, newsreq.DetailURL, newsreq.CoverImage, id,
 	).Scan(&news.NewsID, &news.CreatedAt, &news.UpdatedAt)
 	if err != nil {
 		return nil, err
@@ -246,6 +249,7 @@ func (r *cpsuRepository) UpdateNews(id int, newsreq *models.NewsRequest) (*model
 	news.Content = newsreq.Content
 	news.TypeID = newsreq.TypeID
 	news.DetailURL = newsreq.DetailURL
+	news.CoverImage = newsreq.CoverImage
 	news.Images = newsreq.Images
 
 	return &news, nil

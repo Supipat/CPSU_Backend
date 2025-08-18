@@ -3,15 +3,16 @@ package models
 import "time"
 
 type News struct {
-	NewsID    int          `json:"news_id"`
-	Title     string       `json:"title"`
-	Content   string       `json:"content"`
-	TypeID    int          `json:"type_id"`
-	TypeName  string       `json:"type_name"`
-	DetailURL string       `json:"detail_url"`
-	Images    []NewsImages `json:"images"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"update_at"`
+	NewsID     int          `json:"news_id"`
+	Title      string       `json:"title"`
+	Content    string       `json:"content"`
+	TypeID     int          `json:"type_id"`
+	TypeName   string       `json:"type_name"`
+	DetailURL  string       `json:"detail_url"`
+	CoverImage string       `json:"cover_image"`
+	Images     []NewsImages `json:"images"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"update_at"`
 }
 
 type NewsImages struct {
@@ -36,12 +37,13 @@ type NewsQueryParam struct {
 }
 
 type NewsRequest struct {
-	NewsID    int          `json:"news_id"`
-	Title     string       `json:"title"`
-	Content   string       `json:"content"`
-	TypeID    int          `json:"type_id"`
-	DetailURL string       `json:"detail_url"`
-	Images    []NewsImages `json:"images"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"update_at"`
+	NewsID     int          `json:"news_id"`
+	Title      string       `json:"title"`
+	Content    string       `json:"content"`
+	TypeID     int          `json:"type_id"`
+	DetailURL  string       `json:"detail_url"`
+	CoverImage string       `json:"cover_image"`
+	Images     []NewsImages `json:"images"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"update_at"`
 }

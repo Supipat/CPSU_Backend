@@ -65,6 +65,7 @@ func (h *CPSUHandler) CreateNews(c *gin.Context) {
 	content := c.PostForm("content")
 	typeIDStr := c.PostForm("type_id")
 	detailURL := c.PostForm("detail_url")
+	coverImage, _ := c.FormFile("cover_image")
 
 	typeID, err := strconv.Atoi(typeIDStr)
 	if err != nil {
@@ -83,7 +84,7 @@ func (h *CPSUHandler) CreateNews(c *gin.Context) {
 		fileImages = form.File["images"]
 	}
 
-	created, err := h.cpsuService.CreateNews(title, content, typeID, "", detailURL, fileImages)
+	created, err := h.cpsuService.CreateNews(title, content, typeID, "", detailURL, coverImage, fileImages)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -104,6 +105,7 @@ func (h *CPSUHandler) UpdateNews(c *gin.Context) {
 	content := c.PostForm("content")
 	typeIDStr := c.PostForm("type_id")
 	detailURL := c.PostForm("detail_url")
+	coverImage, _ := c.FormFile("cover_image")
 
 	typeID, err := strconv.Atoi(typeIDStr)
 	if err != nil {
@@ -122,7 +124,7 @@ func (h *CPSUHandler) UpdateNews(c *gin.Context) {
 		fileImages = form.File["images"]
 	}
 
-	updated, err := h.cpsuService.UpdateNews(id, title, content, typeID, "", detailURL, fileImages)
+	updated, err := h.cpsuService.UpdateNews(id, title, content, typeID, "", detailURL, coverImage, fileImages)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})
