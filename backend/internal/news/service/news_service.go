@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-type CPSUService interface {
+type NewsService interface {
 	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
 	GetNewsByID(id int) (*models.News, error)
 	CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error)
@@ -22,27 +22,27 @@ type CPSUService interface {
 	DeleteNews(id int) error
 }
 
-type cpsuService struct {
-	repo   repository.CPSURepository
+type newsService struct {
+	repo   repository.NewsRepository
 	upload *s3manager.Uploader
 	bucket string
 }
 
-func NewCPSUService(repo repository.CPSURepository, awsRegion, awsAccessKeyID, awsSecretAccessKey, bucket string) CPSUService {
+func NewNewsService(repo repository.NewsRepository, awsRegion, awsAccessKeyID, awsSecretAccessKey, bucket string) NewsService {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String(awsRegion),
 		Credentials: credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, ""),
 	}))
 	upload := s3manager.NewUploader(sess)
 
-	return &cpsuService{
+	return &newsService{
 		repo:   repo,
 		upload: upload,
 		bucket: bucket,
 	}
 }
 
-func (s *cpsuService) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
+func (s *newsService) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
 	if param.Sort == "" {
 		param.Sort = "created_at"
 	}
@@ -60,11 +60,11 @@ func (s *cpsuService) GetAllNews(param models.NewsQueryParam) ([]models.News, er
 	return newsList, nil
 }
 
-func (s *cpsuService) GetNewsByID(id int) (*models.News, error) {
+func (s *newsService) GetNewsByID(id int) (*models.News, error) {
 	return s.repo.GetNewsByID(id)
 }
 
-func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error) {
+func (s *newsService) CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
@@ -107,7 +107,7 @@ func (s *cpsuService) CreateNews(title, content string, typeID int, typeName, de
 	return s.repo.GetNewsByID(created.NewsID)
 }
 
-func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error) {
+func (s *newsService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
@@ -155,11 +155,11 @@ func (s *cpsuService) UpdateNews(id int, title, content string, typeID int, type
 	return s.repo.GetNewsByID(id)
 }
 
-func (s *cpsuService) DeleteNews(id int) error {
+func (s *newsService) DeleteNews(id int) error {
 	return s.repo.DeleteNews(id)
 }
 
-func (s *cpsuService) UploadImages(fileHeader *multipart.FileHeader) (string, error) {
+func (s *newsService) UploadImages(fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return "", err

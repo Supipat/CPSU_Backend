@@ -24,103 +24,48 @@ CREATE TABLE IF NOT EXISTS news_images (
     FOREIGN KEY (news_id) REFERENCES news(news_id) ON DELETE CASCADE
 );
 
--- create personnels
-
-/*CREATE TABLE IF NOT EXISTS type_personnels (
-    type_id SERIAL PRIMARY KEY,
-    type_name VARCHAR(50) NOT NULL
-)
-
-CREATE TABLE IF NOT EXISTS personnels (
-    personnel_id SERIAL PRIMARY KEY,
-    type_id INT NOT NULL,
-    department_position VARCHAR(50) NOT NULL,
-    academic_position VARCHAR(50) NOT NULL,
-    thai_name VARCHAR(50) NOT NULL,
-    eng_name VARCHAR(50) NOT NULL,
-    educational TEXT NOT NULL,
-    related_fields TEXT NOT NULL,
-    email VARCHAR(50) NOT NULL,
-    website TEXT NOT NULL,
-    file_image TEXT NOT NULL,
-    FOREIGN KEY (type_id) REFERENCES type_personnels(type_id) ON DELETE CASCADE
-)
-
-CREATE TABLE IF NOT EXISTS office_hours (
-    office_hour_id SERIAL PRIMARY KEY,
-    personnel_id INT NOT NULL,
-    days VARCHAR(20) NOT NULL,
-    times VARCHAR(20) NOT NULL,
-    contact VARCHAR(255) NOT NULL,
-    FOREIGN KEY (personnel_id) REFERENCES personnels(personnel_id) ON DELETE CASCADE
-)
-
 -- create courses
 
 CREATE TABLE IF NOT EXISTS degree (
     degree_id SERIAL PRIMARY KEY,
-    degree VARCHAR(20) NOT NULL,
-)
+    degree_name VARCHAR(20) NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS majors (
     major_id SERIAL PRIMARY KEY,
-    major VARCHAR(20) NOT NULL,
-)
+    major_name VARCHAR(20) NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS courses (
     course_id SERIAL PRIMARY KEY,
-    degree VARCHAR(25) NOT NULL,
-    major VARCHAR(25) NOT NULL,
+    degree_id INT NOT NULL,
+    major_id INT NOT NULL,
     year INT NOT NULL,
-    thai_course VARCHAR(100) NOT NULL,
-    eng_course VARCHAR(100) NOT NULL,
-    thai_degree VARCHAR(100) NOT NULL,
-    eng_degree VARCHAR(100) NOT NULL,
+    thai_course VARCHAR(255) NOT NULL,
+    eng_course VARCHAR(255) NOT NULL,
+    thai_degree VARCHAR(255) NOT NULL,
+    eng_degree VARCHAR(255) NOT NULL,
     admission_req TEXT NOT NULL,
     graduation_req TEXT NOT NULL,
     philosophy TEXT NOT NULL,
     objective TEXT NOT NULL,
     tuition TEXT NOT NULL,
-    credits VARCHAR(20) NOT NULL,
+    credits VARCHAR(255) NOT NULL,
     career_paths TEXT NOT NULL,
     plo TEXT NOT NULL,
-    detail_url TEXT NOT NULL
-)
+    detail_url TEXT NOT NULL,
+    FOREIGN KEY (degree_id) REFERENCES degree(degree_id) ON DELETE CASCADE,
+    FOREIGN KEY (major_id) REFERENCES majors(major_id) ON DELETE CASCADE
+);
 
--- FOREIGN KEY (degree_id) REFERENCES degree(degree_id) ON DELETE CASCADE,
--- FOREIGN KEY (major_id) REFERENCES majors(major_id) ON DELETE CASCADE
+-- create roadmap
 
--- create subjects
-
-CREATE TABLE IF NOT EXISTS subjects (
-    subject_id VARCHAR(6) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS roadmap (
+    roadmap_id SERIAL PRIMARY KEY,
     course_id INT NOT NULL,
-    plan_type VARCHAR(20) NOT NULL,
-    year VARCHAR(20) NOT NULL,
-    thai_subject VARCHAR(100) NOT NULL,
-    eng_subject VARCHAR(100) NOT NULL,
-    credits VARCHAR(10) NOT NULL,
-    condition VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    clo TEXT NOT NULL,
+    roadmap_url TEXT NOT NULL,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
-)
-
--- create documents
-
-CREATE TABLE IF NOT EXISTS category_documents (
-    category_id SERIAL PRIMARY KEY,
-    category VARCHAR(100) NOT NULL
-)
-
-CREATE TABLE IF NOT EXISTS documents (
-    document_id SERIAL PRIMARY KEY,
-    title VARCHAR(100) NOT NULL,
-    category_id INT NOT NULL,
-    document_name VARCHAR(100) NOT NULL,
-    document_url TEXT NOT NULL,
-    FOREIGN KEY (category_id) REFERENCES category_documents(category_id) ON DELETE CASCADE
-)*/
+);
 
 -- TRIGGER
 
@@ -221,232 +166,39 @@ INSERT INTO news_images(news_id,file_image) VALUES
 
 -- insert courses
 
--- INSERT INTO degree(degree) VALUES
--- ('ปริญญาตรี'),('ปริญญาโท'),('ปริญญาเอก');
+INSERT INTO degree(degree_name) VALUES
+('ปริญญาตรี'),('ปริญญาโท'),('ปริญญาเอก');
 
--- INSERT INTO majors(major) VALUES
--- ('วิทยาการคอมพิวเตอร์'),('เทคโนโลยีสารสนเทศ'),('วิทยาการข้อมูล');
+INSERT INTO majors(major_name) VALUES
+('วิทยาการคอมพิวเตอร์'),('เทคโนโลยีสารสนเทศ'),('วิทยาการข้อมูล');
 
-/*INSERT INTO courses(degree,major,year,thai_course,eng_course,thai_degree,eng_degree,admission_req,graduation_req,philosophy,objective,tuition,credits,career_paths,plo,detail_url) VALUES
-('ปริญญาตรี','เทคโนโลยีสารสนเทศ',2565,'(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565','Bachelor of Science Program in Information Technology 2022',
+INSERT INTO courses(degree_id,major_id,year,thai_course,eng_course,thai_degree,eng_degree,admission_req,graduation_req,philosophy,objective,tuition,credits,career_paths,plo,detail_url) VALUES
+((SELECT degree_id FROM degree WHERE degree_name = 'ปริญญาตรี' LIMIT 1),
+    (SELECT major_id FROM majors WHERE major_name = 'เทคโนโลยีสารสนเทศ' LIMIT 1),
+    2565,'(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565','Bachelor of Science Program in Information Technology 2022',
     'วิทยาศาสตรบัณฑิต  (เทคโนโลยีสารสนเทศ)','Bachelor of Science (Information Technology)','สำเร็จการศึกษาระดับมัธยมศึกษาปีที่ 6 หรือเทียบเท่า','เกรดเฉลี่ยไม่ต่ำกว่า 2.00 เกรดเฉลี่ยวิชาเฉพาะไม่ต่ำกว่า 2.00',
     'สร้างบัณฑิตที่มีคุณภาพ คุณธรรม จริยธรรม และวินัย มีความรู้และทักษะทางด้านเทคโนโลยีสารสนเทศที่ทันสมัย มีความคิดสร้างสรรค์ สามารถบูรณาการความรู้ไปประยุกต์ใช้งานด้านต่างๆ สอดคล้องกับความต้องการทางด้านเทคโนโลยีสารสนเทศของทั้งภาครัฐและเอกชน',
     'หลักสูตรนี้มุ่งผลิตบัณฑิตที่มีคุณภาพมีความรู้ความเชี่ยวชาญในสาขาเทคโนโลยีสารสนเทศที่ทันสมัย โดยมุ่งเน้นให้บัณฑิตสามารถหาความรู้ด้าน เทคโนโลยีสารสนเทศไปประยุกต์ใช้ในการทำงาน และเป็นพื้นฐานในการศึกษาต่อในสาขาวิชาที่เกี่ยวข้องต่อไปในอนาคตนอกจากนี้ยังมุ่งเน้นให้ นักศึกษามองเห็นถึงความสัมพันธ์ของศาสตร์ต่างๆในสาขาวิชาเทคโนโลยีสารสนเทศนำความรู้เหล่านั้นมาสร้างงานประยุกต์เพื่อเตรียมพร้อม ในการทำงาน และการวิจัยในขั้นสูงต่อไป',
     'ประมาณ 20,000 บาทต่อเทอม','จำนวนไม่น้อยกว่า 133 หน่วยกิต',
     '1) นักเทคโนโลยีสารสนเทศ หรือนักเทคโนโลยีและสารสนเทศ 2) นักพัฒนาระบบ นักพัฒนาเว็บไซต์ 3) ผู้ดูแลระบบฐานข้อมูล 4) นักวิเคราะห์ และออกแบบระบบงานสารสนเทศ 5) ผู้ดูแลระบบเครือข่าย และเครื่องแม่ข่าย 6) ผู้จัดการโครงการสารสนเทศ 7) ผู้จัดการซอฟต์แวร์ หรือผู้จัดการเทคโนโลยีสารสนเทศ 8) นักทดสอบระบบในสถานประกอบการที่มีการใช้เทคโนโลยีสารสนเทศ 9) นักวิเคราะห์ข้อมูลทางธุรกิจ 10) นักวิทยาศาสตร์ข้อมูล',
-    'PLO1	อธิบายความหมายและคุณค่าของศิลปะและการสร้างสรรค์ได้
-    PLO2	อภิปรายความหมายของความหลากหลายทางวัฒนธรรมได้
-    PLO3	ระบุความรู้เบื้องต้นเกี่ยวกับการประกอบธุรกิจและทักษะพื้นฐานที่จำเป็นต่อการเป็นผู้ประกอบการได้
-    PLO4	มีทักษะการใช้ภาษา และสื่อสารได้ตรงตามวัตถุประสงค์ในบริบทการสื่อสารที่หลากหลาย
-    PLO5	เลือกใช้เทคโนโลยีสารสนเทศและการสื่อสารได้ตรงตามวัตถุประสงค์ ตลอดจนรู้เท่าทันสื่อและสารสนเทศ
-    PLO6	แสวงหาความรู้ได้ด้วยตนเอง และนำความรู้ไปใช้ในการพัฒนาตนเองและการดำเนินชีวิต
-    PLO7	แสดงออกซึ่งทักษะความสัมพันธ์ระหว่างบุคคล สามารถทำงานร่วมกับผู้อื่นได้ มีระเบียบวินัย ตรงต่อเวลา ซื่อสัตย์สุจริต มีความรับผิดชอบต่อตนเอง สังคม และสิ่งแวดล้อม
-    PLO8	ใช้ความคิดสร้างสรรค์ในการสร้างผลงานหรือดำเนินโครงการได้
-    PLO9	คิดวิเคราะห์ วางแผน อย่างเป็นระบบ เพื่อแก้ไขปัญหาหรือเพื่อออกแบบนวัตกรรมได้
-    PLO10	อธิบายหลักการและองค์ประกอบของเทคโนโลยีสารสนเทศได้
-    PLO11	อธิบายสาระสำคัญของจริยธรรมและกฎหมายทางด้านเทคโนโลยีสารสนเทศ
-    PLO12	ออกแบบ ติดตั้ง และจัดการระบบฐานข้อมูลได้
-    PLO13	ประยุกต์ใช้หลักการของเครือข่ายคอมพิวเตอร์และกลไกสำหรับรักษาความปลอดภัยของระบบสารสนเทศได้
-    PLO14	พัฒนาระบบเว็บแอปพลิเคชันให้เหมาะสมกับงานทางธุรกิจได้
-    PLO15	จัดเตรียมสภาวะแวดล้อมที่เหมาะสมต่อการพัฒนาระบบสารสนเทศได้
-    PLO16	ติดตั้ง ทดสอบ และบำรุงรักษา ระบบสารสนเทศที่พัฒนาขึ้นได้
-    PLO17	เก็บรวบรวมข้อมูล จัดการข้อมูล วิเคราะห์ข้อมูล และนำเสนอข้อมูลในรูปแบบที่หลากหลายได้
-    PLO18	พัฒนาโปรแกรมประยุกต์ได้
-    PLO19	รวบรวม สืบค้น ทดลองประยุกต์ใช้ความรู้และเทคโนโลยีใหม่ได้ด้วยตนเอง และสามารถทำงานเป็นทีม
-    PLO20	วิเคราะห์และออกแบบระบบงานด้านเทคโนโลยีสารสนเทศได้
-    PLO21	วิเคราะห์ วางแผน หรือพัฒนาระบบงานที่มีการบูรณาการความรู้ในสาขาเทคโนโลยีสารสนเทศที่สามารถใช้งานได้',
+    'PLO1	อธิบายความหมายและคุณค่าของศิลปะและการสร้างสรรค์ได้ PLO2	อภิปรายความหมายของความหลากหลายทางวัฒนธรรมได้ PLO3	ระบุความรู้เบื้องต้นเกี่ยวกับการประกอบธุรกิจและทักษะพื้นฐานที่จำเป็นต่อการเป็นผู้ประกอบการได้ PLO4	มีทักษะการใช้ภาษา และสื่อสารได้ตรงตามวัตถุประสงค์ในบริบทการสื่อสารที่หลากหลาย PLO5	เลือกใช้เทคโนโลยีสารสนเทศและการสื่อสารได้ตรงตามวัตถุประสงค์ ตลอดจนรู้เท่าทันสื่อและสารสนเทศ PLO6	แสวงหาความรู้ได้ด้วยตนเอง และนำความรู้ไปใช้ในการพัฒนาตนเองและการดำเนินชีวิต PLO7	แสดงออกซึ่งทักษะความสัมพันธ์ระหว่างบุคคล สามารถทำงานร่วมกับผู้อื่นได้ มีระเบียบวินัย ตรงต่อเวลา ซื่อสัตย์สุจริต มีความรับผิดชอบต่อตนเอง สังคม และสิ่งแวดล้อม PLO8	ใช้ความคิดสร้างสรรค์ในการสร้างผลงานหรือดำเนินโครงการได้ PLO9	คิดวิเคราะห์ วางแผน อย่างเป็นระบบ เพื่อแก้ไขปัญหาหรือเพื่อออกแบบนวัตกรรมได้ PLO10	อธิบายหลักการและองค์ประกอบของเทคโนโลยีสารสนเทศได้ PLO11	อธิบายสาระสำคัญของจริยธรรมและกฎหมายทางด้านเทคโนโลยีสารสนเทศ PLO12	ออกแบบ ติดตั้ง และจัดการระบบฐานข้อมูลได้ PLO13	ประยุกต์ใช้หลักการของเครือข่ายคอมพิวเตอร์และกลไกสำหรับรักษาความปลอดภัยของระบบสารสนเทศได้ PLO14	พัฒนาระบบเว็บแอปพลิเคชันให้เหมาะสมกับงานทางธุรกิจได้ PLO15	จัดเตรียมสภาวะแวดล้อมที่เหมาะสมต่อการพัฒนาระบบสารสนเทศได้ PLO16	ติดตั้ง ทดสอบ และบำรุงรักษา ระบบสารสนเทศที่พัฒนาขึ้นได้ PLO17	เก็บรวบรวมข้อมูล จัดการข้อมูล วิเคราะห์ข้อมูล และนำเสนอข้อมูลในรูปแบบที่หลากหลายได้ PLO18	พัฒนาโปรแกรมประยุกต์ได้ PLO19	รวบรวม สืบค้น ทดลองประยุกต์ใช้ความรู้และเทคโนโลยีใหม่ได้ด้วยตนเอง และสามารถทำงานเป็นทีม PLO20	วิเคราะห์และออกแบบระบบงานด้านเทคโนโลยีสารสนเทศได้ PLO21	วิเคราะห์ วางแผน หรือพัฒนาระบบงานที่มีการบูรณาการความรู้ในสาขาเทคโนโลยีสารสนเทศที่สามารถใช้งานได้',
     'https://www.cp.su.ac.th/file/show/1118'),
-('ปริญญาตรี','วิทยาการคอมพิวเตอร์',2565,'(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565','Bachelor of Science Program in Computer Science 2022',
+((SELECT degree_id FROM degree WHERE degree_name = 'ปริญญาตรี' LIMIT 1),
+    (SELECT major_id FROM majors WHERE major_name = 'วิทยาการคอมพิวเตอร์' LIMIT 1),
+    2565,'(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565','Bachelor of Science Program in Computer Science 2022',
     'วิทยาศาสตรบัณฑิต (วิทยาการคอมพิวเตอร์)','Bachelor of Science (Computer Science)','สำเร็จการศึกษาระดับมัธยมศึกษาปีที่ 6 หรือเทียบเท่า','เกรดเฉลี่ยไม่ต่ำกว่า 2.00 เกรดเฉลี่ยวิชาเฉพาะไม่ต่ำกว่า 2.00',
     'ผลิตบัณฑิตผู้ผสานศาสตร์และศิลป์ที่พร้อมจะวางแผนก่อนปฏิบัติการ ทํางานมุ่งผลลัพธ์ ตรวจวัดผลสัมฤทธิ์ คิดวิเคราะห์เพื่อพัฒนาสร้างสรรค์สังคม',
     '1) เพื่อผลิตบัณฑิตที่มีความรู้เชิงทฤษฎีทางวิทยาการคอมพิวเตอร์และความสามารถเชิงปฏิบัติ พัฒนางานทางด้านคอมพิวเตอร์ได้อย่างมีประสิทธิภาพ หรือศึกษาต่อในระดับสูงขึ้น 2) เพื่อผลิตบัณฑิตที่มีทักษะสร้างสรรค์นวัตกรรมจากความรู้ด้านวิทยาการคอมพิวเตอร์ 3) เพื่อผลิตบัณฑิตที่สามารถถ่ายทอดความรู้ด้านวิทยาการคอมพิวเตอร์แก่ชุมชนและสังคม เพื่อการพัฒนาสังคมและประเทศชาติได้ 4) เพื่อผลิตบัณฑิตที่ปฏิบัติตนในกรอบจริยธรรมภายใต้กฎหมายเกี่ยวกับคอมพิวเตอร์และข้อมูล',
     'ประมาณ 20,000 บาทต่อเทอม','จำนวนไม่น้อยกว่า 126 หน่วยกิต',
     '1) โปรแกรมเมอร์ (Programmer) 2) นักวิทยาศาสตร์คอมพิวเตอร์ (Computer Scientist) 3) นักพัฒนาเว็บอย่างเต็มรูปแบบ (Full Stack Developer) 4) นักพัฒนาซอฟต์แวร์ (Software Developer) 5) นักวิเคราะห์และออกแบบระบบ (System Analyst and Designer) 6) นักวิทยาศาตร์ข้อมูล (Data Scientist) 7) ผู้ดูแลระบบเครือข่ายและเครื่องแม่ข่าย (Network and Server Administrator) 8) นักพัฒนาระบบอัตโนมัติของหุ่นยนต์ (Robotic Process Automation Developer)',
-    'PLO1 อธิบายความหมายและคุณค่าของศิลปะและการสร้างสรรค์ได้
-    PLO2 อภิปรายความหมายของความหลากหลายทางวัฒนธรรมได้
-    PLO3 ระบุความรู้เบื้องต้นเกี่ยวกับการประกอบธุรกิจและทักษะพื้นฐานที่จำเป็นต่อการเป็นผู้ประกอบการได้
-    PLO4 มีทักษะการใช้ภาษา และสื่อสารได้ตรงตามวัตถุประสงค์ในบริบทการสื่อสารที่ หลากหลาย
-    PLO5 เลือกใช้เทคโนโลยีสารสนเทศและการสื่อสารได้ตรงตามวัตถุประสงค์ ตลอดจนรู้เท่าทันสื่อและสารสนเทศ
-    PLO6 แสวงหาความรู้ได้ด้วยตนเอง และนำความรู้ไปใช้ในการพัฒนา ตนเองและการดำเนินชีวิต
-    PLO7 แสดงออกซึ่งทักษะความสัมพันธ์ระหว่างบุคคล สามารถทำงานร่วมกับผู้อื่นได้ มีระเบียบวินัย ตรงต่อเวลา ซื่อสัตย์สุจริต มีความรับผิดชอบต่อตนเอง สังคม และสิ่งแวดล้อม
-    PLO8 ใช้ความคิดสร้างสรรค์ในการสร้างผลงานหรือดำเนินโครงการได้
-    PLO9 คิดวิเคราะห์ วางแผนอย่างเป็นระบบ เพื่อแก้ไขปัญหาหรือเพื่อออกแบบนวัตกรรมได้
-    PLO10 อธิบายหลักการทํางานและ แนวคิดของระบบและเทคโนโลยี ทางด้านคอมพิวเตอร์ สารสนเทศ และการสื่อสาร
-    PLO11 จัดการระบบไฟล์ข้อมูลและระบบ ฐานข้อมูลตามบริบทของปัญหา
-    PLO12 ประยุกต์ใช้อัลกอริทึมและโปรแกรมในการแก้ปัญหา ทางด้านคอมพิวเตอร์ภายใต้ สภาวะแวดล้อมที่กําหนด
-    PLO13 กําหนดขอบเขตการทํางาน ติดตั้ง พร้อมตั้งค่าการใช้งานระบบ คอมพิวเตอร์และเครือข่าย
-    PLO14 ประยุกต์ใช้ความรู้ในการ แก้ปัญหาด้านการรักษาความ มั่นคงปลอดภัยของข้อมูลของ ระบบคอมพิวเตอร์ภายใต้ กฎหมายโดยยึดหลักจริยธรรม ของการใช้ข้อมูลและสารสนเทศ
-    PLO15 ปฏิบัติงานภายใต้รูปแบบของการ ทํางานเป็นทีมเพื่อบรรลุเป้าหมาย ในการดําเนินงานร่วมกัน
-    PLO16 พูดและเขียนทั้งภาษาไทยและภาษาอังกฤษ เพื่อสื่อสารทําความ เข้าใจในด้านวิทยาการ คอมพิวเตอร์
-    PLO17 ติดตามข่าวสาร ข้อมูลและ ความก้าวหน้าทางเทคโนโลยีที่ เกี่ยวข้องกับงานด้านวิทยาการคอมพิวเตอร์
-    PLO18 วิเคราะห์ ออกแบบและพัฒนา ระบบคอมพิวเตอร์เพื่อแก้ไข ปัญหาให้ตรงตามความต้องการ ของผู้ใช้และบูรณาการตามบริบทของสังคม',
+    'PLO1 อธิบายความหมายและคุณค่าของศิลปะและการสร้างสรรค์ได้ PLO2 อภิปรายความหมายของความหลากหลายทางวัฒนธรรมได้ PLO3 ระบุความรู้เบื้องต้นเกี่ยวกับการประกอบธุรกิจและทักษะพื้นฐานที่จำเป็นต่อการเป็นผู้ประกอบการได้ PLO4 มีทักษะการใช้ภาษา และสื่อสารได้ตรงตามวัตถุประสงค์ในบริบทการสื่อสารที่ หลากหลาย PLO5 เลือกใช้เทคโนโลยีสารสนเทศและการสื่อสารได้ตรงตามวัตถุประสงค์ ตลอดจนรู้เท่าทันสื่อและสารสนเทศ PLO6 แสวงหาความรู้ได้ด้วยตนเอง และนำความรู้ไปใช้ในการพัฒนา ตนเองและการดำเนินชีวิต PLO7 แสดงออกซึ่งทักษะความสัมพันธ์ระหว่างบุคคล สามารถทำงานร่วมกับผู้อื่นได้ มีระเบียบวินัย ตรงต่อเวลา ซื่อสัตย์สุจริต มีความรับผิดชอบต่อตนเอง สังคม และสิ่งแวดล้อม PLO8 ใช้ความคิดสร้างสรรค์ในการสร้างผลงานหรือดำเนินโครงการได้ PLO9 คิดวิเคราะห์ วางแผนอย่างเป็นระบบ เพื่อแก้ไขปัญหาหรือเพื่อออกแบบนวัตกรรมได้ PLO10 อธิบายหลักการทํางานและ แนวคิดของระบบและเทคโนโลยี ทางด้านคอมพิวเตอร์ สารสนเทศ และการสื่อสาร PLO11 จัดการระบบไฟล์ข้อมูลและระบบ ฐานข้อมูลตามบริบทของปัญหา PLO12 ประยุกต์ใช้อัลกอริทึมและโปรแกรมในการแก้ปัญหา ทางด้านคอมพิวเตอร์ภายใต้ สภาวะแวดล้อมที่กําหนด PLO13 กําหนดขอบเขตการทํางาน ติดตั้ง พร้อมตั้งค่าการใช้งานระบบ คอมพิวเตอร์และเครือข่าย PLO14 ประยุกต์ใช้ความรู้ในการ แก้ปัญหาด้านการรักษาความ มั่นคงปลอดภัยของข้อมูลของ ระบบคอมพิวเตอร์ภายใต้ กฎหมายโดยยึดหลักจริยธรรม ของการใช้ข้อมูลและสารสนเทศ PLO15 ปฏิบัติงานภายใต้รูปแบบของการ ทํางานเป็นทีมเพื่อบรรลุเป้าหมาย ในการดําเนินงานร่วมกัน PLO16 พูดและเขียนทั้งภาษาไทยและภาษาอังกฤษ เพื่อสื่อสารทําความ เข้าใจในด้านวิทยาการ คอมพิวเตอร์ PLO17 ติดตามข่าวสาร ข้อมูลและ ความก้าวหน้าทางเทคโนโลยีที่ เกี่ยวข้องกับงานด้านวิทยาการคอมพิวเตอร์ PLO18 วิเคราะห์ ออกแบบและพัฒนา ระบบคอมพิวเตอร์เพื่อแก้ไข ปัญหาให้ตรงตามความต้องการ ของผู้ใช้และบูรณาการตามบริบทของสังคม',
     'https://www.cp.su.ac.th/file/show/1119');
 
--- insert document
+-- insert roadmap
 
-INSERT INTO category_documents(category) VALUES
-('ทั่วไป'),('การลงทะเบียนเรียน'),('การเงินและค่าธรรมเนียม'),('การสอบและผลการเรียน'),('การเปลี่ยนแปลงสถานภาพการศึกษา'),('เอกสารและหนังสือรับรอง'),('การใช้สถานที่'),
-    ('proposal'),('midway'),('final');
+INSERT INTO roadmap(course_id,roadmap_url) VALUES
+((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_IT_65.jpg'),
+((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565' LIMIT 1),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg');
 
-INSERT INTO documents(title, category_id, document_name, document_url) VALUES
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'ทั่วไป' LIMIT 1),
-    'คำร้องทั่วไป',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การลงทะเบียนเรียน' LIMIT 1),
-    'คำร้องขอลงทะเบียน/เพิ่ม/ถอน ช้าเป็นกรณีพิเศษ',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การลงทะเบียนเรียน' LIMIT 1),
-    'คำร้องขอลงทะเบียนหน่วยกิตน้อยกว่าหรือมากกว่าเกณฑ์',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การลงทะเบียนเรียน' LIMIT 1),
-    'คำร้องขอสำรองที่นั่ง',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การลงทะเบียนเรียน' LIMIT 1),
-    'บัตรถอนติด W',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การลงทะเบียนเรียน' LIMIT 1),
-    'คำร้องขอเปลี่ยนสาขาวิชาเอก',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การเงินและค่าธรรมเนียม' LIMIT 1),
-    'คำร้องขอผ่อนผันการชำระเงินค่าลงทะเบียน',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การสอบและผลการเรียน' LIMIT 1),
-    'คำร้องขอตรวจสอบคะแนนสอบ',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การสอบและผลการเรียน' LIMIT 1),
-    'คำร้องขอขาดเรียนและขาดสอบ',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การสอบและผลการเรียน' LIMIT 1),
-    'คำร้องขอสอบวิชาศึกษาทั่วไป(กรณีขาดสอบ)',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การเปลี่ยนแปลงสถานภาพการศึกษา' LIMIT 1),
-    'คำร้องขอลาพักการศึกษา',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การเปลี่ยนแปลงสถานภาพการศึกษา' LIMIT 1),
-    'คำร้องขอกลับเข้าศึกษา',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การเปลี่ยนแปลงสถานภาพการศึกษา' LIMIT 1),
-    'คำร้องขอลาออก',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การเปลี่ยนแปลงสถานภาพการศึกษา' LIMIT 1),
-    'คำร้องขอสำเร็จการศึกษา',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การเปลี่ยนแปลงสถานภาพการศึกษา' LIMIT 1),
-    'คำร้องขอโอนสังกัดคณะ',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'เอกสารและหนังสือรับรอง' LIMIT 1),
-    'คำร้องขอหนังสือสำคัญ',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'เอกสารและหนังสือรับรอง' LIMIT 1),
-    'ใบมอบฉันทะ (กรณีรับเอกสารแทน)',
-    ''),
-('แบบฟอร์มทั่วไป',
-    (SELECT category_id FROM category_documents WHERE category = 'การใช้สถานที่' LIMIT 1),
-    'คำร้องขอใช้สถานที่',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CP00R แบบคำร้องขอเข้ารับการจัดสรรกลุ่มสำหรับการจัดทำโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CP00X แบบแจ้งความประสงค์แลกเปลี่ยนกลุ่มโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CS00G-55 แบบขอตรวจสอบคุณสมบัติในการมีสิทธิขอจัดทําโครงงานปริญญานิพนธ์ (สาขาวิชาวิทยาการคอมพิวเตอร์) (หลักสูตร 55)',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CS00G แบบขอตรวจสอบคุณสมบัติในการมีสิทธิขอจัดทําโครงงานปริญญานิพนธ์ (สาขาวิชาวิทยาการคอมพิวเตอร์) (หลักสูตร 51)',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'IT00G-55 แบบขอตรวจสอบคุณสมบัติในการมีสิทธิขอจัดทําโครงงานปริญญานิพนธ์ (สาขาวิชาเทคโนโลยีสารสนเทศ) (หลักสูตร 55)',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'IT00G แบบขอตรวจสอบคุณสมบัติในการมีสิทธิขอจัดทําโครงงานปริญญานิพนธ์ (สาขาวิชาเทคโนโลยีสารสนเทศ) (หลักสูตร 51)',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CS01S/IT01S แบบคําร้องขอเสนอหัวข้อโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CS01D/IT01D Template ไฟล์ต้นแบบเอกสารประกอบการเสนอหัวข้อโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CS01D/IT01D Example ตัวอย่างเอกสารประกอบการเสนอหัวข้อโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CS02S/IT02S แบบคําร้องขอสอบข้อเสนอโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CS02D/IT02D Template ไฟล์ต้นแบบเอกสารประกอบการสอบข้อเสนอโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(1)',
-    (SELECT category_id FROM category_documents WHERE category = 'proposal' LIMIT 1),
-    'CS02R/IT02R แบบประเมินผลการสอบข้อเสนอโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'midway' LIMIT 1),
-    'CS03S/IT03S แบบคําร้องขอสอบติดตามความก้าวหน้า',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'midway' LIMIT 1),
-    'CS03D/IT03D Template ไฟล์ต้นแบบเอกสารประกอบการสอบติดตามความก้าวหน้า',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'midway' LIMIT 1),
-    'CS03R/IT03R แบบประเมินผลการสอบติดตามความก้าวหน้า',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'final' LIMIT 1),
-    'CS04S/IT04S แบบคำร้องขอสอบนำเสนอ (โครงงานเสร็จสมบูรณ์)',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'final' LIMIT 1),
-    'CS04D/IT04D Template ไฟล์ต้นแบบเอกสารประกอบการสอบ (โครงงานเสร็จสมบูรณ์)',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'final' LIMIT 1),
-    'CS04R/IT04R แบบประเมินผลการสอบนำเสนอ (โครงงานเสร็จสมบูรณ์)',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'final' LIMIT 1),
-    'CS05D/IT05D Template ไฟล์ต้นแบบเอกสารโครงงานเสร็จสมบูรณ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'final' LIMIT 1),
-    'CS05D/IT05D CD Template แผ่นหน้าปกซีดีโครงงานเสร็จสมบูรณ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'final' LIMIT 1),
-    'CS05C/IT05C แบบฟอร์มการส่งตรวจรูปแบบเล่มโครงงานปริญญานิพนธ์',
-    ''),
-('แบบฟอร์มโครงงานปริญญานิพนธ์(2)',
-    (SELECT category_id FROM category_documents WHERE category = 'final' LIMIT 1),
-    'ไฟล์ต้นแบบโปสเตอร์ (Poster Template)',
-    '');
-*/

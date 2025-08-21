@@ -10,9 +10,14 @@ import (
 
 	"cpsu/internal/config"
 	"cpsu/internal/connectdb"
-	"cpsu/internal/news/handler"
-	"cpsu/internal/news/repository"
-	"cpsu/internal/news/service"
+
+	newsHandler "cpsu/internal/news/handler"
+	newsRepo "cpsu/internal/news/repository"
+	newsService "cpsu/internal/news/service"
+
+	roadmapHandler "cpsu/internal/roadmap/handler"
+	roadmapRepo "cpsu/internal/roadmap/repository"
+	roadmapService "cpsu/internal/roadmap/service"
 )
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
@@ -36,9 +41,13 @@ func main() {
 	}
 	defer db.Close()
 
-	cpsuRepo := repository.NewCPSURepository(db.GetDB())
-	cpsuService := service.NewCPSUService(cpsuRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
-	cpsuHandler := handler.NewCPSUHandler(cpsuService)
+	newsRepo := newsRepo.NewNewsRepository(db.GetDB())
+	newsService := newsService.NewNewsService(newsRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
+	newsHandler := newsHandler.NewNewsHandler(newsService)
+
+	roadmapRepo := roadmapRepo.NewRoadmapRepository(db.GetDB())
+	roadmapService := roadmapService.NewRoadmapService(roadmapRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
+	roadmapHandler := roadmapHandler.NewRoadmapHandler(roadmapService)
 
 	go func() {
 		for {
@@ -80,12 +89,21 @@ func main() {
 	{
 		newsAdmin := v1.Group("admin/news")
 		{
-			newsAdmin.GET("", cpsuHandler.GetAllNews)
-			newsAdmin.GET("/:id", cpsuHandler.GetNewsByID)
-			newsAdmin.POST("", cpsuHandler.CreateNews)
-			newsAdmin.PUT("/:id", cpsuHandler.UpdateNews)
-			newsAdmin.DELETE("/:id", cpsuHandler.DeleteNews)
+			newsAdmin.GET("", newsHandler.GetAllNews)
+			newsAdmin.GET("/:id", newsHandler.GetNewsByID)
+			newsAdmin.POST("", newsHandler.CreateNews)
+			newsAdmin.PUT("/:id", newsHandler.UpdateNews)
+			newsAdmin.DELETE("/:id", newsHandler.DeleteNews)
 		}
+
+		roadmapAdmin := v1.Group("admin/roadmap")
+		{
+			roadmapAdmin.GET("", roadmapHandler.GetAllRoadmap)
+			roadmapAdmin.GET("/:id", roadmapHandler.GetRoadmapByID)
+			roadmapAdmin.POST("", roadmapHandler.CreateRoadmap)
+			roadmapAdmin.DELETE("/:id", roadmapHandler.DeleteRoadmap)
+		}
+
 		/*newsUser := v1.Group("user/news")
 		{
 			newsUser.GET("", cpsuHandler.GetAllNews)

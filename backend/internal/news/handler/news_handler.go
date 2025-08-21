@@ -13,15 +13,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CPSUHandler struct {
-	cpsuService service.CPSUService
+type NewsHandler struct {
+	cpsuService service.NewsService
 }
 
-func NewCPSUHandler(cpsuService service.CPSUService) *CPSUHandler {
-	return &CPSUHandler{cpsuService: cpsuService}
+func NewNewsHandler(cpsuService service.NewsService) *NewsHandler {
+	return &NewsHandler{cpsuService: cpsuService}
 }
 
-func (h *CPSUHandler) GetAllNews(c *gin.Context) {
+func (h *NewsHandler) GetAllNews(c *gin.Context) {
 	var param models.NewsQueryParam
 	if err := c.BindQuery(&param); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query parameter"})
@@ -40,7 +40,7 @@ func (h *CPSUHandler) GetAllNews(c *gin.Context) {
 	c.JSON(http.StatusOK, newsList)
 }
 
-func (h *CPSUHandler) GetNewsByID(c *gin.Context) {
+func (h *NewsHandler) GetNewsByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -60,7 +60,7 @@ func (h *CPSUHandler) GetNewsByID(c *gin.Context) {
 	c.JSON(http.StatusOK, news)
 }
 
-func (h *CPSUHandler) CreateNews(c *gin.Context) {
+func (h *NewsHandler) CreateNews(c *gin.Context) {
 	title := c.PostForm("title")
 	content := c.PostForm("content")
 	typeIDStr := c.PostForm("type_id")
@@ -93,7 +93,7 @@ func (h *CPSUHandler) CreateNews(c *gin.Context) {
 	c.JSON(http.StatusCreated, created)
 }
 
-func (h *CPSUHandler) UpdateNews(c *gin.Context) {
+func (h *NewsHandler) UpdateNews(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -137,7 +137,7 @@ func (h *CPSUHandler) UpdateNews(c *gin.Context) {
 	c.JSON(http.StatusOK, updated)
 }
 
-func (h *CPSUHandler) DeleteNews(c *gin.Context) {
+func (h *NewsHandler) DeleteNews(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {

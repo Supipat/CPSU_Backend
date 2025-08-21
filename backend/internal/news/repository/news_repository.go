@@ -8,7 +8,7 @@ import (
 	"cpsu/internal/news/models"
 )
 
-type CPSURepository interface {
+type NewsRepository interface {
 	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
 	GetNewsByID(id int) (*models.News, error)
 	CreateNews(news *models.NewsRequest) (*models.News, error)
@@ -18,15 +18,15 @@ type CPSURepository interface {
 	UpdateNewsImages(newsID int, images []string) ([]models.NewsImages, error)
 }
 
-type cpsuRepository struct {
+type newsRepository struct {
 	db *sql.DB
 }
 
-func NewCPSURepository(db *sql.DB) CPSURepository {
-	return &cpsuRepository{db: db}
+func NewNewsRepository(db *sql.DB) NewsRepository {
+	return &newsRepository{db: db}
 }
 
-func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
+func (r *newsRepository) GetAllNews(param models.NewsQueryParam) ([]models.News, error) {
 	query := `
 		SELECT n.news_id, n.title, n.content, nt.type_id, nt.type_name,
 			n.detail_url, n.cover_image, ni.image_id, ni.file_image,
@@ -129,7 +129,7 @@ func (r *cpsuRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 	return allNews, nil
 }
 
-func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
+func (r *newsRepository) GetNewsByID(id int) (*models.News, error) {
 	query := `
 		SELECT n.news_id, n.title, n.content, nt.type_id, nt.type_name,
 			n.detail_url, n.cover_image, ni.image_id, ni.file_image,
@@ -197,7 +197,7 @@ func (r *cpsuRepository) GetNewsByID(id int) (*models.News, error) {
 	return news, nil
 }
 
-func (r *cpsuRepository) CreateNews(req *models.NewsRequest) (*models.News, error) {
+func (r *newsRepository) CreateNews(req *models.NewsRequest) (*models.News, error) {
 	query := `
 		INSERT INTO news (title, content, type_id, detail_url, cover_image)
 		VALUES ($1, $2, $3, $4, $5)
@@ -229,7 +229,7 @@ func (r *cpsuRepository) CreateNews(req *models.NewsRequest) (*models.News, erro
 	return &news, nil
 }
 
-func (r *cpsuRepository) UpdateNews(id int, newsreq *models.NewsRequest) (*models.News, error) {
+func (r *newsRepository) UpdateNews(id int, newsreq *models.NewsRequest) (*models.News, error) {
 	query := `
 		UPDATE news
 		SET title = $1, content = $2, type_id = $3, detail_url = $4, cover_image = $5, updated_at = NOW()
@@ -255,7 +255,7 @@ func (r *cpsuRepository) UpdateNews(id int, newsreq *models.NewsRequest) (*model
 	return &news, nil
 }
 
-func (r *cpsuRepository) DeleteNews(id int) error {
+func (r *newsRepository) DeleteNews(id int) error {
 	result, err := r.db.Exec("DELETE FROM news WHERE news_id = $1", id)
 	if err != nil {
 		return err
@@ -270,7 +270,7 @@ func (r *cpsuRepository) DeleteNews(id int) error {
 	return nil
 }
 
-func (r *cpsuRepository) AddNewsImages(newsID int, images []string) error {
+func (r *newsRepository) AddNewsImages(newsID int, images []string) error {
 	for _, img := range images {
 		_, err := r.db.Exec("INSERT INTO news_images (news_id, file_image) VALUES ($1, $2)", newsID, img)
 		if err != nil {
@@ -280,7 +280,7 @@ func (r *cpsuRepository) AddNewsImages(newsID int, images []string) error {
 	return nil
 }
 
-func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models.NewsImages, error) {
+func (r *newsRepository) UpdateNewsImages(newsID int, images []string) ([]models.NewsImages, error) {
 	_, err := r.db.Exec("DELETE FROM news_images WHERE news_id = $1", newsID)
 	if err != nil {
 		return nil, err
@@ -311,7 +311,7 @@ func (r *cpsuRepository) UpdateNewsImages(newsID int, images []string) ([]models
 	return result, nil
 }
 
-func (r *cpsuRepository) GetTypeNameByID(typeID int) (string, error) {
+func (r *newsRepository) GetTypeNameByID(typeID int) (string, error) {
 	var typeName string
 	err := r.db.QueryRow("SELECT type_name FROM news_types WHERE type_id = $1", typeID).Scan(&typeName)
 	if err != nil {
