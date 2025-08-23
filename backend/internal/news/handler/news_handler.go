@@ -14,11 +14,11 @@ import (
 )
 
 type NewsHandler struct {
-	cpsuService service.NewsService
+	newsService service.NewsService
 }
 
-func NewNewsHandler(cpsuService service.NewsService) *NewsHandler {
-	return &NewsHandler{cpsuService: cpsuService}
+func NewNewsHandler(newsService service.NewsService) *NewsHandler {
+	return &NewsHandler{newsService: newsService}
 }
 
 func (h *NewsHandler) GetAllNews(c *gin.Context) {
@@ -28,7 +28,7 @@ func (h *NewsHandler) GetAllNews(c *gin.Context) {
 		return
 	}
 
-	newsList, err := h.cpsuService.GetAllNews(param)
+	newsList, err := h.newsService.GetAllNews(param)
 	if err != nil {
 		if err.Error() == "news type not found" {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -48,7 +48,7 @@ func (h *NewsHandler) GetNewsByID(c *gin.Context) {
 		return
 	}
 
-	news, err := h.cpsuService.GetNewsByID(id)
+	news, err := h.newsService.GetNewsByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})
@@ -84,7 +84,7 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 		fileImages = form.File["images"]
 	}
 
-	created, err := h.cpsuService.CreateNews(title, content, typeID, "", detailURL, coverImage, fileImages)
+	created, err := h.newsService.CreateNews(title, content, typeID, "", detailURL, coverImage, fileImages)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -124,7 +124,7 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 		fileImages = form.File["images"]
 	}
 
-	updated, err := h.cpsuService.UpdateNews(id, title, content, typeID, "", detailURL, coverImage, fileImages)
+	updated, err := h.newsService.UpdateNews(id, title, content, typeID, "", detailURL, coverImage, fileImages)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})
@@ -145,7 +145,7 @@ func (h *NewsHandler) DeleteNews(c *gin.Context) {
 		return
 	}
 
-	err = h.cpsuService.DeleteNews(id)
+	err = h.newsService.DeleteNews(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})

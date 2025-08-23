@@ -21,12 +21,6 @@ type NewsImages struct {
 	FileImage string `json:"file_image"`
 }
 
-type NewsTypes struct {
-	TypeID   string `json:"type_id"`
-	NewsID   int    `json:"news_id"`
-	TypeName string `json:"type_name"`
-}
-
 type NewsQueryParam struct {
 	Search   string `form:"search"`
 	Limit    int    `form:"limit"`
@@ -37,7 +31,6 @@ type NewsQueryParam struct {
 }
 
 type NewsRequest struct {
-	NewsID     int          `json:"news_id"`
 	Title      string       `json:"title"`
 	Content    string       `json:"content"`
 	TypeID     int          `json:"type_id"`

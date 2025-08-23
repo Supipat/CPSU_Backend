@@ -50,7 +50,7 @@ func (r *newsRepository) GetAllNews(param models.NewsQueryParam) ([]models.News,
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	sort := "n.created_at"
+	sort := "n.updated_at"
 	if param.Sort != "" {
 		sort = "n." + param.Sort
 	}

@@ -1,0 +1,45 @@
+package service
+
+import (
+	"cpsu/internal/course/models"
+	"cpsu/internal/course/repository"
+)
+
+type CourseService interface {
+	GetAllCourses(param models.CoursesQueryParam) ([]models.Courses, error)
+	GetCourseByID(id int) (*models.Courses, error)
+	CreateCourse(req models.CoursesRequest) (*models.Courses, error)
+	UpdateCourse(id int, req models.CoursesRequest) (*models.Courses, error)
+	DeleteCourse(id int) error
+}
+
+type courseService struct {
+	repo repository.CoursesRepository
+}
+
+func NewCourseService(repo repository.CoursesRepository) CourseService {
+
+	return &courseService{
+		repo: repo,
+	}
+}
+
+func (s *courseService) GetAllCourses(param models.CoursesQueryParam) ([]models.Courses, error) {
+	return s.repo.GetAllCourses(param)
+}
+
+func (s *courseService) GetCourseByID(id int) (*models.Courses, error) {
+	return s.repo.GetCourseByID(id)
+}
+
+func (s *courseService) CreateCourse(course models.CoursesRequest) (*models.Courses, error) {
+	return s.repo.CreateCourse(course)
+}
+
+func (s *courseService) UpdateCourse(id int, course models.CoursesRequest) (*models.Courses, error) {
+	return s.repo.UpdateCourse(id, course)
+}
+
+func (s *courseService) DeleteCourse(id int) error {
+	return s.repo.DeleteCourse(id)
+}

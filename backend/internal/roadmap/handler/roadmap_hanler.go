@@ -13,11 +13,11 @@ import (
 )
 
 type RoadmapHandler struct {
-	cpsuService service.RoadmapService
+	roadmapService service.RoadmapService
 }
 
-func NewRoadmapHandler(cpsuService service.RoadmapService) *RoadmapHandler {
-	return &RoadmapHandler{cpsuService: cpsuService}
+func NewRoadmapHandler(roadmapService service.RoadmapService) *RoadmapHandler {
+	return &RoadmapHandler{roadmapService: roadmapService}
 }
 
 func (h *RoadmapHandler) GetAllRoadmap(c *gin.Context) {
@@ -27,7 +27,7 @@ func (h *RoadmapHandler) GetAllRoadmap(c *gin.Context) {
 		return
 	}
 
-	roadmaps, err := h.cpsuService.GetAllRoadmap(param)
+	roadmaps, err := h.roadmapService.GetAllRoadmap(param)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -44,7 +44,7 @@ func (h *RoadmapHandler) GetRoadmapByID(c *gin.Context) {
 		return
 	}
 
-	roadmap, err := h.cpsuService.GetRoadmapByID(id)
+	roadmap, err := h.roadmapService.GetRoadmapByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "roadmap not found"})
@@ -71,7 +71,7 @@ func (h *RoadmapHandler) CreateRoadmap(c *gin.Context) {
 		return
 	}
 
-	created, err := h.cpsuService.CreateRoadmap(courseID, file)
+	created, err := h.roadmapService.CreateRoadmap(courseID, file)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -88,7 +88,7 @@ func (h *RoadmapHandler) DeleteRoadmap(c *gin.Context) {
 		return
 	}
 
-	err = h.cpsuService.DeleteRoadmap(id)
+	err = h.roadmapService.DeleteRoadmap(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "roadmap not found"})

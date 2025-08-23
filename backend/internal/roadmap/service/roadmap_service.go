@@ -16,7 +16,7 @@ import (
 
 type RoadmapService interface {
 	GetAllRoadmap(param models.RoadmapQueryParam) ([]models.Roadmap, error)
-	GetRoadmapByID(courseID int) (*models.Roadmap, error)
+	GetRoadmapByID(id int) (*models.Roadmap, error)
 	CreateRoadmap(courseID int, file *multipart.FileHeader) (*models.Roadmap, error)
 	DeleteRoadmap(id int) error
 }
@@ -45,8 +45,8 @@ func (s *roadmapService) GetAllRoadmap(param models.RoadmapQueryParam) ([]models
 	return s.repo.GetAllRoadmap(param)
 }
 
-func (s *roadmapService) GetRoadmapByID(courseID int) (*models.Roadmap, error) {
-	return s.repo.GetRoadmapByID(courseID)
+func (s *roadmapService) GetRoadmapByID(id int) (*models.Roadmap, error) {
+	return s.repo.GetRoadmapByID(id)
 }
 
 func (s *roadmapService) CreateRoadmap(courseID int, file *multipart.FileHeader) (*models.Roadmap, error) {

@@ -11,6 +11,7 @@ services:
       POSTGRES_INITDB_ARGS: "--data-checksums"
     volumes:
       - cpsu_postgres_data:/var/lib/postgresql/data
+      - ./docker:/docker-entrypoint-initdb.d
     ports:
       - "${POSTGRES_PORT}:5432"
     restart: unless-stopped
