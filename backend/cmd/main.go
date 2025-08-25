@@ -23,13 +23,13 @@ import (
 	structureRepo "cpsu/internal/course_structure/repository"
 	structureService "cpsu/internal/course_structure/service"
 
-	subjectHandler "cpsu/internal/subject/handler"
-	subjectRepo "cpsu/internal/subject/repository"
-	subjectService "cpsu/internal/subject/service"
-
 	roadmapHandler "cpsu/internal/roadmap/handler"
 	roadmapRepo "cpsu/internal/roadmap/repository"
 	roadmapService "cpsu/internal/roadmap/service"
+
+	subjectHandler "cpsu/internal/subject/handler"
+	subjectRepo "cpsu/internal/subject/repository"
+	subjectService "cpsu/internal/subject/service"
 )
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
@@ -65,13 +65,13 @@ func main() {
 	structureService := structureService.NewCourseStructureService(structureRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
 	structureHandler := structureHandler.NewCourseStructureHandler(structureService)
 
-	subjectRepo := subjectRepo.NewSubjectRepository(db.GetDB())
-	subjectService := subjectService.NewSubjectService(subjectRepo)
-	subjectHandler := subjectHandler.NewSubjectHandler(subjectService)
-
 	roadmapRepo := roadmapRepo.NewRoadmapRepository(db.GetDB())
 	roadmapService := roadmapService.NewRoadmapService(roadmapRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
 	roadmapHandler := roadmapHandler.NewRoadmapHandler(roadmapService)
+
+	subjectRepo := subjectRepo.NewSubjectRepository(db.GetDB())
+	subjectService := subjectService.NewSubjectService(subjectRepo)
+	subjectHandler := subjectHandler.NewSubjectHandler(subjectService)
 
 	go func() {
 		for {
@@ -137,6 +137,14 @@ func main() {
 			structureAdmin.DELETE("/:id", structureHandler.DeleteCourseStructure)
 		}
 
+		roadmapAdmin := v1.Group("admin/roadmap")
+		{
+			roadmapAdmin.GET("", roadmapHandler.GetAllRoadmap)
+			roadmapAdmin.GET("/:id", roadmapHandler.GetRoadmapByID)
+			roadmapAdmin.POST("", roadmapHandler.CreateRoadmap)
+			roadmapAdmin.DELETE("/:id", roadmapHandler.DeleteRoadmap)
+		}
+
 		subjectAdmin := v1.Group("admin/subject")
 		{
 			subjectAdmin.GET("", subjectHandler.GetAllSubjects)
@@ -144,14 +152,6 @@ func main() {
 			subjectAdmin.POST("", subjectHandler.CreateSubject)
 			subjectAdmin.PUT("/:id", subjectHandler.UpdateSubject)
 			subjectAdmin.DELETE("/:id", subjectHandler.DeleteSubject)
-		}
-
-		roadmapAdmin := v1.Group("admin/roadmap")
-		{
-			roadmapAdmin.GET("", roadmapHandler.GetAllRoadmap)
-			roadmapAdmin.GET("/:id", roadmapHandler.GetRoadmapByID)
-			roadmapAdmin.POST("", roadmapHandler.CreateRoadmap)
-			roadmapAdmin.DELETE("/:id", roadmapHandler.DeleteRoadmap)
 		}
 
 		/*newsUser := v1.Group("user/news")

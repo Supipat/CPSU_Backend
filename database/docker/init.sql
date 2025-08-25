@@ -62,18 +62,18 @@ CREATE TABLE IF NOT EXISTS courses (
 -- create subject
 
 CREATE TABLE IF NOT EXISTS subjects (
-    subject_id VARCHAR(6) PRIMARY KEY,
+    subject_id VARCHAR(6) NOT NULL,
     course_id INT NOT NULL,
-    plan_type VARCHAR(20) NOT NULL,
-    semester VARCHAR(20) NOT NULL,
+    plan_type VARCHAR(50) NOT NULL,
+    semester VARCHAR(50) NOT NULL,
     thai_subject VARCHAR(100) NOT NULL,
-    eng_subject VARCHAR(100) NOT NULL,
-    credits VARCHAR(10) NOT NULL,
-    compulsory_subject VARCHAR(255) NOT NULL,
-    condition VARCHAR(255) NOT NULL,
-    description_thai TEXT NOT NULL,
-    description_eng TEXT NOT NULL,
-    clo TEXT NOT NULL,
+    eng_subject VARCHAR(100) NULL,
+    credits VARCHAR(50) NOT NULL,
+    compulsory_subject VARCHAR(255) NULL,
+    condition VARCHAR(255) NULL,
+    description_thai TEXT NULL,
+    description_eng TEXT NULL,
+    clo TEXT NULL,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
 );
 
@@ -219,3 +219,9 @@ INSERT INTO roadmap(course_id,roadmap_url) VALUES
     'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg'),
 ((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
     'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_IT_65.jpg');
+
+-- insert subject
+
+COPY subjects(subject_id,course_id,plan_type,semester,thai_subject,eng_subject,credits,compulsory_subject,condition,description_thai,description_eng,clo)
+FROM '/docker-entrypoint-initdb.d/subject.csv'
+WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');

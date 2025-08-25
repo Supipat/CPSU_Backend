@@ -10,10 +10,10 @@ import (
 
 type SubjectRepository interface {
 	GetAllSubjects(param models.SubjectsQueryParam) ([]models.Subjects, error)
-	GetSubjectByID(id int) (*models.Subjects, error)
+	GetSubjectByID(id string) (*models.Subjects, error)
 	CreateSubject(req models.SubjectsRequest) (*models.Subjects, error)
-	UpdateSubject(id int, req models.SubjectsRequest) (*models.Subjects, error)
-	DeleteSubject(id int) error
+	UpdateSubject(id string, req models.SubjectsRequest) (*models.Subjects, error)
+	DeleteSubject(id string) error
 }
 
 type subjectRepository struct {
@@ -27,19 +27,19 @@ func NewSubjectRepository(db *sql.DB) SubjectRepository {
 func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]models.Subjects, error) {
 	query := `
 		SELECT 
-			s.subject_id, c.course_id, c.degree, c.major, c.year, s.plan_type,
+			s.subject_id, c.course_id, c.thai_course, s.plan_type,
 			s.semester, s.thai_subject, s.eng_subject, s.credits, 
 			s.compulsory_subject, s.condition, s.description_thai, 
 			s.description_eng, s.clo
 		FROM subjects s
-		LEFT JOIN courses c ON r.course_id = c.course_id
+		LEFT JOIN courses c ON s.course_id = c.course_id
 	`
 
 	conditions := []string{}
 	args := []interface{}{}
 	argIndex := 1
 
-	if param.SubjectID > 0 {
+	if param.SubjectID != "" {
 		conditions = append(conditions, "s.subject_id = $"+strconv.Itoa(argIndex))
 		args = append(args, param.SubjectID)
 		argIndex++
@@ -93,8 +93,8 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 	for rows.Next() {
 		var subject models.Subjects
 		err := rows.Scan(
-			&subject.SubjectID, &subject.CourseID, &subject.Degree, &subject.Major, &subject.Year,
-			&subject.PlanType, &subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
+			&subject.SubjectID, &subject.CourseID, &subject.ThaiCourse, &subject.PlanType,
+			&subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
 			&subject.Credits, &subject.CompulsorySubject, &subject.Condition,
 			&subject.DescriptionThai, &subject.DescriptionEng, &subject.CLO,
 		)
@@ -107,15 +107,15 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 	return subjects, nil
 }
 
-func (r *subjectRepository) GetSubjectByID(id int) (*models.Subjects, error) {
+func (r *subjectRepository) GetSubjectByID(id string) (*models.Subjects, error) {
 	query := `
 		SELECT 
-			s.subject_id, c.course_id, c.degree, c.major, c.year, s.plan_type,
+			s.subject_id, c.course_id, c.thai_course, s.plan_type,
 			s.semester, s.thai_subject, s.eng_subject, s.credits, 
 			s.compulsory_subject, s.condition, s.description_thai, 
 			s.description_eng, s.clo
 		FROM subjects s
-		LEFT JOIN courses c ON r.course_id = c.course_id
+		LEFT JOIN courses c ON s.course_id = c.course_id
 		WHERE s.subject_id = $1
 	`
 
@@ -123,8 +123,8 @@ func (r *subjectRepository) GetSubjectByID(id int) (*models.Subjects, error) {
 
 	var subject models.Subjects
 	err := row.Scan(
-		&subject.SubjectID, &subject.CourseID, &subject.Degree, &subject.Major, &subject.Year,
-		&subject.PlanType, &subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
+		&subject.SubjectID, &subject.CourseID, &subject.ThaiCourse, &subject.PlanType,
+		&subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
 		&subject.Credits, &subject.CompulsorySubject, &subject.Condition,
 		&subject.DescriptionThai, &subject.DescriptionEng, &subject.CLO,
 	)
@@ -141,25 +141,26 @@ func (r *subjectRepository) GetSubjectByID(id int) (*models.Subjects, error) {
 func (r *subjectRepository) CreateSubject(req models.SubjectsRequest) (*models.Subjects, error) {
 	query := `
 		INSERT INTO subjects (
-			course_id, plan_type, semester, thai_subject, eng_subject, 
-			credits, compulsory_subject, condition, description_thai, 
-			description_eng, clo
+			subject_id, course_id, plan_type, semester, thai_subject, 
+			eng_subject, credits, compulsory_subject, condition, 
+			description_thai, description_eng, clo
 		)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
 		RETURNING subject_id
 	`
 
 	var subject models.Subjects
 	err := r.db.QueryRow(
 		query,
-		req.CourseID, req.PlanType, req.Semester, req.ThaiSubject, req.EngSubject,
-		req.Credits, req.CompulsorySubject, req.Condition,
+		req.SubjectID, req.CourseID, req.PlanType, req.Semester, req.ThaiSubject,
+		req.EngSubject, req.Credits, req.CompulsorySubject, req.Condition,
 		req.DescriptionThai, req.DescriptionEng, req.CLO,
 	).Scan(&subject.SubjectID)
 	if err != nil {
 		return nil, err
 	}
 
+	subject.SubjectID = req.SubjectID
 	subject.CourseID = req.CourseID
 	subject.PlanType = req.PlanType
 	subject.Semester = req.Semester
@@ -175,7 +176,7 @@ func (r *subjectRepository) CreateSubject(req models.SubjectsRequest) (*models.S
 	return &subject, nil
 }
 
-func (r *subjectRepository) UpdateSubject(id int, req models.SubjectsRequest) (*models.Subjects, error) {
+func (r *subjectRepository) UpdateSubject(id string, req models.SubjectsRequest) (*models.Subjects, error) {
 	query := `
 		UPDATE subjects
 		SET course_id=$1, plan_type=$2, semester=$3, thai_subject=$4, eng_subject=$5,
@@ -212,7 +213,7 @@ func (r *subjectRepository) UpdateSubject(id int, req models.SubjectsRequest) (*
 	return &subject, nil
 }
 
-func (r *subjectRepository) DeleteSubject(id int) error {
+func (r *subjectRepository) DeleteSubject(id string) error {
 	result, err := r.db.Exec("DELETE FROM subjects WHERE subject_id = $1", id)
 	if err != nil {
 		return err
