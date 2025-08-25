@@ -59,6 +59,33 @@ CREATE TABLE IF NOT EXISTS courses (
 -- FOREIGN KEY (degree_id) REFERENCES degree(degree_id) ON DELETE CASCADE,
 -- FOREIGN KEY (major_id) REFERENCES majors(major_id) ON DELETE CASCADE
 
+-- create subject
+
+CREATE TABLE IF NOT EXISTS subjects (
+    subject_id VARCHAR(6) PRIMARY KEY,
+    course_id INT NOT NULL,
+    plan_type VARCHAR(20) NOT NULL,
+    semester VARCHAR(20) NOT NULL,
+    thai_subject VARCHAR(100) NOT NULL,
+    eng_subject VARCHAR(100) NOT NULL,
+    credits VARCHAR(10) NOT NULL,
+    compulsory_subject VARCHAR(255) NOT NULL,
+    condition VARCHAR(255) NOT NULL,
+    description_thai TEXT NOT NULL,
+    description_eng TEXT NOT NULL,
+    clo TEXT NOT NULL,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);
+
+-- create course structure
+
+CREATE TABLE IF NOT EXISTS course_structure (
+    course_structure_id SERIAL PRIMARY KEY,
+    course_id INT NOT NULL,
+    course_structure_url TEXT NOT NULL,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);
+
 -- create roadmap
 
 CREATE TABLE IF NOT EXISTS roadmap (
@@ -177,10 +204,18 @@ COPY courses(degree,major,year,thai_course,eng_course,thai_degree,eng_degree,adm
 FROM '/docker-entrypoint-initdb.d/courses.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
+-- insert course structure
+
+INSERT INTO course_structure(course_id,course_structure_url) VALUES
+((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565' LIMIT 1),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_CS_65.jpg'),
+((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.jpg');
+
 -- insert roadmap
 
 INSERT INTO roadmap(course_id,roadmap_url) VALUES
-((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_IT_65.jpg'),
 ((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg');
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg'),
+((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_IT_65.jpg');

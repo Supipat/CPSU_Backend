@@ -8,7 +8,7 @@ import (
 	"cpsu/internal/course/models"
 )
 
-type CoursesRepository interface {
+type CourseRepository interface {
 	GetAllCourses(param models.CoursesQueryParam) ([]models.Courses, error)
 	GetCourseByID(id int) (*models.Courses, error)
 	CreateCourse(req models.CoursesRequest) (*models.Courses, error)
@@ -16,15 +16,15 @@ type CoursesRepository interface {
 	DeleteCourse(id int) error
 }
 
-type coursesRepository struct {
+type courseRepository struct {
 	db *sql.DB
 }
 
-func NewCoursesRepository(db *sql.DB) CoursesRepository {
-	return &coursesRepository{db: db}
+func NewCourseRepository(db *sql.DB) CourseRepository {
+	return &courseRepository{db: db}
 }
 
-func (r *coursesRepository) GetAllCourses(param models.CoursesQueryParam) ([]models.Courses, error) {
+func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]models.Courses, error) {
 	query := `
 		SELECT 
 			c.course_id, c.degree, c.major, c.year,c.thai_course, 
@@ -100,7 +100,7 @@ func (r *coursesRepository) GetAllCourses(param models.CoursesQueryParam) ([]mod
 	return courses, nil
 }
 
-func (r *coursesRepository) GetCourseByID(id int) (*models.Courses, error) {
+func (r *courseRepository) GetCourseByID(id int) (*models.Courses, error) {
 	query := `
 		SELECT 
 			c.course_id, c.degree, c.major, c.year,c.thai_course, 
@@ -130,7 +130,7 @@ func (r *coursesRepository) GetCourseByID(id int) (*models.Courses, error) {
 	return &course, nil
 }
 
-func (r *coursesRepository) CreateCourse(req models.CoursesRequest) (*models.Courses, error) {
+func (r *courseRepository) CreateCourse(req models.CoursesRequest) (*models.Courses, error) {
 	query := `
 		INSERT INTO courses (
 			degree, major, year, thai_course, eng_course, thai_degree, eng_degree,
@@ -173,7 +173,7 @@ func (r *coursesRepository) CreateCourse(req models.CoursesRequest) (*models.Cou
 	return &Course, nil
 }
 
-func (r *coursesRepository) UpdateCourse(id int, req models.CoursesRequest) (*models.Courses, error) {
+func (r *courseRepository) UpdateCourse(id int, req models.CoursesRequest) (*models.Courses, error) {
 	query := `
 		UPDATE courses
 		SET degree=$1, major=$2, year=$3, thai_course=$4, eng_course=$5,
@@ -217,7 +217,7 @@ func (r *coursesRepository) UpdateCourse(id int, req models.CoursesRequest) (*mo
 	return &Course, nil
 }
 
-func (r *coursesRepository) DeleteCourse(id int) error {
+func (r *courseRepository) DeleteCourse(id int) error {
 	result, err := r.db.Exec("DELETE FROM courses WHERE course_id = $1", id)
 	if err != nil {
 		return err

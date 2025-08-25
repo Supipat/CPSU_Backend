@@ -1,0 +1,228 @@
+package repository
+
+import (
+	"database/sql"
+	"strconv"
+	"strings"
+
+	"cpsu/internal/subject/models"
+)
+
+type SubjectRepository interface {
+	GetAllSubjects(param models.SubjectsQueryParam) ([]models.Subjects, error)
+	GetSubjectByID(id int) (*models.Subjects, error)
+	CreateSubject(req models.SubjectsRequest) (*models.Subjects, error)
+	UpdateSubject(id int, req models.SubjectsRequest) (*models.Subjects, error)
+	DeleteSubject(id int) error
+}
+
+type subjectRepository struct {
+	db *sql.DB
+}
+
+func NewSubjectRepository(db *sql.DB) SubjectRepository {
+	return &subjectRepository{db: db}
+}
+
+func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]models.Subjects, error) {
+	query := `
+		SELECT 
+			s.subject_id, c.course_id, c.degree, c.major, c.year, s.plan_type,
+			s.semester, s.thai_subject, s.eng_subject, s.credits, 
+			s.compulsory_subject, s.condition, s.description_thai, 
+			s.description_eng, s.clo
+		FROM subjects s
+		LEFT JOIN courses c ON r.course_id = c.course_id
+	`
+
+	conditions := []string{}
+	args := []interface{}{}
+	argIndex := 1
+
+	if param.SubjectID > 0 {
+		conditions = append(conditions, "s.subject_id = $"+strconv.Itoa(argIndex))
+		args = append(args, param.SubjectID)
+		argIndex++
+	}
+
+	if param.CourseID > 0 {
+		conditions = append(conditions, "c.course_id = $"+strconv.Itoa(argIndex))
+		args = append(args, param.CourseID)
+		argIndex++
+	}
+
+	if param.PlanType != "" {
+		conditions = append(conditions, "s.plan_type = $"+strconv.Itoa(argIndex))
+		args = append(args, param.PlanType)
+		argIndex++
+	}
+
+	if param.Semester != "" {
+		conditions = append(conditions, "s.semester = $"+strconv.Itoa(argIndex))
+		args = append(args, param.Semester)
+		argIndex++
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	sort := "s.subject_id"
+	if param.Sort != "" {
+		sort = "s." + param.Sort
+	}
+
+	order := "ASC"
+	if strings.ToUpper(param.Order) == "DESC" {
+		order = "DESC"
+	}
+
+	query += " ORDER BY " + sort + " " + order
+
+	if param.Limit > 0 {
+		query += " LIMIT " + strconv.Itoa(param.Limit)
+	}
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var subjects []models.Subjects
+	for rows.Next() {
+		var subject models.Subjects
+		err := rows.Scan(
+			&subject.SubjectID, &subject.CourseID, &subject.Degree, &subject.Major, &subject.Year,
+			&subject.PlanType, &subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
+			&subject.Credits, &subject.CompulsorySubject, &subject.Condition,
+			&subject.DescriptionThai, &subject.DescriptionEng, &subject.CLO,
+		)
+		if err != nil {
+			return nil, err
+		}
+		subjects = append(subjects, subject)
+	}
+
+	return subjects, nil
+}
+
+func (r *subjectRepository) GetSubjectByID(id int) (*models.Subjects, error) {
+	query := `
+		SELECT 
+			s.subject_id, c.course_id, c.degree, c.major, c.year, s.plan_type,
+			s.semester, s.thai_subject, s.eng_subject, s.credits, 
+			s.compulsory_subject, s.condition, s.description_thai, 
+			s.description_eng, s.clo
+		FROM subjects s
+		LEFT JOIN courses c ON r.course_id = c.course_id
+		WHERE s.subject_id = $1
+	`
+
+	row := r.db.QueryRow(query, id)
+
+	var subject models.Subjects
+	err := row.Scan(
+		&subject.SubjectID, &subject.CourseID, &subject.Degree, &subject.Major, &subject.Year,
+		&subject.PlanType, &subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
+		&subject.Credits, &subject.CompulsorySubject, &subject.Condition,
+		&subject.DescriptionThai, &subject.DescriptionEng, &subject.CLO,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+
+	return &subject, nil
+}
+
+func (r *subjectRepository) CreateSubject(req models.SubjectsRequest) (*models.Subjects, error) {
+	query := `
+		INSERT INTO subjects (
+			course_id, plan_type, semester, thai_subject, eng_subject, 
+			credits, compulsory_subject, condition, description_thai, 
+			description_eng, clo
+		)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		RETURNING subject_id
+	`
+
+	var subject models.Subjects
+	err := r.db.QueryRow(
+		query,
+		req.CourseID, req.PlanType, req.Semester, req.ThaiSubject, req.EngSubject,
+		req.Credits, req.CompulsorySubject, req.Condition,
+		req.DescriptionThai, req.DescriptionEng, req.CLO,
+	).Scan(&subject.SubjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	subject.CourseID = req.CourseID
+	subject.PlanType = req.PlanType
+	subject.Semester = req.Semester
+	subject.ThaiSubject = req.ThaiSubject
+	subject.EngSubject = req.EngSubject
+	subject.Credits = req.Credits
+	subject.CompulsorySubject = req.CompulsorySubject
+	subject.Condition = req.Condition
+	subject.DescriptionThai = req.DescriptionThai
+	subject.DescriptionEng = req.DescriptionEng
+	subject.CLO = req.CLO
+
+	return &subject, nil
+}
+
+func (r *subjectRepository) UpdateSubject(id int, req models.SubjectsRequest) (*models.Subjects, error) {
+	query := `
+		UPDATE subjects
+		SET course_id=$1, plan_type=$2, semester=$3, thai_subject=$4, eng_subject=$5,
+			credits=$6, compulsory_subject=$7, condition=$8, 
+			description_thai=$9, description_eng=$10, clo=$11
+		WHERE subject_id=$12
+		RETURNING subject_id
+	`
+
+	var subject models.Subjects
+	err := r.db.QueryRow(
+		query,
+		req.CourseID, req.PlanType, req.Semester, req.ThaiSubject, req.EngSubject,
+		req.Credits, req.CompulsorySubject, req.Condition,
+		req.DescriptionThai, req.DescriptionEng, req.CLO,
+		id,
+	).Scan(&subject.SubjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	subject.CourseID = req.CourseID
+	subject.PlanType = req.PlanType
+	subject.Semester = req.Semester
+	subject.ThaiSubject = req.ThaiSubject
+	subject.EngSubject = req.EngSubject
+	subject.Credits = req.Credits
+	subject.CompulsorySubject = req.CompulsorySubject
+	subject.Condition = req.Condition
+	subject.DescriptionThai = req.DescriptionThai
+	subject.DescriptionEng = req.DescriptionEng
+	subject.CLO = req.CLO
+
+	return &subject, nil
+}
+
+func (r *subjectRepository) DeleteSubject(id int) error {
+	result, err := r.db.Exec("DELETE FROM subjects WHERE subject_id = $1", id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
