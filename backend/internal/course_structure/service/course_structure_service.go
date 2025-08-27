@@ -82,7 +82,7 @@ func (s *courseStructureService) UploadFile(fileHeader *multipart.FileHeader) (s
 	defer file.Close()
 
 	fileName := strings.ReplaceAll(fileHeader.Filename, " ", "_")
-	key := "files/course_structure/" + fileName
+	key := "images/course/" + fileName
 
 	uploadInput := &s3manager.UploadInput{
 		Bucket: aws.String(s.bucket),

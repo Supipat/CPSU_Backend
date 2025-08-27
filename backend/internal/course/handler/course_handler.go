@@ -2,7 +2,6 @@ package handler
 
 import (
 	"database/sql"
-	"encoding/csv"
 	"errors"
 	"net/http"
 	"strconv"
@@ -59,6 +58,42 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 }
 
 func (h *CourseHandler) CreateCourse(c *gin.Context) {
+	yearStr := c.PostForm("year")
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid year"})
+		return
+	}
+
+	req := models.CoursesRequest{
+		Degree:        c.PostForm("degree"),
+		Major:         c.PostForm("major"),
+		Year:          year,
+		ThaiCourse:    c.PostForm("thai_course"),
+		EngCourse:     c.PostForm("eng_course"),
+		ThaiDegree:    c.PostForm("thai_degree"),
+		EngDegree:     c.PostForm("eng_degree"),
+		AdmissionReq:  c.PostForm("admission_req"),
+		GraduationReq: c.PostForm("graduation_req"),
+		Philosophy:    c.PostForm("philosophy"),
+		Objective:     c.PostForm("objective"),
+		Tuition:       c.PostForm("tuition"),
+		Credits:       c.PostForm("credits"),
+		CareerPaths:   c.PostForm("career_paths"),
+		PLO:           c.PostForm("plo"),
+		DetailURL:     c.PostForm("detail_url"),
+	}
+
+	createdCourse, err := h.courseService.CreateCourse(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, createdCourse)
+}
+
+/*func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	coursefile, err := c.FormFile("coursefile")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "coursefile required"})
@@ -95,7 +130,7 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, created)
-}
+}*/
 
 func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 	idStr := c.Param("id")

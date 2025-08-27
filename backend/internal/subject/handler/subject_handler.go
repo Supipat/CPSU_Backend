@@ -2,7 +2,6 @@ package handler
 
 import (
 	"database/sql"
-	"encoding/csv"
 	"errors"
 	"net/http"
 	"strconv"
@@ -58,6 +57,45 @@ func (h *SubjectHandler) GetSubjectByID(c *gin.Context) {
 }
 
 func (h *SubjectHandler) CreateSubject(c *gin.Context) {
+	courseIDStr := c.PostForm("course_id")
+	courseID, err := strconv.Atoi(courseIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course_id"})
+		return
+	}
+
+	Ptr := func(s string) *string {
+		if s == "" {
+			return nil
+		}
+		return &s
+	}
+
+	req := models.SubjectsRequest{
+		SubjectID:         c.PostForm("subject_id"),
+		CourseID:          courseID,
+		PlanType:          c.PostForm("plan_type"),
+		Semester:          c.PostForm("semester"),
+		ThaiSubject:       c.PostForm("thai_subject"),
+		EngSubject:        Ptr(c.PostForm("eng_subject")),
+		Credits:           c.PostForm("credits"),
+		CompulsorySubject: Ptr(c.PostForm("compulsory_subject")),
+		Condition:         Ptr(c.PostForm("condition")),
+		DescriptionThai:   Ptr(c.PostForm("description_thai")),
+		DescriptionEng:    Ptr(c.PostForm("description_eng")),
+		CLO:               Ptr(c.PostForm("clo")),
+	}
+
+	createdSubject, err := h.subjectService.CreateSubject(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, createdSubject)
+}
+
+/*func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 	subjectfile, err := c.FormFile("subjectfile")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "subjectfile required"})
@@ -100,7 +138,7 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, created)
-}
+}*/
 
 func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 	subjectID := c.Param("id")

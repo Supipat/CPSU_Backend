@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS courses (
 -- create subject
 
 CREATE TABLE IF NOT EXISTS subjects (
+    id SERIAL PRIMARY KEY,
     subject_id VARCHAR(6) NOT NULL,
     course_id INT NOT NULL,
     plan_type VARCHAR(50) NOT NULL,
@@ -208,9 +209,9 @@ WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 INSERT INTO course_structure(course_id,course_structure_url) VALUES
 ((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_CS_65.jpg'),
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_CS_65.png'),
 ((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.jpg');
+    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png');
 
 -- insert roadmap
 
