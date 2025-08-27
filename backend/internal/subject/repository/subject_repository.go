@@ -10,10 +10,10 @@ import (
 
 type SubjectRepository interface {
 	GetAllSubjects(param models.SubjectsQueryParam) ([]models.Subjects, error)
-	GetSubjectByID(id string) (*models.Subjects, error)
+	GetSubjectByID(id int) (*models.Subjects, error)
 	CreateSubject(req models.SubjectsRequest) (*models.Subjects, error)
-	UpdateSubject(id string, req models.SubjectsRequest) (*models.Subjects, error)
-	DeleteSubject(id string) error
+	UpdateSubject(id int, req models.SubjectsRequest) (*models.Subjects, error)
+	DeleteSubject(id int) error
 }
 
 type subjectRepository struct {
@@ -27,10 +27,10 @@ func NewSubjectRepository(db *sql.DB) SubjectRepository {
 func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]models.Subjects, error) {
 	query := `
 		SELECT 
-			s.subject_id, c.course_id, c.thai_course, s.plan_type,
-			s.semester, s.thai_subject, s.eng_subject, s.credits, 
-			s.compulsory_subject, s.condition, s.description_thai, 
-			s.description_eng, s.clo
+			s.id, s.subject_id, c.course_id, c.thai_course, 
+			s.plan_type,s.semester, s.thai_subject, s.eng_subject, 
+			s.credits, s.compulsory_subject, s.condition, 
+			s.description_thai, s.description_eng, s.clo
 		FROM subjects s
 		LEFT JOIN courses c ON s.course_id = c.course_id
 	`
@@ -67,7 +67,7 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	sort := "s.subject_id"
+	sort := "s.id"
 	if param.Sort != "" {
 		sort = "s." + param.Sort
 	}
@@ -93,8 +93,8 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 	for rows.Next() {
 		var subject models.Subjects
 		err := rows.Scan(
-			&subject.SubjectID, &subject.CourseID, &subject.ThaiCourse, &subject.PlanType,
-			&subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
+			&subject.ID, &subject.SubjectID, &subject.CourseID, &subject.ThaiCourse,
+			&subject.PlanType, &subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
 			&subject.Credits, &subject.CompulsorySubject, &subject.Condition,
 			&subject.DescriptionThai, &subject.DescriptionEng, &subject.CLO,
 		)
@@ -107,24 +107,24 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 	return subjects, nil
 }
 
-func (r *subjectRepository) GetSubjectByID(id string) (*models.Subjects, error) {
+func (r *subjectRepository) GetSubjectByID(id int) (*models.Subjects, error) {
 	query := `
 		SELECT 
-			s.subject_id, c.course_id, c.thai_course, s.plan_type,
-			s.semester, s.thai_subject, s.eng_subject, s.credits, 
-			s.compulsory_subject, s.condition, s.description_thai, 
-			s.description_eng, s.clo
+			s.id, s.subject_id, c.course_id, c.thai_course, 
+			s.plan_type,s.semester, s.thai_subject, s.eng_subject, 
+			s.credits, s.compulsory_subject, s.condition, 
+			s.description_thai, s.description_eng, s.clo
 		FROM subjects s
 		LEFT JOIN courses c ON s.course_id = c.course_id
-		WHERE s.subject_id = $1
+		WHERE s.id = $1
 	`
 
 	row := r.db.QueryRow(query, id)
 
 	var subject models.Subjects
 	err := row.Scan(
-		&subject.SubjectID, &subject.CourseID, &subject.ThaiCourse, &subject.PlanType,
-		&subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
+		&subject.ID, &subject.SubjectID, &subject.CourseID, &subject.ThaiCourse,
+		&subject.PlanType, &subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
 		&subject.Credits, &subject.CompulsorySubject, &subject.Condition,
 		&subject.DescriptionThai, &subject.DescriptionEng, &subject.CLO,
 	)
@@ -146,7 +146,7 @@ func (r *subjectRepository) CreateSubject(req models.SubjectsRequest) (*models.S
 			description_thai, description_eng, clo
 		)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-		RETURNING subject_id
+		RETURNING id
 	`
 
 	var subject models.Subjects
@@ -155,7 +155,7 @@ func (r *subjectRepository) CreateSubject(req models.SubjectsRequest) (*models.S
 		req.SubjectID, req.CourseID, req.PlanType, req.Semester, req.ThaiSubject,
 		req.EngSubject, req.Credits, req.CompulsorySubject, req.Condition,
 		req.DescriptionThai, req.DescriptionEng, req.CLO,
-	).Scan(&subject.SubjectID)
+	).Scan(&subject.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -176,28 +176,29 @@ func (r *subjectRepository) CreateSubject(req models.SubjectsRequest) (*models.S
 	return &subject, nil
 }
 
-func (r *subjectRepository) UpdateSubject(id string, req models.SubjectsRequest) (*models.Subjects, error) {
+func (r *subjectRepository) UpdateSubject(id int, req models.SubjectsRequest) (*models.Subjects, error) {
 	query := `
 		UPDATE subjects
-		SET course_id=$1, plan_type=$2, semester=$3, thai_subject=$4, eng_subject=$5,
-			credits=$6, compulsory_subject=$7, condition=$8, 
-			description_thai=$9, description_eng=$10, clo=$11
-		WHERE subject_id=$12
-		RETURNING subject_id
+		SET subject_id=$1, course_id=$2, plan_type=$3, semester=$4, thai_subject=$5, 
+			eng_subject=$6,credits=$7, compulsory_subject=$8, condition=$9, 
+			description_thai=$10, description_eng=$11, clo=$12
+		WHERE id=$13
+		RETURNING id
 	`
 
 	var subject models.Subjects
 	err := r.db.QueryRow(
 		query,
-		req.CourseID, req.PlanType, req.Semester, req.ThaiSubject, req.EngSubject,
-		req.Credits, req.CompulsorySubject, req.Condition,
+		req.SubjectID, req.CourseID, req.PlanType, req.Semester, req.ThaiSubject,
+		req.EngSubject, req.Credits, req.CompulsorySubject, req.Condition,
 		req.DescriptionThai, req.DescriptionEng, req.CLO,
 		id,
-	).Scan(&subject.SubjectID)
+	).Scan(&subject.ID)
 	if err != nil {
 		return nil, err
 	}
 
+	subject.SubjectID = req.SubjectID
 	subject.CourseID = req.CourseID
 	subject.PlanType = req.PlanType
 	subject.Semester = req.Semester
@@ -213,8 +214,8 @@ func (r *subjectRepository) UpdateSubject(id string, req models.SubjectsRequest)
 	return &subject, nil
 }
 
-func (r *subjectRepository) DeleteSubject(id string) error {
-	result, err := r.db.Exec("DELETE FROM subjects WHERE subject_id = $1", id)
+func (r *subjectRepository) DeleteSubject(id int) error {
+	result, err := r.db.Exec("DELETE FROM subjects WHERE id = $1", id)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package models
 
 type Subjects struct {
+	ID                int     `json:"id"`
 	SubjectID         string  `json:"subject_id"`
 	CourseID          int     `json:"course_id"`
 	ThaiCourse        string  `json:"thai_course"`
@@ -28,6 +29,7 @@ type SubjectsQueryParam struct {
 }
 
 type SubjectsRequest struct {
+	ID                int     `json:"id"`
 	SubjectID         string  `json:"subject_id"`
 	CourseID          int     `json:"course_id"`
 	PlanType          string  `json:"plan_type"`

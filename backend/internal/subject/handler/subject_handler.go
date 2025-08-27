@@ -37,13 +37,14 @@ func (h *SubjectHandler) GetAllSubjects(c *gin.Context) {
 }
 
 func (h *SubjectHandler) GetSubjectByID(c *gin.Context) {
-	subjectID := c.Param("id")
-	if subjectID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "subject ID required"})
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID required"})
 		return
 	}
 
-	subject, err := h.subjectService.GetSubjectByID(subjectID)
+	subject, err := h.subjectService.GetSubjectByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "subject not found"})
@@ -141,9 +142,10 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 }*/
 
 func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
-	subjectID := c.Param("id")
-	if subjectID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "subject ID required"})
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid subject ID"})
 		return
 	}
 
@@ -162,6 +164,7 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 	}
 
 	req := models.SubjectsRequest{
+		SubjectID:         c.PostForm("subject_id"),
 		CourseID:          courseID,
 		PlanType:          c.PostForm("plan_type"),
 		Semester:          c.PostForm("semester"),
@@ -175,7 +178,7 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 		CLO:               Ptr(c.PostForm("clo")),
 	}
 
-	updatedSubject, err := h.subjectService.UpdateSubject(subjectID, req)
+	updatedSubject, err := h.subjectService.UpdateSubject(id, req)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "subject ID not found"})
@@ -189,13 +192,14 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 }
 
 func (h *SubjectHandler) DeleteSubject(c *gin.Context) {
-	subjectID := c.Param("id")
-	if subjectID == "" {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "subject ID required"})
 		return
 	}
 
-	err := h.subjectService.DeleteSubject(subjectID)
+	err = h.subjectService.DeleteSubject(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "subject not found"})
