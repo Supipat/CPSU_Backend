@@ -24,46 +24,92 @@ CREATE TABLE IF NOT EXISTS news_images (
     FOREIGN KEY (news_id) REFERENCES news(news_id) ON DELETE CASCADE
 );
 
--- create courses
+create courses
 
--- CREATE TABLE IF NOT EXISTS degree (
---     degree_id SERIAL PRIMARY KEY,
---     degree_name VARCHAR(100) NOT NULL
--- );
+CREATE TABLE IF NOT EXISTS degree (
+    degree_id SERIAL PRIMARY KEY,
+    degree_name VARCHAR(100) NOT NULL
+);
 
--- CREATE TABLE IF NOT EXISTS majors (
---     major_id SERIAL PRIMARY KEY,
---     major_name VARCHAR(100) NOT NULL
--- );
+CREATE TABLE IF NOT EXISTS majors (
+    major_id SERIAL PRIMARY KEY,
+    major_name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS course_name (
+    course_name_id SERIAL PRIMARY KEY,
+    thai_course VARCHAR(100) NOT NULL,
+    eng_course VARCHAR(100) NOT NULL
+)
+
+CREATE TABLE IF NOT EXISTS degree_name (
+    degree_name_id SERIAL PRIMARY KEY,
+    thai_degree VARCHAR(100) NOT NULL,
+    eng_degree VARCHAR(100) NOT NULL,
+)
+
+CREATE TABLE IF NOT EXISTS career_paths (
+    career_paths_id SERIAL PRIMARY KEY,
+    career_paths TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS plo (
+    plo_id SERIAL PRIMARY KEY,
+    plo TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS courses (
     course_id SERIAL PRIMARY KEY,
-    degree VARCHAR(100) NOT NULL,
-    major VARCHAR(100) NOT NULL,
+    degree_id INT NOT NULL,
+    major_id INT NOT NULL,
     year INT NOT NULL,
-    thai_course VARCHAR(255) NOT NULL,
-    eng_course VARCHAR(255) NOT NULL,
-    thai_degree VARCHAR(255) NOT NULL,
-    eng_degree VARCHAR(255) NOT NULL,
+    course_name_id INT NOT NULL,
+    degree_name_id INT NOT NULL,
     admission_req TEXT NOT NULL,
     graduation_req TEXT NOT NULL,
     philosophy TEXT NOT NULL,
     objective TEXT NOT NULL,
     tuition TEXT NOT NULL,
-    credits VARCHAR(255) NOT NULL,
-    career_paths TEXT NOT NULL,
-    plo TEXT NOT NULL,
+    credits VARCHAR(50) NOT NULL,
+    career_paths_id INT NOT NULL,
+    plo_id INT NOT NULL,
     detail_url TEXT NOT NULL
+    FOREIGN KEY (degree_id) REFERENCES degree(degree_id) ON DELETE CASCADE,
+    FOREIGN KEY (major_id) REFERENCES majors(major_id) ON DELETE CASCADE,
+    FOREIGN KEY (course_name_id) REFERENCES course_name(course_name_id) ON DELETE CASCADE,
+    FOREIGN KEY (degree_name_id) REFERENCES degree_name(degree_name_id) ON DELETE CASCADE,
+    FOREIGN KEY (career_paths_id) REFERENCES career_paths(career_paths_id) ON DELETE CASCADE,
+    FOREIGN KEY (plo_id) REFERENCES plo(plo_id) ON DELETE CASCADE
 );
-
--- FOREIGN KEY (degree_id) REFERENCES degree(degree_id) ON DELETE CASCADE,
--- FOREIGN KEY (major_id) REFERENCES majors(major_id) ON DELETE CASCADE
 
 -- create subject
 
+/*CREATE TABLE IF NOT EXISTS condition_subject (
+    condition_id SERIAL PRIMARY KEY,
+    compulsory_subject VARCHAR(255) NULL,
+    condition VARCHAR(255) NULL,
+)
+
 CREATE TABLE IF NOT EXISTS subjects (
     id SERIAL PRIMARY KEY,
-    subject_id VARCHAR(6) NOT NULL,
+    subject_id VARCHAR(7) NOT NULL,
+    course_id INT NOT NULL,
+    plan_type VARCHAR(50) NOT NULL,
+    semester VARCHAR(50) NOT NULL,
+    thai_subject VARCHAR(100) NOT NULL,
+    eng_subject VARCHAR(100) NULL,
+    credits VARCHAR(50) NOT NULL,
+    compulsory_subject VARCHAR(255) NULL,
+    condition VARCHAR(255) NULL,
+    description_thai TEXT NULL,
+    description_eng TEXT NULL,
+    clo TEXT NULL,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);*/
+
+CREATE TABLE IF NOT EXISTS subjects (
+    id SERIAL PRIMARY KEY,
+    subject_id VARCHAR(7) NOT NULL,
     course_id INT NOT NULL,
     plan_type VARCHAR(50) NOT NULL,
     semester VARCHAR(50) NOT NULL,
@@ -95,6 +141,40 @@ CREATE TABLE IF NOT EXISTS roadmap (
     roadmap_url TEXT NOT NULL,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
 );
+
+-- create personnel
+
+CREATE TABLE IF NOT EXISTS type_personnel (
+    type_id SERIAL PRIMARY KEY,
+    type_name VARCHAR(50) NOT NULL
+)
+
+CREATE TABLE IF NOT EXISTS department_position (
+    department_position_id SERIAL PRIMARY KEY,
+    department_position_name VARCHAR(50) NOT NULL
+)
+
+CREATE TABLE IF NOT EXISTS academic_position (
+    academic_position_id SERIAL PRIMARY KEY,
+    thai_academic_position VARCHAR(50) NOT NULL,
+    eng_academic_position VARCHAR(50) NULL
+)
+
+CREATE TABLE IF NOT EXISTS personnels (
+    personnel_id SERIAL PRIMARY KEY,
+    type_id INT NOT NULL,
+    department_position_id INT NOT NULL,
+    academic_position_id INT NULL,
+    thai_name VARCHAR(50) NOT NULL,
+    eng_name VARCHAR(50) NOT NULL,
+    education TEXT NULL,
+    related_fields TEXT NULL,
+    email VARCHAR(100) NULL,
+    website TEXT NULL,
+    FOREIGN KEY (type_id) REFERENCES type_personnel(type_id) ON DELETE CASCADE,
+    FOREIGN KEY (department_position_id) REFERENCES department_position(department_position_id) ON DELETE CASCADE,
+    FOREIGN KEY (academic_position_id) REFERENCES academic_position(academic_position_id) ON DELETE CASCADE
+)
 
 -- TRIGGER
 
@@ -195,11 +275,11 @@ INSERT INTO news_images(news_id,file_image) VALUES
 
 -- insert courses
 
--- INSERT INTO degree(degree_name) VALUES
--- ('ปริญญาตรี'),('ปริญญาโท'),('ปริญญาเอก');
+INSERT INTO degree(degree_name) VALUES
+('ปริญญาตรี'),('ปริญญาโท'),('ปริญญาเอก');
 
--- INSERT INTO majors(major_name) VALUES
--- ('วิทยาการคอมพิวเตอร์'),('เทคโนโลยีสารสนเทศ'),('วิทยาการข้อมูล');
+INSERT INTO majors(major_name) VALUES
+('วิทยาการคอมพิวเตอร์'),('เทคโนโลยีสารสนเทศ'),('วิทยาการข้อมูล');
 
 COPY courses(degree,major,year,thai_course,eng_course,thai_degree,eng_degree,admission_req,graduation_req,philosophy,objective,tuition,credits,career_paths,plo,detail_url)
 FROM '/docker-entrypoint-initdb.d/courses.csv'
@@ -226,3 +306,25 @@ INSERT INTO roadmap(course_id,roadmap_url) VALUES
 COPY subjects(subject_id,course_id,plan_type,semester,thai_subject,eng_subject,credits,compulsory_subject,condition,description_thai,description_eng,clo)
 FROM '/docker-entrypoint-initdb.d/subject.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
+
+-- insert personnel
+
+INSERT INTO type_personnel(type_name) VALUES
+('สายวิชาการ'),('สายสนับสนุนวิชาการ');
+
+INSERT INTO department_position(department_position_name) VALUES
+('หัวหน้าภาควิชา'),('รองหัวหน้าภาควิชา'),('อาจารย์ประจำภาควิชา'),
+('นักวิชาการอุดมศึกษาชำนาญการ'),('นักวิชาการอุดมศึกษา'),('นักวิชาการอุดมศึกษา (ประจำหลักสูตรวิทยาการข้อมูล)',('นักเทคโนโลยีสารสนเทศ'),('นักคอมพิวเตอร์'),('พนักงานทั่วไป'));
+
+INSERT INTO academic_position(thai_academic_position,eng_academic_position) VALUES
+('รศ.ดร','Assoc.Prof.Dr.'),
+('ผศ.ดร.','Asst.Prof.Dr.'),
+('อ.ดร.','Dr.'),
+('อ.','');
+
+/*INSERT INTO personnels(type_id,department_position_id,academic_position_id,thai_name,eng_name,education,related_fields,email,website) VALUES
+('');
+
+COPY personnels(type_id,department_position_id,academic_position_id,thai_name,eng_name,education,related_fields,email,website)
+FROM '/docker-entrypoint-initdb.d/personnel.csv'
+WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');*/
