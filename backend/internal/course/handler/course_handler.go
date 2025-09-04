@@ -58,30 +58,11 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 }
 
 func (h *CourseHandler) CreateCourse(c *gin.Context) {
-	yearStr := c.PostForm("year")
-	year, err := strconv.Atoi(yearStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid year"})
-		return
-	}
+	var req models.CoursesRequest
 
-	req := models.CoursesRequest{
-		Degree:        c.PostForm("degree"),
-		Major:         c.PostForm("major"),
-		Year:          year,
-		ThaiCourse:    c.PostForm("thai_course"),
-		EngCourse:     c.PostForm("eng_course"),
-		ThaiDegree:    c.PostForm("thai_degree"),
-		EngDegree:     c.PostForm("eng_degree"),
-		AdmissionReq:  c.PostForm("admission_req"),
-		GraduationReq: c.PostForm("graduation_req"),
-		Philosophy:    c.PostForm("philosophy"),
-		Objective:     c.PostForm("objective"),
-		Tuition:       c.PostForm("tuition"),
-		Credits:       c.PostForm("credits"),
-		CareerPaths:   c.PostForm("career_paths"),
-		PLO:           c.PostForm("plo"),
-		DetailURL:     c.PostForm("detail_url"),
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	createdCourse, err := h.courseService.CreateCourse(req)
@@ -93,45 +74,6 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdCourse)
 }
 
-/*func (h *CourseHandler) CreateCourse(c *gin.Context) {
-	coursefile, err := c.FormFile("coursefile")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "coursefile required"})
-		return
-	}
-
-	f, _ := coursefile.Open()
-	defer f.Close()
-	reader := csv.NewReader(f)
-	records, _ := reader.ReadAll()
-
-	var created []models.Courses
-
-	for i, row := range records {
-		if i == 0 {
-			continue
-		}
-		year, _ := strconv.Atoi(row[2])
-		req := models.CoursesRequest{
-			Degree: row[0], Major: row[1], Year: year,
-			ThaiCourse: row[3], EngCourse: row[4],
-			ThaiDegree: row[5], EngDegree: row[6],
-			AdmissionReq: row[7], GraduationReq: row[8],
-			Philosophy: row[9], Objective: row[10],
-			Tuition: row[11], Credits: row[12],
-			CareerPaths: row[13], PLO: row[14], DetailURL: row[15],
-		}
-		createdCourse, err := h.courseService.CreateCourse(req)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "row": i})
-			return
-		}
-		created = append(created, *createdCourse)
-	}
-
-	c.JSON(http.StatusOK, created)
-}*/
-
 func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -140,36 +82,16 @@ func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 		return
 	}
 
-	yearStr := c.PostForm("year")
-	year, err := strconv.Atoi(yearStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid year"})
+	var req models.CoursesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-	}
-
-	req := models.CoursesRequest{
-		Degree:        c.PostForm("degree"),
-		Major:         c.PostForm("major"),
-		Year:          year,
-		ThaiCourse:    c.PostForm("thai_course"),
-		EngCourse:     c.PostForm("eng_course"),
-		ThaiDegree:    c.PostForm("thai_degree"),
-		EngDegree:     c.PostForm("eng_degree"),
-		AdmissionReq:  c.PostForm("admission_req"),
-		GraduationReq: c.PostForm("graduation_req"),
-		Philosophy:    c.PostForm("philosophy"),
-		Objective:     c.PostForm("objective"),
-		Tuition:       c.PostForm("tuition"),
-		Credits:       c.PostForm("credits"),
-		CareerPaths:   c.PostForm("career_paths"),
-		PLO:           c.PostForm("plo"),
-		DetailURL:     c.PostForm("detail_url"),
 	}
 
 	updatedCourse, err := h.courseService.UpdateCourse(id, req)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "course ID not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "course not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}

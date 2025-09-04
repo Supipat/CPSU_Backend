@@ -18,7 +18,6 @@ type courseService struct {
 }
 
 func NewCourseService(repo repository.CourseRepository) CourseService {
-
 	return &courseService{
 		repo: repo,
 	}
