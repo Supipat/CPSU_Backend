@@ -151,6 +151,28 @@ func (r *courseRepository) CreateCourse(req models.CoursesRequest) (*models.Cour
 	}
 	defer tx.Rollback()
 
+	var majorID int
+	err = tx.QueryRow(`SELECT major_id FROM majors WHERE major = $1`, req.Major).Scan(&majorID)
+	if err == sql.ErrNoRows {
+		err = tx.QueryRow(`INSERT INTO majors (major) VALUES($1) RETURNING major_id`, req.Major).Scan(&majorID)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
+	var degreeNameID int
+	err = tx.QueryRow(`SELECT degree_name_id FROM degree_name WHERE thai_degree = $1`, req.ThaiDegree).Scan(&degreeNameID)
+	if err == sql.ErrNoRows {
+		err = tx.QueryRow(`INSERT INTO degree_name (thai_degree,eng_degree) VALUES($1,$2) RETURNING degree_name_id`, req.ThaiDegree, req.EngDegree).Scan(&degreeNameID)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
 	var careerPathsID int
 	err = tx.QueryRow(`SELECT career_paths_id FROM career_paths WHERE career_paths = $1`, req.CareerPaths).Scan(&careerPathsID)
 	if err == sql.ErrNoRows {
@@ -183,8 +205,8 @@ func (r *courseRepository) CreateCourse(req models.CoursesRequest) (*models.Cour
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
         RETURNING course_id
     `,
-		req.DegreeID, req.MajorID, req.Year, req.ThaiCourse, req.EngCourse,
-		req.DegreeNameID, req.AdmissionReq, req.GraduationReq, req.Philosophy,
+		req.DegreeID, majorID, req.Year, req.ThaiCourse, req.EngCourse,
+		degreeNameID, req.AdmissionReq, req.GraduationReq, req.Philosophy,
 		req.Objective, req.Tuition, req.Credits, careerPathsID, ploID, req.DetailURL,
 	).Scan(&courseID)
 	if err != nil {
@@ -204,6 +226,28 @@ func (r *courseRepository) UpdateCourse(id int, req models.CoursesRequest) (*mod
 		return nil, err
 	}
 	defer tx.Rollback()
+
+	var majorID int
+	err = tx.QueryRow(`SELECT major_id FROM majors WHERE major = $1`, req.Major).Scan(&majorID)
+	if err == sql.ErrNoRows {
+		err = tx.QueryRow(`INSERT INTO majors (major) VALUES($1) RETURNING major_id`, req.Major).Scan(&majorID)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
+	var degreeNameID int
+	err = tx.QueryRow(`SELECT degree_name_id FROM degree_name WHERE thai_degree = $1`, req.ThaiDegree).Scan(&degreeNameID)
+	if err == sql.ErrNoRows {
+		err = tx.QueryRow(`INSERT INTO degree_name (thai_degree,eng_degree) VALUES($1,$2) RETURNING degree_name_id`, req.ThaiDegree, req.EngDegree).Scan(&degreeNameID)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
 
 	var careerPathsID int
 	err = tx.QueryRow(`SELECT career_paths_id FROM career_paths WHERE career_paths = $1`, req.CareerPaths).Scan(&careerPathsID)
@@ -234,7 +278,7 @@ func (r *courseRepository) UpdateCourse(id int, req models.CoursesRequest) (*mod
 		    credits=$12, career_paths_id=$13, plo_id=$14, detail_url=$15
 		WHERE course_id=$16
 	`,
-		req.DegreeID, req.MajorID, req.Year, req.ThaiCourse, req.EngCourse, req.DegreeNameID,
+		req.DegreeID, majorID, req.Year, req.ThaiCourse, req.EngCourse, degreeNameID,
 		req.AdmissionReq, req.GraduationReq, req.Philosophy, req.Objective, req.Tuition,
 		req.Credits, careerPathsID, ploID, req.DetailURL, id,
 	)

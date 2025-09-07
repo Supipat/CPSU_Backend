@@ -39,10 +39,13 @@ type CoursesRequest struct {
 	CourseID      int    `json:"course_id"`
 	DegreeID      int    `json:"degree_id"`
 	MajorID       int    `json:"major_id"`
+	Major         string `json:"major"`
 	Year          int    `json:"year"`
 	ThaiCourse    string `json:"thai_course"`
 	EngCourse     string `json:"eng_course"`
 	DegreeNameID  int    `json:"degree_name_id"`
+	ThaiDegree    string `json:"thai_degree"`
+	EngDegree     string `json:"eng_degree"`
 	AdmissionReq  string `json:"admission_req"`
 	GraduationReq string `json:"graduation_req"`
 	Philosophy    string `json:"philosophy"`
