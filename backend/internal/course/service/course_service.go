@@ -7,10 +7,10 @@ import (
 
 type CourseService interface {
 	GetAllCourses(param models.CoursesQueryParam) ([]models.Courses, error)
-	GetCourseByID(id int) (*models.Courses, error)
+	GetCourseByID(id string) (*models.Courses, error)
 	CreateCourse(req models.CoursesRequest) (*models.Courses, error)
-	UpdateCourse(id int, req models.CoursesRequest) (*models.Courses, error)
-	DeleteCourse(id int) error
+	UpdateCourse(id string, req models.CoursesRequest) (*models.Courses, error)
+	DeleteCourse(id string) error
 }
 
 type courseService struct {
@@ -27,7 +27,7 @@ func (s *courseService) GetAllCourses(param models.CoursesQueryParam) ([]models.
 	return s.repo.GetAllCourses(param)
 }
 
-func (s *courseService) GetCourseByID(id int) (*models.Courses, error) {
+func (s *courseService) GetCourseByID(id string) (*models.Courses, error) {
 	return s.repo.GetCourseByID(id)
 }
 
@@ -35,10 +35,10 @@ func (s *courseService) CreateCourse(course models.CoursesRequest) (*models.Cour
 	return s.repo.CreateCourse(course)
 }
 
-func (s *courseService) UpdateCourse(id int, course models.CoursesRequest) (*models.Courses, error) {
+func (s *courseService) UpdateCourse(id string, course models.CoursesRequest) (*models.Courses, error) {
 	return s.repo.UpdateCourse(id, course)
 }
 
-func (s *courseService) DeleteCourse(id int) error {
+func (s *courseService) DeleteCourse(id string) error {
 	return s.repo.DeleteCourse(id)
 }

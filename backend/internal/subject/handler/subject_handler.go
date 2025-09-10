@@ -27,20 +27,20 @@ func (h *SubjectHandler) GetAllSubjects(c *gin.Context) {
 		return
 	}
 
-	subject, err := h.subjectService.GetAllSubjects(param)
+	subjects, err := h.subjectService.GetAllSubjects(param)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, subject)
+	c.JSON(http.StatusOK, subjects)
 }
 
 func (h *SubjectHandler) GetSubjectByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid subject ID"})
 		return
 	}
 
@@ -58,33 +58,11 @@ func (h *SubjectHandler) GetSubjectByID(c *gin.Context) {
 }
 
 func (h *SubjectHandler) CreateSubject(c *gin.Context) {
-	courseIDStr := c.PostForm("course_id")
-	courseID, err := strconv.Atoi(courseIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course_id"})
+	var req models.SubjectsRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-	}
-
-	Ptr := func(s string) *string {
-		if s == "" {
-			return nil
-		}
-		return &s
-	}
-
-	req := models.SubjectsRequest{
-		SubjectID:         c.PostForm("subject_id"),
-		CourseID:          courseID,
-		PlanType:          c.PostForm("plan_type"),
-		Semester:          c.PostForm("semester"),
-		ThaiSubject:       c.PostForm("thai_subject"),
-		EngSubject:        Ptr(c.PostForm("eng_subject")),
-		Credits:           c.PostForm("credits"),
-		CompulsorySubject: Ptr(c.PostForm("compulsory_subject")),
-		Condition:         Ptr(c.PostForm("condition")),
-		DescriptionThai:   Ptr(c.PostForm("description_thai")),
-		DescriptionEng:    Ptr(c.PostForm("description_eng")),
-		CLO:               Ptr(c.PostForm("clo")),
 	}
 
 	createdSubject, err := h.subjectService.CreateSubject(req)
@@ -96,51 +74,6 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdSubject)
 }
 
-/*func (h *SubjectHandler) CreateSubject(c *gin.Context) {
-	subjectfile, err := c.FormFile("subjectfile")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "subjectfile required"})
-		return
-	}
-
-	f, _ := subjectfile.Open()
-	defer f.Close()
-	reader := csv.NewReader(f)
-	records, _ := reader.ReadAll()
-
-	var created []models.Subjects
-
-	for i, row := range records {
-		if i == 0 {
-			continue
-		}
-
-		courseID, _ := strconv.Atoi(row[1])
-
-		Ptr := func(s string) *string {
-			if s == "" {
-				return nil
-			}
-			return &s
-		}
-
-		req := models.SubjectsRequest{
-			SubjectID: row[0], CourseID: courseID, PlanType: row[2], Semester: row[3],
-			ThaiSubject: row[4], EngSubject: Ptr(row[5]), Credits: row[6], CompulsorySubject: Ptr(row[7]),
-			Condition: Ptr(row[8]), DescriptionThai: Ptr(row[9]), DescriptionEng: Ptr(row[10]), CLO: Ptr(row[11]),
-		}
-
-		createdSubject, err := h.subjectService.CreateSubject(req)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "row": i})
-			return
-		}
-		created = append(created, *createdSubject)
-	}
-
-	c.JSON(http.StatusOK, created)
-}*/
-
 func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -149,39 +82,16 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 		return
 	}
 
-	courseIDStr := c.PostForm("course_id")
-	courseID, err := strconv.Atoi(courseIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course ID"})
+	var req models.SubjectsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
-	}
-
-	Ptr := func(s string) *string {
-		if s == "" {
-			return nil
-		}
-		return &s
-	}
-
-	req := models.SubjectsRequest{
-		SubjectID:         c.PostForm("subject_id"),
-		CourseID:          courseID,
-		PlanType:          c.PostForm("plan_type"),
-		Semester:          c.PostForm("semester"),
-		ThaiSubject:       c.PostForm("thai_subject"),
-		EngSubject:        Ptr(c.PostForm("eng_subject")),
-		Credits:           c.PostForm("credits"),
-		CompulsorySubject: Ptr(c.PostForm("compulsory_subject")),
-		Condition:         Ptr(c.PostForm("condition")),
-		DescriptionThai:   Ptr(c.PostForm("description_thai")),
-		DescriptionEng:    Ptr(c.PostForm("description_eng")),
-		CLO:               Ptr(c.PostForm("clo")),
 	}
 
 	updatedSubject, err := h.subjectService.UpdateSubject(id, req)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "subject ID not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "subject not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
@@ -195,7 +105,7 @@ func (h *SubjectHandler) DeleteSubject(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "subject ID required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid subject ID"})
 		return
 	}
 

@@ -10,10 +10,10 @@ import (
 
 type CourseRepository interface {
 	GetAllCourses(param models.CoursesQueryParam) ([]models.Courses, error)
-	GetCourseByID(id int) (*models.Courses, error)
+	GetCourseByID(id string) (*models.Courses, error)
 	CreateCourse(req models.CoursesRequest) (*models.Courses, error)
-	UpdateCourse(id int, req models.CoursesRequest) (*models.Courses, error)
-	DeleteCourse(id int) error
+	UpdateCourse(id string, req models.CoursesRequest) (*models.Courses, error)
+	DeleteCourse(id string) error
 }
 
 type courseRepository struct {
@@ -107,7 +107,7 @@ func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]mode
 	return courses, nil
 }
 
-func (r *courseRepository) GetCourseByID(id int) (*models.Courses, error) {
+func (r *courseRepository) GetCourseByID(id string) (*models.Courses, error) {
 	query := `
 		SELECT 
 			c.course_id, d.degree_id, d.degree, m.major_id, m.major, c.year, c.thai_course, 
@@ -195,20 +195,18 @@ func (r *courseRepository) CreateCourse(req models.CoursesRequest) (*models.Cour
 		return nil, err
 	}
 
-	var courseID int
-	err = tx.QueryRow(`
+	_, err = tx.Exec(`
         INSERT INTO courses (
-            degree_id, major_id, year, thai_course, eng_course, degree_name_id,
-            admission_req, graduation_req, philosophy, objective, tuition, credits,
-            career_paths_id, plo_id, detail_url
+            course_id, degree_id, major_id, year, thai_course, eng_course, 
+			degree_name_id, admission_req, graduation_req, philosophy, objective, 
+			tuition, credits,career_paths_id, plo_id, detail_url
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-        RETURNING course_id
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
     `,
-		req.DegreeID, majorID, req.Year, req.ThaiCourse, req.EngCourse,
+		req.CourseID, req.DegreeID, majorID, req.Year, req.ThaiCourse, req.EngCourse,
 		degreeNameID, req.AdmissionReq, req.GraduationReq, req.Philosophy,
 		req.Objective, req.Tuition, req.Credits, careerPathsID, ploID, req.DetailURL,
-	).Scan(&courseID)
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -217,10 +215,10 @@ func (r *courseRepository) CreateCourse(req models.CoursesRequest) (*models.Cour
 		return nil, err
 	}
 
-	return r.GetCourseByID(courseID)
+	return r.GetCourseByID(req.CourseID)
 }
 
-func (r *courseRepository) UpdateCourse(id int, req models.CoursesRequest) (*models.Courses, error) {
+func (r *courseRepository) UpdateCourse(id string, req models.CoursesRequest) (*models.Courses, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
@@ -293,7 +291,7 @@ func (r *courseRepository) UpdateCourse(id int, req models.CoursesRequest) (*mod
 	return r.GetCourseByID(id)
 }
 
-func (r *courseRepository) DeleteCourse(id int) error {
+func (r *courseRepository) DeleteCourse(id string) error {
 	result, err := r.db.Exec("DELETE FROM courses WHERE course_id = $1", id)
 	if err != nil {
 		return err

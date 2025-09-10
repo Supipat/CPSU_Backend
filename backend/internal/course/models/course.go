@@ -1,7 +1,7 @@
 package models
 
 type Courses struct {
-	CourseID      int    `json:"course_id"`
+	CourseID      string `json:"course_id"`
 	DegreeID      int    `json:"degree_id"`
 	Degree        string `json:"degree"`
 	MajorID       int    `json:"major_id"`
@@ -36,7 +36,7 @@ type CoursesQueryParam struct {
 }
 
 type CoursesRequest struct {
-	CourseID      int    `json:"course_id"`
+	CourseID      string `json:"course_id"`
 	DegreeID      int    `json:"degree_id"`
 	MajorID       int    `json:"major_id"`
 	Major         string `json:"major"`

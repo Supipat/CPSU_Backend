@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS plo (
 );
 
 CREATE TABLE IF NOT EXISTS courses (
-    course_id SERIAL PRIMARY KEY,
+    course_id VARCHAR(10) PRIMARY KEY,
     degree_id INT NOT NULL,
     major_id INT NOT NULL,
     year INT NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS courses (
 
 CREATE TABLE IF NOT EXISTS course_structure (
     course_structure_id SERIAL PRIMARY KEY,
-    course_id INT NOT NULL,
+    course_id VARCHAR(10) NOT NULL,
     course_structure_url TEXT NOT NULL,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
 );
@@ -89,20 +89,20 @@ CREATE TABLE IF NOT EXISTS course_structure (
 
 CREATE TABLE IF NOT EXISTS roadmap (
     roadmap_id SERIAL PRIMARY KEY,
-    course_id INT NOT NULL,
+    course_id VARCHAR(10) NOT NULL,
     roadmap_url TEXT NOT NULL,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
 );
 
 -- create subject
 
-/*CREATE TABLE IF NOT EXISTS plan_type (
+CREATE TABLE IF NOT EXISTS plan_type (
     plan_type_id SERIAL PRIMARY KEY,
     plan_type VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS semester (
-    semester_id VARCHAR(2) PRIMARY KEY,
+    semester_id INT PRIMARY KEY,
     semester VARCHAR(50) NOT NULL
 );
 
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS clo (
 CREATE TABLE IF NOT EXISTS subjects (
     id SERIAL PRIMARY KEY,
     subject_id VARCHAR(6) NOT NULL,
-    course_id INT NOT NULL,
+    course_id VARCHAR(10) NOT NULL,
     plan_type_id INT NOT NULL,
     semester_id INT NOT NULL,
     thai_subject VARCHAR(100) NOT NULL,
@@ -128,14 +128,14 @@ CREATE TABLE IF NOT EXISTS subjects (
     credits VARCHAR(50) NOT NULL,
     compulsory_subject VARCHAR(255) NULL,
     condition VARCHAR(255) NULL,
-    description_id INT NULL,
-    clo_id INT NULL,
+    description_id VARCHAR(6) NULL,
+    clo_id VARCHAR(6) NULL,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
     FOREIGN KEY (plan_type_id) REFERENCES plan_type(plan_type_id) ON DELETE CASCADE,
     FOREIGN KEY (semester_id) REFERENCES semester(semester_id) ON DELETE CASCADE,
     FOREIGN KEY (description_id) REFERENCES description(description_id) ON DELETE CASCADE,
     FOREIGN KEY (clo_id) REFERENCES clo(clo_id) ON DELETE CASCADE
-);*/
+);
 
 -- create personnel
 
@@ -286,18 +286,17 @@ INSERT INTO degree_name(thai_degree,eng_degree) VALUES
 ('ปรัชญาดุษฎีบัณฑิต (เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล)','Doctor of Philosophy (Information Technology and Digital Innovation)');
 
 COPY career_paths(career_paths)
-FROM '/docker-entrypoint-initdb.d/career_paths.csv'
+FROM '/docker-entrypoint-initdb.d/csv/course/career_paths.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 COPY plo(plo)
-FROM '/docker-entrypoint-initdb.d/plo.csv'
+FROM '/docker-entrypoint-initdb.d/csv/course/plo.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
-COPY courses(degree_id,major_id,year,thai_course,eng_course,degree_name_id,admission_req,graduation_req,philosophy,objective,tuition,credits,career_paths_id,plo_id,detail_url)
-FROM '/docker-entrypoint-initdb.d/courses.csv'
+COPY courses(course_id,degree_id,major_id,year,thai_course,eng_course,degree_name_id,admission_req,graduation_req,philosophy,objective,tuition,credits,career_paths_id,plo_id,detail_url)
+FROM '/docker-entrypoint-initdb.d/csv/course/courses.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
-SELECT setval('courses_course_id_seq', (SELECT MAX(course_id) FROM courses));
 SELECT setval('career_paths_career_paths_id_seq', (SELECT MAX(career_paths_id) FROM career_paths));
 SELECT setval('plo_plo_id_seq', (SELECT MAX(plo_id) FROM plo));
 
@@ -319,7 +318,7 @@ INSERT INTO roadmap(course_id,roadmap_url) VALUES
 
 -- insert subject
 
-/*INSERT INTO plan_type(plan_type) VALUES
+INSERT INTO plan_type(plan_type) VALUES
 ('โครงงานวิจัย'),('สหกิจศึกษา');
 
 INSERT INTO semester(semester_id,semester) VALUES
@@ -333,18 +332,18 @@ INSERT INTO semester(semester_id,semester) VALUES
 ('42','ปีที่ 4 ภาคการศึกษาที่ 2');
 
 COPY description(description_id,description_thai,description_eng)
-FROM '/docker-entrypoint-initdb.d/description.csv'
+FROM '/docker-entrypoint-initdb.d/csv/subject/description.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 COPY clo(clo_id,clo)
-FROM '/docker-entrypoint-initdb.d/clo.csv'
+FROM '/docker-entrypoint-initdb.d/csv/subject/clo.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 COPY subjects(subject_id,course_id,plan_type_id,semester_id,thai_subject,eng_subject,credits,compulsory_subject,condition,description_id,clo_id)
-FROM '/docker-entrypoint-initdb.d/subject.csv'
+FROM '/docker-entrypoint-initdb.d/csv/subject/subjects.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
-SELECT setval('courses_id_seq', (SELECT MAX(id) FROM courses));*/
+SELECT setval('subjects_id_seq', (SELECT MAX(id) FROM subjects));
 
 -- insert personnel
 

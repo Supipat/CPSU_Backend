@@ -27,12 +27,16 @@ func NewSubjectRepository(db *sql.DB) SubjectRepository {
 func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]models.Subjects, error) {
 	query := `
 		SELECT 
-			s.id, s.subject_id, c.course_id, c.thai_course, 
-			s.plan_type,s.semester, s.thai_subject, s.eng_subject, 
-			s.credits, s.compulsory_subject, s.condition, 
-			s.description_thai, s.description_eng, s.clo
+			s.id, s.subject_id, c.course_id, c.thai_course, p.plan_type_id, 
+			p.plan_type, se.semester_id, se.semester, s.thai_subject, s.eng_subject, 
+			s.credits, s.compulsory_subject, s.condition, d.description_id, 
+			d.description_thai, d.description_eng, cl.clo_id, cl.clo
 		FROM subjects s
 		LEFT JOIN courses c ON s.course_id = c.course_id
+		LEFT JOIN plan_type p ON s.plan_type_id = p.plan_type_id
+		LEFT JOIN semester se ON s.semester_id = se.semester_id
+		LEFT JOIN description d ON s.description_id = d.description_id
+		LEFT JOIN clo cl ON s.clo_id = cl.clo_id
 	`
 
 	conditions := []string{}
@@ -51,15 +55,15 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 		argIndex++
 	}
 
-	if param.PlanType != "" {
-		conditions = append(conditions, "s.plan_type = $"+strconv.Itoa(argIndex))
-		args = append(args, param.PlanType)
+	if param.PlanTypeID > 0 {
+		conditions = append(conditions, "p.plan_type_id = $"+strconv.Itoa(argIndex))
+		args = append(args, param.PlanTypeID)
 		argIndex++
 	}
 
-	if param.Semester != "" {
-		conditions = append(conditions, "s.semester = $"+strconv.Itoa(argIndex))
-		args = append(args, param.Semester)
+	if param.SemesterID > 0 {
+		conditions = append(conditions, "se.semester_id = $"+strconv.Itoa(argIndex))
+		args = append(args, param.SemesterID)
 		argIndex++
 	}
 
@@ -94,9 +98,10 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 		var subject models.Subjects
 		err := rows.Scan(
 			&subject.ID, &subject.SubjectID, &subject.CourseID, &subject.ThaiCourse,
-			&subject.PlanType, &subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
-			&subject.Credits, &subject.CompulsorySubject, &subject.Condition,
-			&subject.DescriptionThai, &subject.DescriptionEng, &subject.CLO,
+			&subject.PlanTypeID, &subject.PlanType, &subject.SemesterID, &subject.Semester,
+			&subject.ThaiSubject, &subject.EngSubject, &subject.Credits, &subject.CompulsorySubject,
+			&subject.Condition, &subject.DescriptionID, &subject.DescriptionThai,
+			&subject.DescriptionEng, &subject.CloID, &subject.CLO,
 		)
 		if err != nil {
 			return nil, err
@@ -110,12 +115,16 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 func (r *subjectRepository) GetSubjectByID(id int) (*models.Subjects, error) {
 	query := `
 		SELECT 
-			s.id, s.subject_id, c.course_id, c.thai_course, 
-			s.plan_type,s.semester, s.thai_subject, s.eng_subject, 
-			s.credits, s.compulsory_subject, s.condition, 
-			s.description_thai, s.description_eng, s.clo
+			s.id, s.subject_id, c.course_id, c.thai_course, p.plan_type_id, 
+			p.plan_type, se.semester_id, se.semester, s.thai_subject, s.eng_subject, 
+			s.credits, s.compulsory_subject, s.condition, d.description_id, 
+			d.description_thai, d.description_eng, cl.clo_id, cl.clo
 		FROM subjects s
 		LEFT JOIN courses c ON s.course_id = c.course_id
+		LEFT JOIN plan_type p ON s.plan_type_id = p.plan_type_id
+		LEFT JOIN semester se ON s.semester_id = se.semester_id
+		LEFT JOIN description d ON s.description_id = d.description_id
+		LEFT JOIN clo cl ON s.clo_id = cl.clo_id
 		WHERE s.id = $1
 	`
 
@@ -124,9 +133,10 @@ func (r *subjectRepository) GetSubjectByID(id int) (*models.Subjects, error) {
 	var subject models.Subjects
 	err := row.Scan(
 		&subject.ID, &subject.SubjectID, &subject.CourseID, &subject.ThaiCourse,
-		&subject.PlanType, &subject.Semester, &subject.ThaiSubject, &subject.EngSubject,
-		&subject.Credits, &subject.CompulsorySubject, &subject.Condition,
-		&subject.DescriptionThai, &subject.DescriptionEng, &subject.CLO,
+		&subject.PlanTypeID, &subject.PlanType, &subject.SemesterID, &subject.Semester,
+		&subject.ThaiSubject, &subject.EngSubject, &subject.Credits, &subject.CompulsorySubject,
+		&subject.Condition, &subject.DescriptionID, &subject.DescriptionThai,
+		&subject.DescriptionEng, &subject.CloID, &subject.CLO,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -139,79 +149,112 @@ func (r *subjectRepository) GetSubjectByID(id int) (*models.Subjects, error) {
 }
 
 func (r *subjectRepository) CreateSubject(req models.SubjectsRequest) (*models.Subjects, error) {
-	query := `
-		INSERT INTO subjects (
-			subject_id, course_id, plan_type, semester, thai_subject, 
-			eng_subject, credits, compulsory_subject, condition, 
-			description_thai, description_eng, clo
-		)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-		RETURNING id
-	`
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	if req.DescriptionThai != nil || req.DescriptionEng != nil {
+		_, err = tx.Exec(`
+			INSERT INTO description (description_id, description_thai, description_eng)
+			VALUES ($1,$2,$3)
+			ON CONFLICT (description_id) DO UPDATE 
+			SET description_thai=EXCLUDED.description_thai, description_eng=EXCLUDED.description_eng
+		`, req.SubjectID, req.DescriptionThai, req.DescriptionEng)
+		if err != nil {
+			return nil, err
+		}
+		req.DescriptionID = &req.SubjectID
+	}
+
+	if req.CLO != nil {
+		_, err = tx.Exec(`
+			INSERT INTO clo (clo_id, clo)
+			VALUES ($1,$2)
+			ON CONFLICT (clo_id) DO UPDATE 
+			SET clo=EXCLUDED.clo
+		`, req.SubjectID, req.CLO)
+		if err != nil {
+			return nil, err
+		}
+		req.CloID = &req.SubjectID
+	}
 
 	var subject models.Subjects
-	err := r.db.QueryRow(
-		query,
-		req.SubjectID, req.CourseID, req.PlanType, req.Semester, req.ThaiSubject,
-		req.EngSubject, req.Credits, req.CompulsorySubject, req.Condition,
-		req.DescriptionThai, req.DescriptionEng, req.CLO,
+	err = tx.QueryRow(`
+		INSERT INTO subjects (
+			subject_id, course_id, plan_type_id, semester_id, thai_subject, eng_subject,
+			credits, compulsory_subject, condition, description_id, clo_id
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		RETURNING id
+	`,
+		req.SubjectID, req.CourseID, req.PlanTypeID, req.SemesterID,
+		req.ThaiSubject, req.EngSubject, req.Credits, req.CompulsorySubject,
+		req.Condition, req.DescriptionID, req.CloID,
 	).Scan(&subject.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	subject.SubjectID = req.SubjectID
-	subject.CourseID = req.CourseID
-	subject.PlanType = req.PlanType
-	subject.Semester = req.Semester
-	subject.ThaiSubject = req.ThaiSubject
-	subject.EngSubject = req.EngSubject
-	subject.Credits = req.Credits
-	subject.CompulsorySubject = req.CompulsorySubject
-	subject.Condition = req.Condition
-	subject.DescriptionThai = req.DescriptionThai
-	subject.DescriptionEng = req.DescriptionEng
-	subject.CLO = req.CLO
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
 
-	return &subject, nil
+	return r.GetSubjectByID(subject.ID)
 }
 
 func (r *subjectRepository) UpdateSubject(id int, req models.SubjectsRequest) (*models.Subjects, error) {
-	query := `
-		UPDATE subjects
-		SET subject_id=$1, course_id=$2, plan_type=$3, semester=$4, thai_subject=$5, 
-			eng_subject=$6,credits=$7, compulsory_subject=$8, condition=$9, 
-			description_thai=$10, description_eng=$11, clo=$12
-		WHERE id=$13
-		RETURNING id
-	`
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
 
-	var subject models.Subjects
-	err := r.db.QueryRow(
-		query,
-		req.SubjectID, req.CourseID, req.PlanType, req.Semester, req.ThaiSubject,
-		req.EngSubject, req.Credits, req.CompulsorySubject, req.Condition,
-		req.DescriptionThai, req.DescriptionEng, req.CLO,
-		id,
-	).Scan(&subject.ID)
+	if req.DescriptionThai != nil || req.DescriptionEng != nil {
+		_, err = tx.Exec(`
+			INSERT INTO description (description_id, description_thai, description_eng)
+			VALUES ($1,$2,$3)
+			ON CONFLICT (description_id) DO UPDATE 
+			SET description_thai=EXCLUDED.description_thai, description_eng=EXCLUDED.description_eng
+		`, req.SubjectID, req.DescriptionThai, req.DescriptionEng)
+		if err != nil {
+			return nil, err
+		}
+		req.DescriptionID = &req.SubjectID
+	}
+
+	if req.CLO != nil {
+		_, err = tx.Exec(`
+			INSERT INTO clo (clo_id, clo)
+			VALUES ($1,$2)
+			ON CONFLICT (clo_id) DO UPDATE 
+			SET clo=EXCLUDED.clo
+		`, req.SubjectID, req.CLO)
+		if err != nil {
+			return nil, err
+		}
+		req.CloID = &req.SubjectID
+	}
+
+	_, err = tx.Exec(`
+		UPDATE subjects
+		SET subject_id=$1, course_id=$2, plan_type_id=$3, semester_id=$4, 
+		    thai_subject=$5, eng_subject=$6, credits=$7, compulsory_subject=$8, 
+		    condition=$9, description_id=$10, clo_id=$11
+		WHERE id=$12
+	`, req.SubjectID, req.CourseID, req.PlanTypeID, req.SemesterID, req.ThaiSubject,
+		req.EngSubject, req.Credits, req.CompulsorySubject, req.Condition, req.DescriptionID, req.CloID, id,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	subject.SubjectID = req.SubjectID
-	subject.CourseID = req.CourseID
-	subject.PlanType = req.PlanType
-	subject.Semester = req.Semester
-	subject.ThaiSubject = req.ThaiSubject
-	subject.EngSubject = req.EngSubject
-	subject.Credits = req.Credits
-	subject.CompulsorySubject = req.CompulsorySubject
-	subject.Condition = req.Condition
-	subject.DescriptionThai = req.DescriptionThai
-	subject.DescriptionEng = req.DescriptionEng
-	subject.CLO = req.CLO
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
 
-	return &subject, nil
+	return r.GetSubjectByID(id)
 }
 
 func (r *subjectRepository) DeleteSubject(id int) error {

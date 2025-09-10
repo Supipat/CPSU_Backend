@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"cpsu/internal/course/models"
 	"cpsu/internal/course/service"
@@ -37,12 +36,7 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 }
 
 func (h *CourseHandler) GetCourseByID(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course ID"})
-		return
-	}
+	id := c.Param("id")
 
 	course, err := h.courseService.GetCourseByID(id)
 	if err != nil {
@@ -75,12 +69,7 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 }
 
 func (h *CourseHandler) UpdateCourse(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course ID"})
-		return
-	}
+	id := c.Param("id")
 
 	var req models.CoursesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -102,14 +91,9 @@ func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 }
 
 func (h *CourseHandler) DeleteCourse(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course ID"})
-		return
-	}
+	id := c.Param("id")
 
-	err = h.courseService.DeleteCourse(id)
+	err := h.courseService.DeleteCourse(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "course not found"})
