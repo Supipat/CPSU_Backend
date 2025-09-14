@@ -153,12 +153,6 @@ func main() {
 			subjectAdmin.PUT("/:id", subjectHandler.UpdateSubject)
 			subjectAdmin.DELETE("/:id", subjectHandler.DeleteSubject)
 		}
-
-		/*newsUser := v1.Group("user/news")
-		{
-			newsUser.GET("", cpsuHandler.GetAllNews)
-			newsUser.GET("/:id", cpsuHandler.GetNewsByID)
-		}*/
 	}
 
 	if err := r.Run(":" + cfg.AppPort); err != nil {

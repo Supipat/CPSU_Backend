@@ -58,9 +58,8 @@ func (h *CourseStructureHandler) GetCourseStructureByID(c *gin.Context) {
 }
 
 func (h *CourseStructureHandler) CreateCourseStructure(c *gin.Context) {
-	courseIDStr := c.PostForm("course_id")
-	courseID, err := strconv.Atoi(courseIDStr)
-	if err != nil || courseID == 0 {
+	courseID := c.PostForm("course_id")
+	if courseID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course ID"})
 		return
 	}

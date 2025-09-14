@@ -17,7 +17,7 @@ import (
 type CourseStructureService interface {
 	GetAllCourseStructure(param models.CourseStructureQueryParam) ([]models.CourseStructure, error)
 	GetCourseStructureByID(id int) (*models.CourseStructure, error)
-	CreateCourseStructure(courseID int, file *multipart.FileHeader) (*models.CourseStructure, error)
+	CreateCourseStructure(courseID string, file *multipart.FileHeader) (*models.CourseStructure, error)
 	DeleteCourseStructure(id int) error
 }
 
@@ -49,8 +49,8 @@ func (s *courseStructureService) GetCourseStructureByID(id int) (*models.CourseS
 	return s.repo.GetCourseStructureByID(id)
 }
 
-func (s *courseStructureService) CreateCourseStructure(courseID int, file *multipart.FileHeader) (*models.CourseStructure, error) {
-	if courseID == 0 {
+func (s *courseStructureService) CreateCourseStructure(courseID string, file *multipart.FileHeader) (*models.CourseStructure, error) {
+	if courseID == "" {
 		return nil, errors.New("course_id is required")
 	}
 	if file == nil {

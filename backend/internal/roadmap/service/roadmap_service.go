@@ -17,7 +17,7 @@ import (
 type RoadmapService interface {
 	GetAllRoadmap(param models.RoadmapQueryParam) ([]models.Roadmap, error)
 	GetRoadmapByID(id int) (*models.Roadmap, error)
-	CreateRoadmap(courseID int, file *multipart.FileHeader) (*models.Roadmap, error)
+	CreateRoadmap(courseID string, file *multipart.FileHeader) (*models.Roadmap, error)
 	DeleteRoadmap(id int) error
 }
 
@@ -49,8 +49,8 @@ func (s *roadmapService) GetRoadmapByID(id int) (*models.Roadmap, error) {
 	return s.repo.GetRoadmapByID(id)
 }
 
-func (s *roadmapService) CreateRoadmap(courseID int, file *multipart.FileHeader) (*models.Roadmap, error) {
-	if courseID == 0 {
+func (s *roadmapService) CreateRoadmap(courseID string, file *multipart.FileHeader) (*models.Roadmap, error) {
+	if courseID == "" {
 		return nil, errors.New("course_id is required")
 	}
 	if file == nil {

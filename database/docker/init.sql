@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS clo (
 
 CREATE TABLE IF NOT EXISTS subjects (
     id SERIAL PRIMARY KEY,
-    subject_id VARCHAR(6) NOT NULL,
+    subject_id VARCHAR(10) NOT NULL,
     course_id VARCHAR(10) NOT NULL,
     plan_type_id INT NOT NULL,
     semester_id INT NOT NULL,

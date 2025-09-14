@@ -34,7 +34,7 @@ func (r *roadmapRepository) GetAllRoadmap(param models.RoadmapQueryParam) ([]mod
 	args := []interface{}{}
 	argIndex := 1
 
-	if param.CourseID > 0 {
+	if param.CourseID != "" {
 		conditions = append(conditions, "c.course_id = $"+strconv.Itoa(argIndex))
 		args = append(args, param.CourseID)
 		argIndex++
