@@ -21,6 +21,8 @@ type Config struct {
 	AWSAccessKeyID     string
 	AWSSecretAccessKey string
 	S3BucketName       string
+
+	CalendarID string
 }
 
 func LoadConfig() (Config, error) {
@@ -41,6 +43,8 @@ func LoadConfig() (Config, error) {
 	viper.SetDefault("AWS.REGION", "ap-southeast-2")
 	viper.SetDefault("S3.BUCKET_NAME", "cpsu-website")
 
+	viper.SetDefault("CALENDAR.ID", "")
+
 	// Set config values
 	config := Config{
 		AppPort:            viper.GetString("APP.PORT"),
@@ -54,6 +58,7 @@ func LoadConfig() (Config, error) {
 		AWSAccessKeyID:     viper.GetString("AWS.ACCESS_KEY_ID"),
 		AWSSecretAccessKey: viper.GetString("AWS.SECRET_ACCESS_KEY"),
 		S3BucketName:       viper.GetString("S3.BUCKET_NAME"),
+		CalendarID:         viper.GetString("CALENDAR.ID"),
 	}
 
 	return config, nil

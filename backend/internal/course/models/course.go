@@ -23,6 +23,7 @@ type Courses struct {
 	PloID         int    `json:"plo_id"`
 	PLO           string `json:"plo"`
 	DetailURL     string `json:"detail_url"`
+	Status        string `json:"status"`
 }
 
 type CoursesQueryParam struct {
@@ -57,4 +58,5 @@ type CoursesRequest struct {
 	PloID         int    `json:"plo_id"`
 	PLO           string `json:"plo"`
 	DetailURL     string `json:"detail_url"`
+	Status        string `json:"status"`
 }

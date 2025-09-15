@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS courses (
     career_paths_id INT NOT NULL,
     plo_id INT NOT NULL,
     detail_url TEXT NOT NULL,
+    status VARCHAR(25) NOT NULL,
     FOREIGN KEY (degree_id) REFERENCES degree(degree_id) ON DELETE CASCADE,
     FOREIGN KEY (major_id) REFERENCES majors(major_id) ON DELETE CASCADE,
     FOREIGN KEY (degree_name_id) REFERENCES degree_name(degree_name_id) ON DELETE CASCADE,
@@ -293,7 +294,7 @@ COPY plo(plo)
 FROM '/docker-entrypoint-initdb.d/csv/course/plo.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
-COPY courses(course_id,degree_id,major_id,year,thai_course,eng_course,degree_name_id,admission_req,graduation_req,philosophy,objective,tuition,credits,career_paths_id,plo_id,detail_url)
+COPY courses(course_id,degree_id,major_id,year,thai_course,eng_course,degree_name_id,admission_req,graduation_req,philosophy,objective,tuition,credits,career_paths_id,plo_id,detail_url,status)
 FROM '/docker-entrypoint-initdb.d/csv/course/courses.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 

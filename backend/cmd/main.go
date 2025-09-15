@@ -30,6 +30,10 @@ import (
 	subjectHandler "cpsu/internal/subject/handler"
 	subjectRepo "cpsu/internal/subject/repository"
 	subjectService "cpsu/internal/subject/service"
+
+	calendarHandler "cpsu/internal/calendar/handler"
+	calendarRepo "cpsu/internal/calendar/repository"
+	calendarService "cpsu/internal/calendar/service"
 )
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
@@ -72,6 +76,13 @@ func main() {
 	subjectRepo := subjectRepo.NewSubjectRepository(db.GetDB())
 	subjectService := subjectService.NewSubjectService(subjectRepo)
 	subjectHandler := subjectHandler.NewSubjectHandler(subjectService)
+
+	calendarRepo, err := calendarRepo.NewCalendarRepository(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to init Google Calendar repository: %v", err)
+	}
+	calService := calendarService.NewCalendarService(calendarRepo, cfg.CalendarID)
+	calHandler := calendarHandler.NewCalendarHandler(calService)
 
 	go func() {
 		for {
@@ -152,6 +163,11 @@ func main() {
 			subjectAdmin.POST("", subjectHandler.CreateSubject)
 			subjectAdmin.PUT("/:id", subjectHandler.UpdateSubject)
 			subjectAdmin.DELETE("/:id", subjectHandler.DeleteSubject)
+		}
+
+		calendarAdmin := v1.Group("admin/calendar")
+		{
+			calendarAdmin.GET("", calHandler.GetAllCalendar)
 		}
 	}
 

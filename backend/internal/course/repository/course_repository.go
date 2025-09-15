@@ -29,8 +29,8 @@ func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]mode
 		SELECT 
 			c.course_id, d.degree_id, d.degree, m.major_id, m.major, c.year, c.thai_course, 
 			c.eng_course, dn.degree_name_id, dn.thai_degree, dn.eng_degree, c.admission_req, 
-			c.graduation_req, c.philosophy, c.objective, c.tuition, c.credits, 
-			cp.career_paths_id, cp.career_paths, p.plo_id, p.plo, c.detail_url
+			c.graduation_req, c.philosophy, c.objective, c.tuition, c.credits, cp.career_paths_id, 
+			cp.career_paths, p.plo_id, p.plo, c.detail_url, c.status
 		FROM courses c
 		LEFT JOIN degree d ON c.degree_id = d.degree_id
 		LEFT JOIN majors m ON c.major_id = m.major_id
@@ -96,7 +96,7 @@ func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]mode
 			&course.ThaiDegree, &course.EngDegree, &course.AdmissionReq, &course.GraduationReq,
 			&course.Philosophy, &course.Objective, &course.Tuition, &course.Credits,
 			&course.CareerPathsID, &course.CareerPaths, &course.PloID,
-			&course.PLO, &course.DetailURL,
+			&course.PLO, &course.DetailURL, &course.Status,
 		)
 		if err != nil {
 			return nil, err
@@ -112,8 +112,8 @@ func (r *courseRepository) GetCourseByID(id string) (*models.Courses, error) {
 		SELECT 
 			c.course_id, d.degree_id, d.degree, m.major_id, m.major, c.year, c.thai_course, 
 			c.eng_course, dn.degree_name_id, dn.thai_degree, dn.eng_degree, c.admission_req, 
-			c.graduation_req, c.philosophy, c.objective, c.tuition, c.credits, 
-			cp.career_paths_id, cp.career_paths, p.plo_id, p.plo, c.detail_url
+			c.graduation_req, c.philosophy, c.objective, c.tuition, c.credits, cp.career_paths_id, 
+			cp.career_paths, p.plo_id, p.plo, c.detail_url, c.status
 		FROM courses c
 		LEFT JOIN degree d ON c.degree_id = d.degree_id
 		LEFT JOIN majors m ON c.major_id = m.major_id
@@ -132,7 +132,7 @@ func (r *courseRepository) GetCourseByID(id string) (*models.Courses, error) {
 		&course.ThaiDegree, &course.EngDegree, &course.AdmissionReq, &course.GraduationReq,
 		&course.Philosophy, &course.Objective, &course.Tuition, &course.Credits,
 		&course.CareerPathsID, &course.CareerPaths, &course.PloID,
-		&course.PLO, &course.DetailURL,
+		&course.PLO, &course.DetailURL, &course.Status,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -199,13 +199,13 @@ func (r *courseRepository) CreateCourse(req models.CoursesRequest) (*models.Cour
         INSERT INTO courses (
             course_id, degree_id, major_id, year, thai_course, eng_course, 
 			degree_name_id, admission_req, graduation_req, philosophy, objective, 
-			tuition, credits,career_paths_id, plo_id, detail_url
+			tuition, credits,career_paths_id, plo_id, detail_url, status
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
     `,
 		req.CourseID, req.DegreeID, majorID, req.Year, req.ThaiCourse, req.EngCourse,
-		degreeNameID, req.AdmissionReq, req.GraduationReq, req.Philosophy,
-		req.Objective, req.Tuition, req.Credits, careerPathsID, ploID, req.DetailURL,
+		degreeNameID, req.AdmissionReq, req.GraduationReq, req.Philosophy, req.Objective,
+		req.Tuition, req.Credits, careerPathsID, ploID, req.DetailURL, req.Status,
 	)
 	if err != nil {
 		return nil, err
@@ -273,12 +273,12 @@ func (r *courseRepository) UpdateCourse(id string, req models.CoursesRequest) (*
 		UPDATE courses
 		SET degree_id=$1, major_id=$2, year=$3, thai_course=$4, eng_course=$5, degree_name_id=$6,
 		    admission_req=$7, graduation_req=$8, philosophy=$9, objective=$10, tuition=$11,
-		    credits=$12, career_paths_id=$13, plo_id=$14, detail_url=$15
-		WHERE course_id=$16
+		    credits=$12, career_paths_id=$13, plo_id=$14, detail_url=$15, status=$16
+		WHERE course_id=$17
 	`,
 		req.DegreeID, majorID, req.Year, req.ThaiCourse, req.EngCourse, degreeNameID,
 		req.AdmissionReq, req.GraduationReq, req.Philosophy, req.Objective, req.Tuition,
-		req.Credits, careerPathsID, ploID, req.DetailURL, id,
+		req.Credits, careerPathsID, ploID, req.DetailURL, req.Status, id,
 	)
 	if err != nil {
 		return nil, err
