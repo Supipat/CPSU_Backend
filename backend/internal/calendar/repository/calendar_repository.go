@@ -81,7 +81,7 @@ func (r *calendarRepo) GetAllCalendar(ctx context.Context, calendarID string, ti
 
 		events = append(events, models.Calendar{
 			ID:          e.Id,
-			Title:       e.Summary,
+			Summary:     e.Summary,
 			Description: e.Description,
 			Start:       start,
 			End:         end,
