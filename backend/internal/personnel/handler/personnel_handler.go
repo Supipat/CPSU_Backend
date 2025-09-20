@@ -23,13 +23,13 @@ func NewPersonnelHandler(personnelService service.PersonnelService) *PersonnelHa
 func (h *PersonnelHandler) GetAllPersonnels(c *gin.Context) {
 	var param models.PersonnelQueryParam
 	if err := c.BindQuery(&param); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query parameter"})
 		return
 	}
 
 	personnels, err := h.personnelService.GetAllPersonnels(param)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get personnels"})
 		return
 	}
 
@@ -37,10 +37,9 @@ func (h *PersonnelHandler) GetAllPersonnels(c *gin.Context) {
 }
 
 func (h *PersonnelHandler) GetPersonnelByID(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid personnel ID"})
 		return
 	}
 
@@ -58,30 +57,6 @@ func (h *PersonnelHandler) GetPersonnelByID(c *gin.Context) {
 }
 
 func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
-	Ptr := func(s string) *string {
-		if s == "" {
-			return nil
-		}
-		return &s
-	}
-
-	IntPtr := func(s string) *int {
-		if s == "" {
-			return nil
-		}
-		val, err := strconv.Atoi(s)
-		if err != nil {
-			return nil
-		}
-		return &val
-	}
-
-	typeID, err := strconv.Atoi(c.PostForm("type_id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid type_id"})
-		return
-	}
-
 	departmentPositionID, err := strconv.Atoi(c.PostForm("department_position_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid department_position_id"})
@@ -89,18 +64,22 @@ func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
 	}
 
 	req := models.PersonnelRequest{
-		TypeID:               typeID,
+		TypePersonnel:        c.PostForm("type_personnel"),
 		DepartmentPositionID: departmentPositionID,
-		AcademicPositionID:   IntPtr(c.PostForm("academic_position_id")),
+		ThaiAcademicPosition: strPtr(c.PostForm("thai_academic_position")),
+		EngAcademicPosition:  strPtr(c.PostForm("eng_academic_position")),
 		ThaiName:             c.PostForm("thai_name"),
 		EngName:              c.PostForm("eng_name"),
-		Education:            Ptr(c.PostForm("education")),
-		RelatedFields:        Ptr(c.PostForm("related_fields")),
-		Email:                Ptr(c.PostForm("email")),
-		Website:              Ptr(c.PostForm("website")),
+		Education:            strPtr(c.PostForm("education")),
+		RelatedFields:        strPtr(c.PostForm("related_fields")),
+		Email:                strPtr(c.PostForm("email")),
+		Website:              strPtr(c.PostForm("website")),
+		AcademicPositionID:   intPtr(c.PostForm("academic_position_id")),
 	}
 
-	createdPersonnel, err := h.personnelService.CreatePersonnel(req)
+	fileImage, _ := c.FormFile("file_image")
+
+	createdPersonnel, err := h.personnelService.CreatePersonnel(req, fileImage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -110,34 +89,9 @@ func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
 }
 
 func (h *PersonnelHandler) UpdatePersonnel(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid personnel ID"})
-		return
-	}
-
-	Ptr := func(s string) *string {
-		if s == "" {
-			return nil
-		}
-		return &s
-	}
-
-	IntPtr := func(s string) *int {
-		if s == "" {
-			return nil
-		}
-		val, err := strconv.Atoi(s)
-		if err != nil {
-			return nil
-		}
-		return &val
-	}
-
-	typeID, err := strconv.Atoi(c.PostForm("type_id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid type_id"})
 		return
 	}
 
@@ -148,18 +102,22 @@ func (h *PersonnelHandler) UpdatePersonnel(c *gin.Context) {
 	}
 
 	req := models.PersonnelRequest{
-		TypeID:               typeID,
+		TypePersonnel:        c.PostForm("type_personnel"),
 		DepartmentPositionID: departmentPositionID,
-		AcademicPositionID:   IntPtr(c.PostForm("academic_position_id")),
+		ThaiAcademicPosition: strPtr(c.PostForm("thai_academic_position")),
+		EngAcademicPosition:  strPtr(c.PostForm("eng_academic_position")),
 		ThaiName:             c.PostForm("thai_name"),
 		EngName:              c.PostForm("eng_name"),
-		Education:            Ptr(c.PostForm("education")),
-		RelatedFields:        Ptr(c.PostForm("related_fields")),
-		Email:                Ptr(c.PostForm("email")),
-		Website:              Ptr(c.PostForm("website")),
+		Education:            strPtr(c.PostForm("education")),
+		RelatedFields:        strPtr(c.PostForm("related_fields")),
+		Email:                strPtr(c.PostForm("email")),
+		Website:              strPtr(c.PostForm("website")),
+		AcademicPositionID:   intPtr(c.PostForm("academic_position_id")),
 	}
 
-	updatedPersonnel, err := h.personnelService.UpdatePersonnel(id, req)
+	fileImage, _ := c.FormFile("file_image")
+
+	updatedPersonnel, err := h.personnelService.UpdatePersonnel(id, req, fileImage)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "personnel ID not found"})
@@ -173,8 +131,7 @@ func (h *PersonnelHandler) UpdatePersonnel(c *gin.Context) {
 }
 
 func (h *PersonnelHandler) DeletePersonnel(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "personnel ID required"})
 		return
@@ -191,4 +148,22 @@ func (h *PersonnelHandler) DeletePersonnel(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "personnel deleted successfully"})
+}
+
+func strPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+func intPtr(s string) *int {
+	if s == "" {
+		return nil
+	}
+	val, err := strconv.Atoi(s)
+	if err != nil {
+		return nil
+	}
+	return &val
 }

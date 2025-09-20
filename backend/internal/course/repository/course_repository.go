@@ -27,14 +27,11 @@ func NewCourseRepository(db *sql.DB) CourseRepository {
 func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]models.Courses, error) {
 	query := `
 		SELECT 
-			c.course_id, d.degree_id, d.degree, m.major_id, m.major, c.year, c.thai_course, 
-			c.eng_course, dn.degree_name_id, dn.thai_degree, dn.eng_degree, c.admission_req, 
+			c.course_id, c.degree, c.major, c.year, c.thai_course, 
+			c.eng_course, c.thai_degree, c.eng_degree, c.admission_req, 
 			c.graduation_req, c.philosophy, c.objective, c.tuition, c.credits, cp.career_paths_id, 
 			cp.career_paths, p.plo_id, p.plo, c.detail_url, c.status
 		FROM courses c
-		LEFT JOIN degree d ON c.degree_id = d.degree_id
-		LEFT JOIN majors m ON c.major_id = m.major_id
-		LEFT JOIN degree_name dn ON c.degree_name_id = dn.degree_name_id
 		LEFT JOIN career_paths cp ON c.career_paths_id = cp.career_paths_id
 		LEFT JOIN plo p ON c.plo_id = p.plo_id
 	`
@@ -43,15 +40,15 @@ func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]mode
 	args := []interface{}{}
 	argIndex := 1
 
-	if param.DegreeID > 0 {
-		conditions = append(conditions, "d.degree_id = $"+strconv.Itoa(argIndex))
-		args = append(args, param.DegreeID)
+	if param.Degree != "" {
+		conditions = append(conditions, "c.degree = $"+strconv.Itoa(argIndex))
+		args = append(args, param.Degree)
 		argIndex++
 	}
 
-	if param.MajorID > 0 {
-		conditions = append(conditions, "m.major_id = $"+strconv.Itoa(argIndex))
-		args = append(args, param.MajorID)
+	if param.Major != "" {
+		conditions = append(conditions, "c.major = $"+strconv.Itoa(argIndex))
+		args = append(args, param.Major)
 		argIndex++
 	}
 
@@ -91,9 +88,9 @@ func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]mode
 	for rows.Next() {
 		var course models.Courses
 		err := rows.Scan(
-			&course.CourseID, &course.DegreeID, &course.Degree, &course.MajorID, &course.Major,
-			&course.Year, &course.ThaiCourse, &course.EngCourse, &course.DegreeNameID,
-			&course.ThaiDegree, &course.EngDegree, &course.AdmissionReq, &course.GraduationReq,
+			&course.CourseID, &course.Degree, &course.Major, &course.Year,
+			&course.ThaiCourse, &course.EngCourse, &course.ThaiDegree,
+			&course.EngDegree, &course.AdmissionReq, &course.GraduationReq,
 			&course.Philosophy, &course.Objective, &course.Tuition, &course.Credits,
 			&course.CareerPathsID, &course.CareerPaths, &course.PloID,
 			&course.PLO, &course.DetailURL, &course.Status,
@@ -110,14 +107,11 @@ func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]mode
 func (r *courseRepository) GetCourseByID(id string) (*models.Courses, error) {
 	query := `
 		SELECT 
-			c.course_id, d.degree_id, d.degree, m.major_id, m.major, c.year, c.thai_course, 
-			c.eng_course, dn.degree_name_id, dn.thai_degree, dn.eng_degree, c.admission_req, 
+			c.course_id, c.degree, c.major, c.year, c.thai_course, 
+			c.eng_course, c.thai_degree, c.eng_degree, c.admission_req, 
 			c.graduation_req, c.philosophy, c.objective, c.tuition, c.credits, cp.career_paths_id, 
 			cp.career_paths, p.plo_id, p.plo, c.detail_url, c.status
 		FROM courses c
-		LEFT JOIN degree d ON c.degree_id = d.degree_id
-		LEFT JOIN majors m ON c.major_id = m.major_id
-		LEFT JOIN degree_name dn ON c.degree_name_id = dn.degree_name_id
 		LEFT JOIN career_paths cp ON c.career_paths_id = cp.career_paths_id
 		LEFT JOIN plo p ON c.plo_id = p.plo_id
 		WHERE c.course_id = $1
@@ -127,9 +121,9 @@ func (r *courseRepository) GetCourseByID(id string) (*models.Courses, error) {
 
 	var course models.Courses
 	err := row.Scan(
-		&course.CourseID, &course.DegreeID, &course.Degree, &course.MajorID, &course.Major,
-		&course.Year, &course.ThaiCourse, &course.EngCourse, &course.DegreeNameID,
-		&course.ThaiDegree, &course.EngDegree, &course.AdmissionReq, &course.GraduationReq,
+		&course.CourseID, &course.Degree, &course.Major, &course.Year,
+		&course.ThaiCourse, &course.EngCourse, &course.ThaiDegree,
+		&course.EngDegree, &course.AdmissionReq, &course.GraduationReq,
 		&course.Philosophy, &course.Objective, &course.Tuition, &course.Credits,
 		&course.CareerPathsID, &course.CareerPaths, &course.PloID,
 		&course.PLO, &course.DetailURL, &course.Status,
@@ -150,28 +144,6 @@ func (r *courseRepository) CreateCourse(req models.CoursesRequest) (*models.Cour
 		return nil, err
 	}
 	defer tx.Rollback()
-
-	var majorID int
-	err = tx.QueryRow(`SELECT major_id FROM majors WHERE major = $1`, req.Major).Scan(&majorID)
-	if err == sql.ErrNoRows {
-		err = tx.QueryRow(`INSERT INTO majors (major) VALUES($1) RETURNING major_id`, req.Major).Scan(&majorID)
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
-		return nil, err
-	}
-
-	var degreeNameID int
-	err = tx.QueryRow(`SELECT degree_name_id FROM degree_name WHERE thai_degree = $1`, req.ThaiDegree).Scan(&degreeNameID)
-	if err == sql.ErrNoRows {
-		err = tx.QueryRow(`INSERT INTO degree_name (thai_degree,eng_degree) VALUES($1,$2) RETURNING degree_name_id`, req.ThaiDegree, req.EngDegree).Scan(&degreeNameID)
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
-		return nil, err
-	}
 
 	var careerPathsID int
 	err = tx.QueryRow(`SELECT career_paths_id FROM career_paths WHERE career_paths = $1`, req.CareerPaths).Scan(&careerPathsID)
@@ -197,14 +169,14 @@ func (r *courseRepository) CreateCourse(req models.CoursesRequest) (*models.Cour
 
 	_, err = tx.Exec(`
         INSERT INTO courses (
-            course_id, degree_id, major_id, year, thai_course, eng_course, 
-			degree_name_id, admission_req, graduation_req, philosophy, objective, 
+            course_id, degree, major, year, thai_course, eng_course, thai_degree,
+			eng_degree, admission_req, graduation_req, philosophy, objective, 
 			tuition, credits,career_paths_id, plo_id, detail_url, status
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
     `,
-		req.CourseID, req.DegreeID, majorID, req.Year, req.ThaiCourse, req.EngCourse,
-		degreeNameID, req.AdmissionReq, req.GraduationReq, req.Philosophy, req.Objective,
+		req.CourseID, req.Degree, req.Major, req.Year, req.ThaiCourse, req.EngCourse, req.ThaiDegree,
+		req.EngDegree, req.AdmissionReq, req.GraduationReq, req.Philosophy, req.Objective,
 		req.Tuition, req.Credits, careerPathsID, ploID, req.DetailURL, req.Status,
 	)
 	if err != nil {
@@ -224,28 +196,6 @@ func (r *courseRepository) UpdateCourse(id string, req models.CoursesRequest) (*
 		return nil, err
 	}
 	defer tx.Rollback()
-
-	var majorID int
-	err = tx.QueryRow(`SELECT major_id FROM majors WHERE major = $1`, req.Major).Scan(&majorID)
-	if err == sql.ErrNoRows {
-		err = tx.QueryRow(`INSERT INTO majors (major) VALUES($1) RETURNING major_id`, req.Major).Scan(&majorID)
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
-		return nil, err
-	}
-
-	var degreeNameID int
-	err = tx.QueryRow(`SELECT degree_name_id FROM degree_name WHERE thai_degree = $1`, req.ThaiDegree).Scan(&degreeNameID)
-	if err == sql.ErrNoRows {
-		err = tx.QueryRow(`INSERT INTO degree_name (thai_degree,eng_degree) VALUES($1,$2) RETURNING degree_name_id`, req.ThaiDegree, req.EngDegree).Scan(&degreeNameID)
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
-		return nil, err
-	}
 
 	var careerPathsID int
 	err = tx.QueryRow(`SELECT career_paths_id FROM career_paths WHERE career_paths = $1`, req.CareerPaths).Scan(&careerPathsID)
@@ -271,12 +221,12 @@ func (r *courseRepository) UpdateCourse(id string, req models.CoursesRequest) (*
 
 	_, err = tx.Exec(`
 		UPDATE courses
-		SET degree_id=$1, major_id=$2, year=$3, thai_course=$4, eng_course=$5, degree_name_id=$6,
-		    admission_req=$7, graduation_req=$8, philosophy=$9, objective=$10, tuition=$11,
-		    credits=$12, career_paths_id=$13, plo_id=$14, detail_url=$15, status=$16
-		WHERE course_id=$17
+		SET degree=$1, major=$2, year=$3, thai_course=$4, eng_course=$5, thai_degree=$6, eng_degree=$7,
+		    admission_req=$8, graduation_req=$9, philosophy=$10, objective=$11, tuition=$12,
+		    credits=$13, career_paths_id=$14, plo_id=$15, detail_url=$16, status=$17
+		WHERE course_id=$18
 	`,
-		req.DegreeID, majorID, req.Year, req.ThaiCourse, req.EngCourse, degreeNameID,
+		req.Degree, req.Major, req.Year, req.ThaiCourse, req.EngCourse, req.ThaiDegree, req.EngDegree,
 		req.AdmissionReq, req.GraduationReq, req.Philosophy, req.Objective, req.Tuition,
 		req.Credits, careerPathsID, ploID, req.DetailURL, req.Status, id,
 	)

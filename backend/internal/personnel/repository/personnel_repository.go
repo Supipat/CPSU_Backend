@@ -27,12 +27,10 @@ func NewPersonnelRepository(db *sql.DB) PersonnelRepository {
 func (r *personnelRepository) GetAllPersonnels(param models.PersonnelQueryParam) ([]models.Personnels, error) {
 	query := `
 		SELECT
-			p.personnel_id, t.type_id, t.type_name, 
-			d.department_position_id, d.department_position_name,
-			a.academic_position_id, a.thai_academic_position, a.eng_academic_position, 
-			p.thai_name, p.eng_name, p.education, p.related_fields, p.email, p.website
+			p.personnel_id, p.type_personnel, d.department_position_id, d.department_position_name,
+			a.academic_position_id, a.thai_academic_position, a.eng_academic_position, p.thai_name, 
+			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image
 		FROM personnels p
-		LEFT JOIN type_personnel t ON p.type_id = t.type_id
 		LEFT JOIN department_position d ON p.department_position_id = d.department_position_id
 		LEFT JOIN academic_position a ON p.academic_position_id = a.academic_position_id
 	`
@@ -41,9 +39,9 @@ func (r *personnelRepository) GetAllPersonnels(param models.PersonnelQueryParam)
 	args := []interface{}{}
 	argIndex := 1
 
-	if param.TypeID > 0 {
-		conditions = append(conditions, "t.type_id = $"+strconv.Itoa(argIndex))
-		args = append(args, param.TypeID)
+	if param.TypePersonnel != "" {
+		conditions = append(conditions, "p.type_personnel = $"+strconv.Itoa(argIndex))
+		args = append(args, param.TypePersonnel)
 		argIndex++
 	}
 
@@ -89,12 +87,10 @@ func (r *personnelRepository) GetAllPersonnels(param models.PersonnelQueryParam)
 	for rows.Next() {
 		var personnel models.Personnels
 		err := rows.Scan(
-			&personnel.PersonnelID, &personnel.TypeID, &personnel.TypeName,
-			&personnel.DepartmentPositionID, &personnel.DepartmentPositionName,
-			&personnel.AcademicPositionID, &personnel.ThaiAcademicPosition,
-			&personnel.EngAcademicPosition, &personnel.ThaiName, &personnel.EngName,
-			&personnel.Education, &personnel.RelatedFields,
-			&personnel.Email, &personnel.Website,
+			&personnel.PersonnelID, &personnel.TypePersonnel, &personnel.DepartmentPositionID, &personnel.DepartmentPositionName,
+			&personnel.AcademicPositionID, &personnel.ThaiAcademicPosition, &personnel.EngAcademicPosition,
+			&personnel.ThaiName, &personnel.EngName, &personnel.Education, &personnel.RelatedFields,
+			&personnel.Email, &personnel.Website, &personnel.FileImage,
 		)
 		if err != nil {
 			return nil, err
@@ -107,12 +103,10 @@ func (r *personnelRepository) GetAllPersonnels(param models.PersonnelQueryParam)
 func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, error) {
 	query := `
 		SELECT
-			p.personnel_id, t.type_id, t.type_name, 
-			d.department_position_id, d.department_position_name,
-			a.academic_position_id, a.thai_academic_position, a.eng_academic_position, 
-			p.thai_name, p.eng_name, p.education, p.related_fields, p.email, p.website
+			p.personnel_id, p.type_personnel, d.department_position_id, d.department_position_name,
+			a.academic_position_id, a.thai_academic_position, a.eng_academic_position, p.thai_name, 
+			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image
 		FROM personnels p
-		LEFT JOIN type_personnel t ON p.type_id = t.type_id
 		LEFT JOIN department_position d ON p.department_position_id = d.department_position_id
 		LEFT JOIN academic_position a ON p.academic_position_id = a.academic_position_id
 		WHERE p.personnel_id = $1
@@ -122,12 +116,10 @@ func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, erro
 
 	var personnel models.Personnels
 	err := row.Scan(
-		&personnel.PersonnelID, &personnel.TypeID, &personnel.TypeName,
-		&personnel.DepartmentPositionID, &personnel.DepartmentPositionName,
-		&personnel.AcademicPositionID, &personnel.ThaiAcademicPosition,
-		&personnel.EngAcademicPosition, &personnel.ThaiName, &personnel.EngName,
-		&personnel.Education, &personnel.RelatedFields,
-		&personnel.Email, &personnel.Website,
+		&personnel.PersonnelID, &personnel.TypePersonnel, &personnel.DepartmentPositionID, &personnel.DepartmentPositionName,
+		&personnel.AcademicPositionID, &personnel.ThaiAcademicPosition, &personnel.EngAcademicPosition,
+		&personnel.ThaiName, &personnel.EngName, &personnel.Education, &personnel.RelatedFields,
+		&personnel.Email, &personnel.Website, &personnel.FileImage,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -139,68 +131,111 @@ func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, erro
 }
 
 func (r *personnelRepository) CreatePersonnel(req models.PersonnelRequest) (*models.Personnels, error) {
-	query := `
-		INSERT INTO personnels (
-			type_id, department_position_id, academic_position_id,
-			thai_name, eng_name, education, related_fields, email, website
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-		RETURNING personnel_id
-	`
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
 
-	var p models.Personnels
-	err := r.db.QueryRow(
-		query,
-		req.TypeID, req.DepartmentPositionID, req.AcademicPositionID,
-		req.ThaiName, req.EngName, req.Education, req.RelatedFields, req.Email, req.Website,
-	).Scan(&p.PersonnelID)
+	var academicID *int
+	if req.AcademicPositionID != nil {
+		academicID = req.AcademicPositionID
+	} else if req.ThaiAcademicPosition != nil || req.EngAcademicPosition != nil {
+		var id int
+		err = tx.QueryRow(`SELECT academic_position_id FROM academic_position WHERE thai_academic_position = $1 AND eng_academic_position = $2`, req.ThaiAcademicPosition, req.EngAcademicPosition).Scan(&id)
+		if err == sql.ErrNoRows {
+			err = tx.QueryRow(`INSERT INTO academic_position (thai_academic_position, eng_academic_position) VALUES($1,$2) RETURNING academic_position_id`, req.ThaiAcademicPosition, req.EngAcademicPosition).Scan(&id)
+			if err != nil {
+				return nil, err
+			}
+		} else if err != nil {
+			return nil, err
+		}
+		academicID = &id
+	}
+
+	var academicPositionID interface{}
+	if academicID != nil {
+		academicPositionID = *academicID
+	} else {
+		academicPositionID = nil
+	}
+
+	var newID int
+	err = tx.QueryRow(`
+		INSERT INTO personnels (
+			type_personnel, department_position_id, academic_position_id,
+			thai_name, eng_name, education, related_fields, email, website, file_image
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		RETURNING personnel_id
+	`,
+		req.TypePersonnel, req.DepartmentPositionID, academicPositionID,
+		req.ThaiName, req.EngName, req.Education, req.RelatedFields,
+		req.Email, req.Website, req.FileImage,
+	).Scan(&newID)
 	if err != nil {
 		return nil, err
 	}
 
-	p.TypeID = req.TypeID
-	p.DepartmentPositionID = req.DepartmentPositionID
-	p.AcademicPositionID = req.AcademicPositionID
-	p.ThaiName = req.ThaiName
-	p.EngName = req.EngName
-	p.Education = req.Education
-	p.RelatedFields = req.RelatedFields
-	p.Email = req.Email
-	p.Website = req.Website
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
 
-	return &p, nil
+	return r.GetPersonnelByID(newID)
 }
 
 func (r *personnelRepository) UpdatePersonnel(id int, req models.PersonnelRequest) (*models.Personnels, error) {
-	query := `
-		UPDATE personnels
-		SET type_id=$1, department_position_id=$2, academic_position_id=$3,
-			thai_name=$4, eng_name=$5, education=$6, related_fields=$7, email=$8, website=$9
-		WHERE personnel_id=$10
-		RETURNING personnel_id
-	`
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
 
-	var p models.Personnels
-	err := r.db.QueryRow(
-		query,
-		req.TypeID, req.DepartmentPositionID, req.AcademicPositionID,
+	var academicID *int
+	if req.AcademicPositionID != nil {
+		academicID = req.AcademicPositionID
+	} else if req.ThaiAcademicPosition != nil || req.EngAcademicPosition != nil {
+		var aid int
+		err = tx.QueryRow(`SELECT academic_position_id FROM academic_position WHERE thai_academic_position = $1 AND eng_academic_position = $2`, req.ThaiAcademicPosition, req.EngAcademicPosition).Scan(&aid)
+		if err == sql.ErrNoRows {
+			err = tx.QueryRow(`INSERT INTO academic_position (thai_academic_position, eng_academic_position) VALUES($1,$2) RETURNING academic_position_id`, req.ThaiAcademicPosition, req.EngAcademicPosition).Scan(&aid)
+			if err != nil {
+				return nil, err
+			}
+		} else if err != nil {
+			return nil, err
+		}
+		academicID = &aid
+	}
+
+	var academicPositionID interface{}
+	if academicID != nil {
+		academicPositionID = *academicID
+	} else {
+		academicPositionID = nil
+	}
+
+	var updatedID int
+	err = tx.QueryRow(`
+		UPDATE personnels
+		SET type_personnel=$1, department_position_id=$2, academic_position_id=$3,
+			thai_name=$4, eng_name=$5, education=$6, related_fields=$7, email=$8, website=$9, file_image=$10
+		WHERE personnel_id=$11
+		RETURNING personnel_id
+	`,
+		req.TypePersonnel, req.DepartmentPositionID, academicPositionID,
 		req.ThaiName, req.EngName, req.Education, req.RelatedFields,
-		req.Email, req.Website, id,
-	).Scan(&p.PersonnelID)
+		req.Email, req.Website, req.FileImage, id,
+	).Scan(&updatedID)
 	if err != nil {
 		return nil, err
 	}
 
-	p.TypeID = req.TypeID
-	p.DepartmentPositionID = req.DepartmentPositionID
-	p.AcademicPositionID = req.AcademicPositionID
-	p.ThaiName = req.ThaiName
-	p.EngName = req.EngName
-	p.Education = req.Education
-	p.RelatedFields = req.RelatedFields
-	p.Email = req.Email
-	p.Website = req.Website
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
 
-	return &p, nil
+	return r.GetPersonnelByID(updatedID)
 }
 
 func (r *personnelRepository) DeletePersonnel(id int) error {
