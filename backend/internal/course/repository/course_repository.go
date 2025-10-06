@@ -57,6 +57,11 @@ func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]mode
 		args = append(args, param.Year)
 		argIndex++
 	}
+	if param.Status != "" {
+		conditions = append(conditions, "c.status = $"+strconv.Itoa(argIndex))
+		args = append(args, param.Status)
+		argIndex++
+	}
 
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")

@@ -53,7 +53,7 @@ func (s *newsService) GetAllNews(param models.NewsQueryParam) ([]models.News, er
 	if err != nil {
 		return nil, err
 	}
-	if len(newsList) == 0 && param.TypeName != "" {
+	if len(newsList) == 0 && param.TypeID > 0 {
 		return nil, errors.New("news type not found")
 	}
 

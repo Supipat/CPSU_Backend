@@ -54,6 +54,22 @@ func (h *PersonnelHandler) GetPersonnelByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, personnel)
+	var research []models.Research
+	if personnel.ScopusID != nil && *personnel.ScopusID != "" {
+		research, err = h.personnelService.GetResearchByScopusID(*personnel.ScopusID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "failed to fetch scopus data",
+				"details": err.Error(),
+			})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"personnel": personnel,
+		"research":  research,
+	})
 }
 
 func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
@@ -74,6 +90,7 @@ func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
 		RelatedFields:        strPtr(c.PostForm("related_fields")),
 		Email:                strPtr(c.PostForm("email")),
 		Website:              strPtr(c.PostForm("website")),
+		ScopusID:             strPtr(c.PostForm("scopus_id")),
 		AcademicPositionID:   intPtr(c.PostForm("academic_position_id")),
 	}
 
@@ -112,6 +129,7 @@ func (h *PersonnelHandler) UpdatePersonnel(c *gin.Context) {
 		RelatedFields:        strPtr(c.PostForm("related_fields")),
 		Email:                strPtr(c.PostForm("email")),
 		Website:              strPtr(c.PostForm("website")),
+		ScopusID:             strPtr(c.PostForm("scopus_id")),
 		AcademicPositionID:   intPtr(c.PostForm("academic_position_id")),
 	}
 

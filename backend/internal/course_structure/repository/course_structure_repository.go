@@ -39,13 +39,6 @@ func (r *courseStructureRepository) GetAllCourseStructure(param models.CourseStr
 		args = append(args, param.CourseID)
 		argIndex++
 	}
-
-	if len(param.Search) > 0 {
-		conditions = append(conditions, "c.thai_course ILIKE '%' || $"+strconv.Itoa(argIndex)+" || '%'")
-		args = append(args, param.Search)
-		argIndex++
-	}
-
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}

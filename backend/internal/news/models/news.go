@@ -22,12 +22,11 @@ type NewsImages struct {
 }
 
 type NewsQueryParam struct {
-	Search   string `form:"search"`
-	Limit    int    `form:"limit"`
-	TypeID   int    `form:"type_id"`
-	TypeName string `form:"type_name"`
-	Sort     string `form:"sort"`
-	Order    string `form:"order"`
+	Search string `form:"search"`
+	Limit  int    `form:"limit"`
+	TypeID int    `form:"type_id"`
+	Sort   string `form:"sort"`
+	Order  string `form:"order"`
 }
 
 type NewsRequest struct {

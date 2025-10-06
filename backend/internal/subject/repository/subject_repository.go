@@ -47,7 +47,7 @@ func (r *subjectRepository) GetAllSubjects(param models.SubjectsQueryParam) ([]m
 		argIndex++
 	}
 
-	if param.CourseID > 0 {
+	if param.CourseID != "" {
 		conditions = append(conditions, "c.course_id = $"+strconv.Itoa(argIndex))
 		args = append(args, param.CourseID)
 		argIndex++

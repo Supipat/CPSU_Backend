@@ -30,6 +30,7 @@ type CoursesQueryParam struct {
 	Major  string `form:"major"`
 	Year   int    `form:"year"`
 	Sort   string `form:"sort"`
+	Status string `form:"status"`
 	Order  string `form:"order"`
 }
 

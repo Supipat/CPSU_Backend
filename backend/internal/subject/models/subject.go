@@ -23,7 +23,7 @@ type SubjectsQueryParam struct {
 	Search    string `form:"search"`
 	Limit     int    `form:"limit"`
 	SubjectID string `form:"subject_id"`
-	CourseID  int    `form:"course_id"`
+	CourseID  string `form:"course_id"`
 	PlanType  string `form:"plan_type"`
 	Semester  string `form:"semester"`
 	Sort      string `form:"sort"`
@@ -31,7 +31,6 @@ type SubjectsQueryParam struct {
 }
 
 type SubjectsRequest struct {
-	ID                int     `json:"id"`
 	SubjectID         string  `json:"subject_id"`
 	CourseID          string  `json:"course_id"`
 	PlanType          string  `json:"plan_type"`

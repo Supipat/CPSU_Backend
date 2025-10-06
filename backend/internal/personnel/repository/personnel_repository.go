@@ -14,6 +14,7 @@ type PersonnelRepository interface {
 	CreatePersonnel(req models.PersonnelRequest) (*models.Personnels, error)
 	UpdatePersonnel(id int, req models.PersonnelRequest) (*models.Personnels, error)
 	DeletePersonnel(id int) error
+	GetScopusIDByPersonnelID(id int) (string, error)
 }
 
 type personnelRepository struct {
@@ -29,7 +30,11 @@ func (r *personnelRepository) GetAllPersonnels(param models.PersonnelQueryParam)
 		SELECT
 			p.personnel_id, p.type_personnel, d.department_position_id, d.department_position_name,
 			a.academic_position_id, a.thai_academic_position, a.eng_academic_position, p.thai_name, 
+<<<<<<< HEAD
 			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image
+=======
+			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image, p.scopus_id
+>>>>>>> b28a701 (6/10/68)
 		FROM personnels p
 		LEFT JOIN department_position d ON p.department_position_id = d.department_position_id
 		LEFT JOIN academic_position a ON p.academic_position_id = a.academic_position_id
@@ -90,7 +95,7 @@ func (r *personnelRepository) GetAllPersonnels(param models.PersonnelQueryParam)
 			&personnel.PersonnelID, &personnel.TypePersonnel, &personnel.DepartmentPositionID, &personnel.DepartmentPositionName,
 			&personnel.AcademicPositionID, &personnel.ThaiAcademicPosition, &personnel.EngAcademicPosition,
 			&personnel.ThaiName, &personnel.EngName, &personnel.Education, &personnel.RelatedFields,
-			&personnel.Email, &personnel.Website, &personnel.FileImage,
+			&personnel.Email, &personnel.Website, &personnel.FileImage, &personnel.ScopusID,
 		)
 		if err != nil {
 			return nil, err
@@ -105,7 +110,11 @@ func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, erro
 		SELECT
 			p.personnel_id, p.type_personnel, d.department_position_id, d.department_position_name,
 			a.academic_position_id, a.thai_academic_position, a.eng_academic_position, p.thai_name, 
+<<<<<<< HEAD
 			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image
+=======
+			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image, p.scopus_id
+>>>>>>> b28a701 (6/10/68)
 		FROM personnels p
 		LEFT JOIN department_position d ON p.department_position_id = d.department_position_id
 		LEFT JOIN academic_position a ON p.academic_position_id = a.academic_position_id
@@ -119,7 +128,7 @@ func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, erro
 		&personnel.PersonnelID, &personnel.TypePersonnel, &personnel.DepartmentPositionID, &personnel.DepartmentPositionName,
 		&personnel.AcademicPositionID, &personnel.ThaiAcademicPosition, &personnel.EngAcademicPosition,
 		&personnel.ThaiName, &personnel.EngName, &personnel.Education, &personnel.RelatedFields,
-		&personnel.Email, &personnel.Website, &personnel.FileImage,
+		&personnel.Email, &personnel.Website, &personnel.FileImage, &personnel.ScopusID,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -128,6 +137,16 @@ func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, erro
 		return nil, err
 	}
 	return &personnel, nil
+}
+
+func (r *personnelRepository) GetScopusIDByPersonnelID(id int) (string, error) {
+	query := `SELECT scopus_id FROM personnels WHERE personnel_id = $1`
+	var scopusID string
+	err := r.db.QueryRow(query, id).Scan(&scopusID)
+	if err != nil {
+		return "", err
+	}
+	return scopusID, nil
 }
 
 func (r *personnelRepository) CreatePersonnel(req models.PersonnelRequest) (*models.Personnels, error) {
@@ -164,14 +183,14 @@ func (r *personnelRepository) CreatePersonnel(req models.PersonnelRequest) (*mod
 	var newID int
 	err = tx.QueryRow(`
 		INSERT INTO personnels (
-			type_personnel, department_position_id, academic_position_id,
-			thai_name, eng_name, education, related_fields, email, website, file_image
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+			type_personnel, department_position_id, academic_position_id,thai_name, 
+			eng_name, education, related_fields, email, website, file_image, scopus_id
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		RETURNING personnel_id
 	`,
 		req.TypePersonnel, req.DepartmentPositionID, academicPositionID,
 		req.ThaiName, req.EngName, req.Education, req.RelatedFields,
-		req.Email, req.Website, req.FileImage,
+		req.Email, req.Website, req.FileImage, req.ScopusID,
 	).Scan(&newID)
 	if err != nil {
 		return nil, err
@@ -218,14 +237,14 @@ func (r *personnelRepository) UpdatePersonnel(id int, req models.PersonnelReques
 	var updatedID int
 	err = tx.QueryRow(`
 		UPDATE personnels
-		SET type_personnel=$1, department_position_id=$2, academic_position_id=$3,
-			thai_name=$4, eng_name=$5, education=$6, related_fields=$7, email=$8, website=$9, file_image=$10
-		WHERE personnel_id=$11
+		SET type_personnel=$1, department_position_id=$2, academic_position_id=$3,thai_name=$4, eng_name=$5, 
+		education=$6, related_fields=$7, email=$8, website=$9, file_image=$10, scopus_id=$11
+		WHERE personnel_id=$12
 		RETURNING personnel_id
 	`,
 		req.TypePersonnel, req.DepartmentPositionID, academicPositionID,
 		req.ThaiName, req.EngName, req.Education, req.RelatedFields,
-		req.Email, req.Website, req.FileImage, id,
+		req.Email, req.Website, req.FileImage, req.ScopusID, id,
 	).Scan(&updatedID)
 	if err != nil {
 		return nil, err
