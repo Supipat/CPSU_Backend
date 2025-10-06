@@ -360,13 +360,8 @@ SELECT setval('subjects_id_seq', (SELECT MAX(id) FROM subjects));
 ('สายวิชาการ'),('สายสนับสนุนวิชาการ');*/
    
 INSERT INTO department_position(department_position_name) VALUES
-<<<<<<< HEAD
-('หัวหน้าภาควิชา'),('รองหัวหน้าภาควิชา'),('อาจารย์ประจำภาควิชา'),
-('นักวิชาการอุดมศึกษาชำนาญการ'),('นักวิชาการอุดมศึกษา'),('นักวิชาการอุดมศึกษา (ประจำหลักสูตรวิทยาการข้อมูล)'),('นักวิชาการอุดมศึกษา'),('นักเทคโนโลยีสารสนเทศ'),('นักคอมพิวเตอร์'),('พนักงานทั่วไป');
-=======
 ('หัวหน้าภาควิชา'),('รองหัวหน้าภาควิชาฯ ฝ่ายบริหาร'),('รองหัวหน้าภาควิชาฯ'),('อาจารย์ประจำภาควิชา'),
 ('นักวิชาการอุดมศึกษาชำนาญการ'),('นักวิชาการอุดมศึกษาปฏิบัติการ'),('นักวิชาการอุดมศึกษา (ประจำหลักสูตรวิทยาการข้อมูล)'),('นักวิชาการอุดมศึกษา'),('นักเทคโนโลยีสารสนเทศ'),('นักคอมพิวเตอร์'),('พนักงานทั่วไป');
->>>>>>> b28a701 (6/10/68)
 
 INSERT INTO academic_position(thai_academic_position,eng_academic_position) VALUES
 ('รศ.ดร.','Assoc.Prof.Dr.'),
@@ -375,12 +370,7 @@ INSERT INTO academic_position(thai_academic_position,eng_academic_position) VALU
 ('อ.ดร.','Dr.'),
 ('อ.','');
 
-
-<<<<<<< HEAD
-COPY personnels(type_personnel,department_position_id,academic_position_id,thai_name,eng_name,education,related_fields,email,website,file_image)
-=======
 COPY personnels(type_personnel,department_position_id,academic_position_id,thai_name,eng_name,education,related_fields,email,website,file_image,scopus_id)
->>>>>>> b28a701 (6/10/68)
 FROM '/docker-entrypoint-initdb.d/csv/personnel/personnels.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 

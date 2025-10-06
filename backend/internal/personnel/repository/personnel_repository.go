@@ -30,11 +30,7 @@ func (r *personnelRepository) GetAllPersonnels(param models.PersonnelQueryParam)
 		SELECT
 			p.personnel_id, p.type_personnel, d.department_position_id, d.department_position_name,
 			a.academic_position_id, a.thai_academic_position, a.eng_academic_position, p.thai_name, 
-<<<<<<< HEAD
-			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image
-=======
 			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image, p.scopus_id
->>>>>>> b28a701 (6/10/68)
 		FROM personnels p
 		LEFT JOIN department_position d ON p.department_position_id = d.department_position_id
 		LEFT JOIN academic_position a ON p.academic_position_id = a.academic_position_id
@@ -110,11 +106,7 @@ func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, erro
 		SELECT
 			p.personnel_id, p.type_personnel, d.department_position_id, d.department_position_name,
 			a.academic_position_id, a.thai_academic_position, a.eng_academic_position, p.thai_name, 
-<<<<<<< HEAD
-			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image
-=======
 			p.eng_name, p.education, p.related_fields, p.email, p.website, p.file_image, p.scopus_id
->>>>>>> b28a701 (6/10/68)
 		FROM personnels p
 		LEFT JOIN department_position d ON p.department_position_id = d.department_position_id
 		LEFT JOIN academic_position a ON p.academic_position_id = a.academic_position_id

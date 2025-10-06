@@ -52,8 +52,6 @@ func (h *PersonnelHandler) GetPersonnelByID(c *gin.Context) {
 		}
 		return
 	}
-
-	c.JSON(http.StatusOK, personnel)
 	var research []models.Research
 	if personnel.ScopusID != nil && *personnel.ScopusID != "" {
 		research, err = h.personnelService.GetResearchByScopusID(*personnel.ScopusID)
