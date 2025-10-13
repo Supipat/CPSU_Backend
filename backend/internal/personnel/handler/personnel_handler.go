@@ -27,47 +27,26 @@ func (h *PersonnelHandler) GetAllPersonnels(c *gin.Context) {
 		return
 	}
 
-	personnels, err := h.personnelService.GetAllPersonnels(param)
+	personnel, err := h.personnelService.GetAllPersonnels(param)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get personnels"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, personnels)
+	c.JSON(http.StatusOK, personnel)
 }
 
 func (h *PersonnelHandler) GetPersonnelByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid personnel ID"})
-		return
-	}
-
+	id, _ := strconv.Atoi(c.Param("id"))
 	personnel, err := h.personnelService.GetPersonnelByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "personnel not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
 	}
-	var research []models.Research
-	if personnel.ScopusID != nil && *personnel.ScopusID != "" {
-		research, err = h.personnelService.GetResearchByScopusID(*personnel.ScopusID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "failed to fetch scopus data",
-				"details": err.Error(),
-			})
-			return
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"personnel": personnel,
-		"research":  research,
-	})
+	c.JSON(http.StatusOK, gin.H{"personnel": personnel})
 }
 
 func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
@@ -182,4 +161,45 @@ func intPtr(s string) *int {
 		return nil
 	}
 	return &val
+}
+
+func (h *PersonnelHandler) GetResearchfromScopus(c *gin.Context) {
+	pidStr := c.Query("personnel_id")
+	if pidStr != "" {
+		pid, err := strconv.Atoi(pidStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid personnel_id"})
+			return
+		}
+		rs, err := h.personnelService.SyncResearch(pid)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"personnel_id": pid, "researches": rs})
+		return
+	}
+
+	count, err := h.personnelService.SyncAllFromScopus()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Data retrieved successfully", "processed_personnels": count})
+}
+
+func (h *PersonnelHandler) GetAllResearch(c *gin.Context) {
+	var param models.ResearchQueryParam
+	if err := c.ShouldBindQuery(&param); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	rs, err := h.personnelService.GetAllResearch(param)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, rs)
 }

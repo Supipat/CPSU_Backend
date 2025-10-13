@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"strconv"
 	"strings"
+	"time"
 
 	"cpsu/internal/personnel/models"
 )
@@ -14,7 +15,10 @@ type PersonnelRepository interface {
 	CreatePersonnel(req models.PersonnelRequest) (*models.Personnels, error)
 	UpdatePersonnel(id int, req models.PersonnelRequest) (*models.Personnels, error)
 	DeletePersonnel(id int) error
-	GetScopusIDByPersonnelID(id int) (string, error)
+	GetScopusIDByPersonnelID(id int) (*string, error)
+	SaveResearch(personnelID int, researches []models.Research) (err error)
+	GetResearchByPersonnelID(personnelID int) ([]models.Research, error)
+	GetAllResearch(param models.ResearchQueryParam) ([]models.Research, error)
 }
 
 type personnelRepository struct {
@@ -87,14 +91,20 @@ func (r *personnelRepository) GetAllPersonnels(param models.PersonnelQueryParam)
 	var personnels []models.Personnels
 	for rows.Next() {
 		var personnel models.Personnels
+		var scopus sql.NullString
 		err := rows.Scan(
 			&personnel.PersonnelID, &personnel.TypePersonnel, &personnel.DepartmentPositionID, &personnel.DepartmentPositionName,
 			&personnel.AcademicPositionID, &personnel.ThaiAcademicPosition, &personnel.EngAcademicPosition,
 			&personnel.ThaiName, &personnel.EngName, &personnel.Education, &personnel.RelatedFields,
-			&personnel.Email, &personnel.Website, &personnel.FileImage, &personnel.ScopusID,
+			&personnel.Email, &personnel.Website, &personnel.FileImage, &scopus,
 		)
 		if err != nil {
 			return nil, err
+		}
+		if scopus.Valid {
+			personnel.ScopusID = &scopus.String
+		} else {
+			personnel.ScopusID = nil
 		}
 		personnels = append(personnels, personnel)
 	}
@@ -116,11 +126,12 @@ func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, erro
 	row := r.db.QueryRow(query, id)
 
 	var personnel models.Personnels
+	var scopus sql.NullString
 	err := row.Scan(
 		&personnel.PersonnelID, &personnel.TypePersonnel, &personnel.DepartmentPositionID, &personnel.DepartmentPositionName,
 		&personnel.AcademicPositionID, &personnel.ThaiAcademicPosition, &personnel.EngAcademicPosition,
 		&personnel.ThaiName, &personnel.EngName, &personnel.Education, &personnel.RelatedFields,
-		&personnel.Email, &personnel.Website, &personnel.FileImage, &personnel.ScopusID,
+		&personnel.Email, &personnel.Website, &personnel.FileImage, &scopus,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -128,17 +139,12 @@ func (r *personnelRepository) GetPersonnelByID(id int) (*models.Personnels, erro
 		}
 		return nil, err
 	}
-	return &personnel, nil
-}
-
-func (r *personnelRepository) GetScopusIDByPersonnelID(id int) (string, error) {
-	query := `SELECT scopus_id FROM personnels WHERE personnel_id = $1`
-	var scopusID string
-	err := r.db.QueryRow(query, id).Scan(&scopusID)
-	if err != nil {
-		return "", err
+	if scopus.Valid {
+		personnel.ScopusID = &scopus.String
+	} else {
+		personnel.ScopusID = nil
 	}
-	return scopusID, nil
+	return &personnel, nil
 }
 
 func (r *personnelRepository) CreatePersonnel(req models.PersonnelRequest) (*models.Personnels, error) {
@@ -262,4 +268,185 @@ func (r *personnelRepository) DeletePersonnel(id int) error {
 		return sql.ErrNoRows
 	}
 	return nil
+}
+
+func (r *personnelRepository) GetScopusIDByPersonnelID(id int) (*string, error) {
+	query := `SELECT scopus_id FROM personnels WHERE personnel_id = $1`
+	var scopus sql.NullString
+	err := r.db.QueryRow(query, id).Scan(&scopus)
+	if err != nil {
+		return nil, err
+	}
+	if scopus.Valid {
+		return &scopus.String, nil
+	}
+	return nil, nil
+}
+
+func (r *personnelRepository) SaveResearch(personnelID int, researches []models.Research) (err error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	val := func(s *string) interface{} {
+		if s == nil {
+			return nil
+		}
+		return *s
+	}
+
+	for _, rc := range researches {
+		if rc.DOI != nil && *rc.DOI != "" {
+			res, e := tx.Exec(
+				`UPDATE research SET title=$1, journal=$2, year=$3, volume=$4, issue=$5, pages=$6, cited=$7
+                 WHERE personnel_id=$8 AND doi=$9`,
+				rc.Title, rc.Journal, rc.Year, val(rc.Volume), val(rc.Issue), val(rc.Pages), rc.Cited, personnelID, *rc.DOI,
+			)
+			if e != nil {
+				return e
+			}
+			if rows, _ := res.RowsAffected(); rows > 0 {
+				continue
+			}
+		}
+
+		res, e := tx.Exec(
+			`UPDATE research SET journal=$1, volume=$2, issue=$3, pages=$4, doi=$5, cited=$6
+             WHERE personnel_id=$7 AND title=$8 AND year=$9`,
+			rc.Journal, val(rc.Volume), val(rc.Issue), val(rc.Pages), val(rc.DOI), rc.Cited, personnelID, rc.Title, rc.Year,
+		)
+		if e != nil {
+			return e
+		}
+		if rows, _ := res.RowsAffected(); rows > 0 {
+			continue
+		}
+
+		createdAt := rc.CreatedAt
+		if createdAt.IsZero() {
+			createdAt = time.Now()
+		}
+		if _, e = tx.Exec(
+			`INSERT INTO research (personnel_id, title, journal, year, volume, issue, pages, doi, cited, created_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+			personnelID, rc.Title, rc.Journal, rc.Year, val(rc.Volume), val(rc.Issue), val(rc.Pages), val(rc.DOI), rc.Cited, createdAt,
+		); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
+func (r *personnelRepository) GetResearchByPersonnelID(personnelID int) ([]models.Research, error) {
+	query := `SELECT research_id, personnel_id, title, journal, year, volume, issue, pages, doi, cited, created_at
+              FROM research 
+			  WHERE personnel_id=$1`
+	rows, err := r.db.Query(query, personnelID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var research []models.Research
+	for rows.Next() {
+		var r models.Research
+		var vol, iss, pages, doi sql.NullString
+		if err := rows.Scan(&r.ResearchID, &r.PersonnelID, &r.Title, &r.Journal, &r.Year, &vol, &iss, &pages, &doi, &r.Cited, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		if vol.Valid {
+			r.Volume = &vol.String
+		}
+		if iss.Valid {
+			r.Issue = &iss.String
+		}
+		if pages.Valid {
+			r.Pages = &pages.String
+		}
+		if doi.Valid {
+			r.DOI = &doi.String
+		}
+		research = append(research, r)
+	}
+	return research, nil
+}
+
+func (r *personnelRepository) GetAllResearch(param models.ResearchQueryParam) ([]models.Research, error) {
+	query := `
+		SELECT r.research_id, p.personnel_id, r.title, r.journal, r.year, r.volume, r.issue, r.pages, r.doi, r.cited, r.created_at
+        FROM research r
+		LEFT JOIN personnels p ON r.personnel_id = p.personnel_id
+	`
+	conditions := []string{}
+	args := []interface{}{}
+	argIndex := 1
+
+	if param.PersonnelID > 0 {
+		conditions = append(conditions, "p.personnel_id = $"+strconv.Itoa(argIndex))
+		args = append(args, param.PersonnelID)
+		argIndex++
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	sort := "research_id"
+	if param.Sort != "" {
+		sort = param.Sort
+	}
+	order := "DESC"
+	if strings.ToUpper(param.Order) == "ASC" {
+		order = "ASC"
+	}
+	query += " ORDER BY " + sort + " " + order
+
+	if param.Limit > 0 {
+		query += " LIMIT " + strconv.Itoa(param.Limit)
+	}
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var researches []models.Research
+	for rows.Next() {
+		var r models.Research
+		var vol, iss, pages, doi sql.NullString
+
+		err := rows.Scan(
+			&r.ResearchID, &r.PersonnelID, &r.Title, &r.Journal, &r.Year,
+			&vol, &iss, &pages, &doi, &r.Cited, &r.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if vol.Valid {
+			r.Volume = &vol.String
+		}
+		if iss.Valid {
+			r.Issue = &iss.String
+		}
+		if pages.Valid {
+			r.Pages = &pages.String
+		}
+		if doi.Valid {
+			r.DOI = &doi.String
+		}
+
+		researches = append(researches, r)
+	}
+
+	return researches, nil
 }

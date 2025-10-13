@@ -8,15 +8,15 @@ type Subjects struct {
 	PlanType          string  `json:"plan_type"`
 	Semester          string  `json:"semester"`
 	ThaiSubject       string  `json:"thai_subject"`
-	EngSubject        *string `json:"eng_subject"`
+	EngSubject        *string `json:"eng_subject,omitempty"`
 	Credits           string  `json:"credits"`
-	CompulsorySubject *string `json:"compulsory_subject"`
-	Condition         *string `json:"condition"`
-	DescriptionID     *string `json:"description_id"`
-	DescriptionThai   *string `json:"description_thai"`
-	DescriptionEng    *string `json:"description_eng"`
-	CloID             *string `json:"clo_id"`
-	CLO               *string `json:"clo"`
+	CompulsorySubject *string `json:"compulsory_subject,omitempty"`
+	Condition         *string `json:"condition,omitempty"`
+	DescriptionID     *string `json:"description_id,omitempty"`
+	DescriptionThai   *string `json:"description_thai,omitempty"`
+	DescriptionEng    *string `json:"description_eng,omitempty"`
+	CloID             *string `json:"clo_id,omitempty"`
+	CLO               *string `json:"clo,omitempty"`
 }
 
 type SubjectsQueryParam struct {
@@ -36,13 +36,13 @@ type SubjectsRequest struct {
 	PlanType          string  `json:"plan_type"`
 	Semester          string  `json:"semester"`
 	ThaiSubject       string  `json:"thai_subject"`
-	EngSubject        *string `json:"eng_subject"`
+	EngSubject        *string `json:"eng_subject,omitempty"`
 	Credits           string  `json:"credits"`
-	CompulsorySubject *string `json:"compulsory_subject"`
-	Condition         *string `json:"condition"`
-	DescriptionID     *string `json:"description_id"`
-	DescriptionThai   *string `json:"description_thai"`
-	DescriptionEng    *string `json:"description_eng"`
-	CloID             *string `json:"clo_id"`
-	CLO               *string `json:"clo"`
+	CompulsorySubject *string `json:"compulsory_subject,omitempty"`
+	Condition         *string `json:"condition,omitempty"`
+	DescriptionID     *string `json:"description_id,omitempty"`
+	DescriptionThai   *string `json:"description_thai,omitempty"`
+	DescriptionEng    *string `json:"description_eng,omitempty"`
+	CloID             *string `json:"clo_id,omitempty"`
+	CLO               *string `json:"clo,omitempty"`
 }

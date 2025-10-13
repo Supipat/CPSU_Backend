@@ -34,9 +34,7 @@ import (
 	personnelHandler "cpsu/internal/personnel/handler"
 	personnelRepo "cpsu/internal/personnel/repository"
 	personnelService "cpsu/internal/personnel/service"
-	/*calendarHandler "cpsu/internal/calendar/handler"
-	calendarRepo "cpsu/internal/calendar/repository"
-	calendarService "cpsu/internal/calendar/service"*/)
+)
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -82,13 +80,6 @@ func main() {
 	personnelRepo := personnelRepo.NewPersonnelRepository(db.GetDB())
 	personnelService := personnelService.NewPersonnelService(personnelRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
 	personnelHandler := personnelHandler.NewPersonnelHandler(personnelService)
-
-	/*calendarRepo, err := calendarRepo.NewCalendarRepository(context.Background())
-	if err != nil {
-		log.Fatalf("Failed to init Google Calendar repository: %v", err)
-	}
-	calService := calendarService.NewCalendarService(calendarRepo, cfg.CalendarID)
-	calHandler := calendarHandler.NewCalendarHandler(calService)*/
 
 	go func() {
 		for {
@@ -178,12 +169,10 @@ func main() {
 			personnelAdmin.POST("", personnelHandler.CreatePersonnel)
 			personnelAdmin.PUT("/:id", personnelHandler.UpdatePersonnel)
 			personnelAdmin.DELETE("/:id", personnelHandler.DeletePersonnel)
+			personnelAdmin.GET("/scopus", personnelHandler.GetResearchfromScopus)
+			personnelAdmin.GET("/research", personnelHandler.GetAllResearch)
 		}
 
-		/*calendarAdmin := v1.Group("admin/calendar")
-		{
-			calendarAdmin.GET("", calHandler.GetAllCalendar)
-		}*/
 	}
 
 	if err := r.Run(":" + cfg.AppPort); err != nil {

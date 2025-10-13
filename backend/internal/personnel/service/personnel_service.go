@@ -8,6 +8,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"sort"
+	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -18,10 +21,14 @@ import (
 type PersonnelService interface {
 	GetAllPersonnels(param models.PersonnelQueryParam) ([]models.Personnels, error)
 	GetPersonnelByID(id int) (*models.Personnels, error)
-	GetResearchByScopusID(scopusID string) ([]models.Research, error)
 	CreatePersonnel(req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
 	UpdatePersonnel(id int, req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
 	DeletePersonnel(id int) error
+	GetResearchByPersonnelID(personnelID int) ([]models.Research, error)
+	SyncResearch(personnelID int) ([]models.Research, error)
+	GetResearchFromScopus(scopusID string) ([]models.Research, error)
+	SyncAllFromScopus() (int, error)
+	GetAllResearch(param models.ResearchQueryParam) ([]models.Research, error)
 }
 
 type personnelService struct {
@@ -45,69 +52,11 @@ func NewPersonnelService(repo repository.PersonnelRepository, awsRegion, awsAcce
 }
 
 func (s *personnelService) GetAllPersonnels(param models.PersonnelQueryParam) ([]models.Personnels, error) {
-	personnels, err := s.repo.GetAllPersonnels(param)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range personnels {
-		if personnels[i].ScopusID != nil && *personnels[i].ScopusID != "" {
-			research, err := s.GetResearchByScopusID(*personnels[i].ScopusID)
-			if err == nil {
-				personnels[i].Researches = research
-			}
-		}
-	}
-
-	return personnels, nil
+	return s.repo.GetAllPersonnels(param)
 }
 
 func (s *personnelService) GetPersonnelByID(id int) (*models.Personnels, error) {
 	return s.repo.GetPersonnelByID(id)
-}
-
-func (s *personnelService) GetResearchByScopusID(scopusID string) ([]models.Research, error) {
-	apiKey := os.Getenv("SCOPUS_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("missing scopus_api_key")
-	}
-
-	url := fmt.Sprintf(
-		"https://api.elsevier.com/content/search/scopus?query=AU-ID(%s)&apiKey=%s",
-		scopusID, apiKey,
-	)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to request scopus api: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("scopus api returned status: %d", resp.StatusCode)
-	}
-
-	var data map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, fmt.Errorf("failed to decode scopus response: %w", err)
-	}
-
-	results, _ := data["search-results"].(map[string]interface{})
-	entries, _ := results["entry"].([]interface{})
-
-	var list []models.Research
-	for _, e := range entries {
-		item := e.(map[string]interface{})
-		list = append(list, models.Research{
-			Title:   fmt.Sprint(item["dc:title"]),
-			Journal: fmt.Sprint(item["prism:publicationName"]),
-			Year:    fmt.Sprint(item["prism:coverDate"]),
-			DOI:     fmt.Sprint(item["prism:doi"]),
-			Cited:   fmt.Sprint(item["citedby-count"]),
-		})
-	}
-
-	return list, nil
 }
 
 func (s *personnelService) CreatePersonnel(req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error) {
@@ -157,4 +106,153 @@ func (s *personnelService) UploadFile(fileHeader *multipart.FileHeader) (string,
 	}
 
 	return result.Location, nil
+}
+
+func (s *personnelService) GetResearchByPersonnelID(personnelID int) ([]models.Research, error) {
+	return s.repo.GetResearchByPersonnelID(personnelID)
+}
+
+func (s *personnelService) SyncResearch(personnelID int) ([]models.Research, error) {
+	scopusIDptr, err := s.repo.GetScopusIDByPersonnelID(personnelID)
+	if err != nil {
+		return nil, err
+	}
+	if scopusIDptr == nil || *scopusIDptr == "" {
+		return nil, fmt.Errorf("personnel %d has no scopus_id", personnelID)
+	}
+
+	rs, err := s.GetResearchFromScopus(*scopusIDptr)
+	if err != nil {
+		return nil, err
+	}
+	for i := range rs {
+		rs[i].PersonnelID = personnelID
+		if rs[i].CreatedAt.IsZero() {
+			rs[i].CreatedAt = time.Now()
+		}
+	}
+	if err := s.repo.SaveResearch(personnelID, rs); err != nil {
+		return nil, err
+	}
+	return s.repo.GetResearchByPersonnelID(personnelID)
+}
+
+func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Research, error) {
+	apiKey := os.Getenv("SCOPUS_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("missing SCOPUS_API_KEY")
+	}
+	url := fmt.Sprintf("https://api.elsevier.com/content/search/scopus?query=AU-ID(%s)&apiKey=%s", scopusID, apiKey)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("scopus status %d", resp.StatusCode)
+	}
+	var data map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	sr, ok := data["search-results"].(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+	entriesRaw := sr["entry"]
+	entries, ok := entriesRaw.([]interface{})
+	if !ok || len(entries) == 0 {
+		return []models.Research{}, nil
+	}
+
+	toPtr := func(v interface{}) *string {
+		if v == nil {
+			return nil
+		}
+		s := fmt.Sprint(v)
+		if s == "" {
+			return nil
+		}
+		return &s
+	}
+
+	var research []models.Research
+	for _, e := range entries {
+		item, ok := e.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		year := 0
+		if ds, ok := item["prism:coverDate"].(string); ok && len(ds) >= 4 {
+			if y, err := strconv.Atoi(ds[:4]); err == nil {
+				year = y
+			}
+		}
+		cited := 0
+		switch v := item["citedby-count"].(type) {
+		case string:
+			cited, _ = strconv.Atoi(v)
+		case float64:
+			cited = int(v)
+		}
+		research = append(research, models.Research{
+			Title:     fmt.Sprint(item["dc:title"]),
+			Journal:   fmt.Sprint(item["prism:publicationName"]),
+			Year:      year,
+			Volume:    toPtr(item["prism:volume"]),
+			Issue:     toPtr(item["prism:issueIdentifier"]),
+			Pages:     toPtr(item["prism:pageRange"]),
+			DOI:       toPtr(item["prism:doi"]),
+			Cited:     cited,
+			CreatedAt: time.Now(),
+		})
+	}
+	return research, nil
+}
+
+func (s *personnelService) SyncAllFromScopus() (int, error) {
+	personnels, err := s.repo.GetAllPersonnels(models.PersonnelQueryParam{})
+	if err != nil {
+		return 0, err
+	}
+
+	processed := 0
+
+	fmt.Printf("SyncAllFromScopus: total personnels = %d\n", len(personnels))
+
+	for _, p := range personnels {
+		if p.ScopusID == nil || *p.ScopusID == "" {
+			continue
+		}
+		rs, err := s.GetResearchFromScopus(*p.ScopusID)
+		if err != nil {
+			continue
+		}
+		if len(rs) == 0 {
+			continue
+		}
+
+		sort.Slice(rs, func(i, j int) bool {
+			return rs[i].Year > rs[j].Year
+		})
+		if len(rs) > 5 {
+			rs = rs[:5]
+		}
+
+		for i := range rs {
+			rs[i].PersonnelID = p.PersonnelID
+			if rs[i].CreatedAt.IsZero() {
+				rs[i].CreatedAt = time.Now()
+			}
+		}
+
+		if err := s.repo.SaveResearch(p.PersonnelID, rs); err == nil {
+			processed++
+		}
+	}
+	return processed, nil
+}
+
+func (s *personnelService) GetAllResearch(param models.ResearchQueryParam) ([]models.Research, error) {
+	return s.repo.GetAllResearch(param)
 }

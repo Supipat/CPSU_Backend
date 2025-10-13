@@ -26,22 +26,6 @@ CREATE TABLE IF NOT EXISTS news_images (
 
 -- create courses
 
-/*CREATE TABLE IF NOT EXISTS degree (
-    degree_id SERIAL PRIMARY KEY,  
-    degree VARCHAR(100) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS majors (
-    major_id SERIAL PRIMARY KEY,
-    major VARCHAR(100) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS degree_name (
-    degree_name_id SERIAL PRIMARY KEY,
-    thai_degree VARCHAR(255) NOT NULL,
-    eng_degree VARCHAR(255) NOT NULL
-);*/
-
 CREATE TABLE IF NOT EXISTS career_paths (
     career_paths_id SERIAL PRIMARY KEY,
     career_paths TEXT NOT NULL
@@ -77,10 +61,6 @@ CREATE TABLE IF NOT EXISTS courses (
     FOREIGN KEY (plo_id) REFERENCES plo(plo_id) ON DELETE CASCADE
 );
 
-/*FOREIGN KEY (degree_id) REFERENCES degree(degree_id) ON DELETE CASCADE,
-FOREIGN KEY (major_id) REFERENCES majors(major_id) ON DELETE CASCADE,
-FOREIGN KEY (degree_name_id) REFERENCES degree_name(degree_name_id) ON DELETE CASCADE,*/
-
 -- create course structure
 
 CREATE TABLE IF NOT EXISTS course_structure (
@@ -100,16 +80,6 @@ CREATE TABLE IF NOT EXISTS roadmap (
 );
 
 -- create subject
-
-/*CREATE TABLE IF NOT EXISTS plan_type (
-    plan_type_id SERIAL PRIMARY KEY,
-    plan_type VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS semester (
-    semester_id INT PRIMARY KEY,
-    semester VARCHAR(50) NOT NULL
-);*/
 
 CREATE TABLE IF NOT EXISTS description (
     description_id VARCHAR(6) PRIMARY KEY,
@@ -140,15 +110,9 @@ CREATE TABLE IF NOT EXISTS subjects (
     FOREIGN KEY (clo_id) REFERENCES clo(clo_id) ON DELETE CASCADE
 );
 
-/*FOREIGN KEY (plan_type_id) REFERENCES plan_type(plan_type_id) ON DELETE CASCADE,
-FOREIGN KEY (semester_id) REFERENCES semester(semester_id) ON DELETE CASCADE,*/
+
 
 -- create personnel
-
-/*CREATE TABLE IF NOT EXISTS type_personnel (
-    type_id SERIAL PRIMARY KEY,
-    type_name VARCHAR(50) NOT NULL
-);*/
 
 CREATE TABLE IF NOT EXISTS department_position (
     department_position_id SERIAL PRIMARY KEY,
@@ -173,9 +137,26 @@ CREATE TABLE IF NOT EXISTS personnels (
     email VARCHAR(100) NULL,
     website TEXT NULL,
     file_image TEXT NOT NULL,
-    scopus_id VARCHAR(20) NULL,
+    scopus_id VARCHAR(50) NULL,
     FOREIGN KEY (department_position_id) REFERENCES department_position(department_position_id) ON DELETE CASCADE,
     FOREIGN KEY (academic_position_id) REFERENCES academic_position(academic_position_id) ON DELETE CASCADE
+);
+
+-- create research
+
+CREATE TABLE IF NOT EXISTS research (
+    research_id SERIAL PRIMARY KEY,
+    personnel_id INT NOT NULL,
+    title TEXT NOT NULL,                                       
+    journal VARCHAR(255) NOT NULL,              
+    year INT NOT NULL,                         
+    volume VARCHAR(50) NULL,                         
+    issue VARCHAR(50) NULL,                         
+    pages VARCHAR(50) NULL,                          
+    doi TEXT NULL,                          
+    cited INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (personnel_id) REFERENCES personnels(personnel_id) ON DELETE CASCADE           
 );
 
 -- FOREIGN KEY (type_id) REFERENCES type_personnel(type_id) ON DELETE CASCADE,
@@ -279,21 +260,6 @@ INSERT INTO news_images(news_id,file_image) VALUES
 
 -- insert courses
 
-/*INSERT INTO degree(degree) VALUES
-('ปริญญาตรี'),('ปริญญาโท'),('ปริญญาเอก');
-
-INSERT INTO majors(major) VALUES
-('วิทยาการคอมพิวเตอร์'),('เทคโนโลยีสารสนเทศ'),('วิทยาการข้อมูล'),('เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล');
-
-INSERT INTO degree_name(thai_degree,eng_degree) VALUES
-('วิทยาศาสตรบัณฑิต (วิทยาการคอมพิวเตอร์)','Bachelor of Science (Computer Science)'),
-('วิทยาศาสตรบัณฑิต (เทคโนโลยีสารสนเทศ)','Bachelor of Science (Information Technology)'),
-('วิทยาศาสตรบัณฑิต (วิทยาการข้อมูล)','Bachelor of Science (Data Science)'),
-('วิทยาศาสตรมหาบัณฑิต (เทคโนโลยีสารสนเทศ)','Master of Science (Information Technology)'),
-('วิทยาศาสตรมหาบัณฑิต (เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล)','Master of Science (Information Technology and Digital Innovation)'),
-('ปรัชญาดุษฎีบัณฑิต (เทคโนโลยีสารสนเทศ)','Doctor of Philosophy (Information Technology)'),
-('ปรัชญาดุษฎีบัณฑิต (เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล)','Doctor of Philosophy (Information Technology and Digital Innovation)');*/
-
 COPY career_paths(career_paths)
 FROM '/docker-entrypoint-initdb.d/csv/course/career_paths.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
@@ -327,38 +293,46 @@ INSERT INTO roadmap(course_id,roadmap_url) VALUES
 
 -- insert subject
 
-/*INSERT INTO plan_type(plan_type) VALUES
-('โครงงานวิจัย'),('สหกิจศึกษา');
-
-INSERT INTO semester(semester_id,semester) VALUES
-('11','ปีที่ 1 ภาคการศึกษาที่ 1'),
-('12','ปีที่ 1 ภาคการศึกษาที่ 2'),
-('21','ปีที่ 2 ภาคการศึกษาที่ 1'),
-('22','ปีที่ 2 ภาคการศึกษาที่ 2'),
-('31','ปีที่ 3 ภาคการศึกษาที่ 1'),
-('32','ปีที่ 3 ภาคการศึกษาที่ 2'),
-('41','ปีที่ 4 ภาคการศึกษาที่ 1'),
-('42','ปีที่ 4 ภาคการศึกษาที่ 2');*/
+COPY description(description_id,description_thai,description_eng)
+FROM '/docker-entrypoint-initdb.d/csv/subject/BS_description.csv'
+WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 COPY description(description_id,description_thai,description_eng)
-FROM '/docker-entrypoint-initdb.d/csv/subject/description.csv'
+FROM '/docker-entrypoint-initdb.d/csv/subject/MSIT66_description.csv'
+WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
+
+COPY description(description_id,description_thai,description_eng)
+FROM '/docker-entrypoint-initdb.d/csv/subject/DSIT66_description.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 COPY clo(clo_id,clo)
-FROM '/docker-entrypoint-initdb.d/csv/subject/clo.csv'
+FROM '/docker-entrypoint-initdb.d/csv/subject/BS_clo.csv'
+WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
+
+COPY clo(clo_id,clo)
+FROM '/docker-entrypoint-initdb.d/csv/subject/MSIT66_clo.csv'
+WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
+
+COPY clo(clo_id,clo)
+FROM '/docker-entrypoint-initdb.d/csv/subject/DSIT66_clo.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 COPY subjects(subject_id,course_id,plan_type,semester,thai_subject,eng_subject,credits,compulsory_subject,condition,description_id,clo_id)
-FROM '/docker-entrypoint-initdb.d/csv/subject/subjects.csv'
+FROM '/docker-entrypoint-initdb.d/csv/subject/BS_subjects.csv'
+WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
+
+COPY subjects(subject_id,course_id,plan_type,semester,thai_subject,eng_subject,credits,compulsory_subject,condition,description_id,clo_id)
+FROM '/docker-entrypoint-initdb.d/csv/subject/MSIT66_subjects.csv'
+WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
+
+COPY subjects(subject_id,course_id,plan_type,semester,thai_subject,eng_subject,credits,compulsory_subject,condition,description_id,clo_id)
+FROM '/docker-entrypoint-initdb.d/csv/subject/DSIT66_subjects.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 SELECT setval('subjects_id_seq', (SELECT MAX(id) FROM subjects));
 
 -- insert personnel
 
-/*INSERT INTO type_personnel(type_name) VALUES
-('สายวิชาการ'),('สายสนับสนุนวิชาการ');*/
-   
 INSERT INTO department_position(department_position_name) VALUES
 ('หัวหน้าภาควิชา'),('รองหัวหน้าภาควิชาฯ ฝ่ายบริหาร'),('รองหัวหน้าภาควิชาฯ'),('อาจารย์ประจำภาควิชา'),
 ('นักวิชาการอุดมศึกษาชำนาญการ'),('นักวิชาการอุดมศึกษาปฏิบัติการ'),('นักวิชาการอุดมศึกษา (ประจำหลักสูตรวิทยาการข้อมูล)'),('นักวิชาการอุดมศึกษา'),('นักเทคโนโลยีสารสนเทศ'),('นักคอมพิวเตอร์'),('พนักงานทั่วไป');
