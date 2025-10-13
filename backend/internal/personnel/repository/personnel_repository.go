@@ -17,7 +17,6 @@ type PersonnelRepository interface {
 	DeletePersonnel(id int) error
 	GetScopusIDByPersonnelID(id int) (*string, error)
 	SaveResearch(personnelID int, researches []models.Research) (err error)
-	GetResearchByPersonnelID(personnelID int) ([]models.Research, error)
 	GetAllResearch(param models.ResearchQueryParam) ([]models.Research, error)
 }
 
@@ -343,40 +342,6 @@ func (r *personnelRepository) SaveResearch(personnelID int, researches []models.
 		}
 	}
 	return nil
-}
-
-func (r *personnelRepository) GetResearchByPersonnelID(personnelID int) ([]models.Research, error) {
-	query := `SELECT research_id, personnel_id, title, journal, year, volume, issue, pages, doi, cited, created_at
-              FROM research 
-			  WHERE personnel_id=$1`
-	rows, err := r.db.Query(query, personnelID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var research []models.Research
-	for rows.Next() {
-		var r models.Research
-		var vol, iss, pages, doi sql.NullString
-		if err := rows.Scan(&r.ResearchID, &r.PersonnelID, &r.Title, &r.Journal, &r.Year, &vol, &iss, &pages, &doi, &r.Cited, &r.CreatedAt); err != nil {
-			return nil, err
-		}
-		if vol.Valid {
-			r.Volume = &vol.String
-		}
-		if iss.Valid {
-			r.Issue = &iss.String
-		}
-		if pages.Valid {
-			r.Pages = &pages.String
-		}
-		if doi.Valid {
-			r.DOI = &doi.String
-		}
-		research = append(research, r)
-	}
-	return research, nil
 }
 
 func (r *personnelRepository) GetAllResearch(param models.ResearchQueryParam) ([]models.Research, error) {

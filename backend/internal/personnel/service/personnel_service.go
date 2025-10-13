@@ -24,7 +24,6 @@ type PersonnelService interface {
 	CreatePersonnel(req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
 	UpdatePersonnel(id int, req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
 	DeletePersonnel(id int) error
-	GetResearchByPersonnelID(personnelID int) ([]models.Research, error)
 	SyncResearch(personnelID int) ([]models.Research, error)
 	GetResearchFromScopus(scopusID string) ([]models.Research, error)
 	SyncAllFromScopus() (int, error)
@@ -108,10 +107,6 @@ func (s *personnelService) UploadFile(fileHeader *multipart.FileHeader) (string,
 	return result.Location, nil
 }
 
-func (s *personnelService) GetResearchByPersonnelID(personnelID int) ([]models.Research, error) {
-	return s.repo.GetResearchByPersonnelID(personnelID)
-}
-
 func (s *personnelService) SyncResearch(personnelID int) ([]models.Research, error) {
 	scopusIDptr, err := s.repo.GetScopusIDByPersonnelID(personnelID)
 	if err != nil {
@@ -134,7 +129,11 @@ func (s *personnelService) SyncResearch(personnelID int) ([]models.Research, err
 	if err := s.repo.SaveResearch(personnelID, rs); err != nil {
 		return nil, err
 	}
-	return s.repo.GetResearchByPersonnelID(personnelID)
+	param := models.ResearchQueryParam{
+		PersonnelID: personnelID,
+	}
+
+	return s.repo.GetAllResearch(param)
 }
 
 func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Research, error) {
