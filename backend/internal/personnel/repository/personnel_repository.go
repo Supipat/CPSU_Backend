@@ -368,9 +368,9 @@ func (r *personnelRepository) GetAllResearch(param models.ResearchQueryParam) ([
 	if param.Sort != "" {
 		sort = param.Sort
 	}
-	order := "DESC"
-	if strings.ToUpper(param.Order) == "ASC" {
-		order = "ASC"
+	order := "ASC"
+	if strings.ToUpper(param.Order) == "DESC" {
+		order = "DESC"
 	}
 	query += " ORDER BY " + sort + " " + order
 

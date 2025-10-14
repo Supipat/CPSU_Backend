@@ -72,9 +72,9 @@ func (r *courseRepository) GetAllCourses(param models.CoursesQueryParam) ([]mode
 		sort = "c." + param.Sort
 	}
 
-	order := "DESC"
-	if strings.ToUpper(param.Order) == "ASC" {
-		order = "ASC"
+	order := "ASC"
+	if strings.ToUpper(param.Order) == "DESC" {
+		order = "DESC"
 	}
 
 	query += " ORDER BY " + sort + " " + order
