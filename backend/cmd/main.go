@@ -34,6 +34,10 @@ import (
 	personnelHandler "cpsu/internal/personnel/handler"
 	personnelRepo "cpsu/internal/personnel/repository"
 	personnelService "cpsu/internal/personnel/service"
+
+	calendarHandler "cpsu/internal/calendar/handler"
+	calendarRepo "cpsu/internal/calendar/repository"
+	calendarService "cpsu/internal/calendar/service"
 )
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
@@ -80,6 +84,10 @@ func main() {
 	personnelRepo := personnelRepo.NewPersonnelRepository(db.GetDB())
 	personnelService := personnelService.NewPersonnelService(personnelRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
 	personnelHandler := personnelHandler.NewPersonnelHandler(personnelService)
+
+	calendarRepo := calendarRepo.NewCalendarRepository(db.GetDB())
+	calendarService := calendarService.NewCalendarService(calendarRepo)
+	calendarHandler := calendarHandler.NewCalendarHandler(calendarService)
 
 	go func() {
 		for {
@@ -171,6 +179,20 @@ func main() {
 			personnelAdmin.DELETE("/:id", personnelHandler.DeletePersonnel)
 			personnelAdmin.GET("/scopus", personnelHandler.GetResearchfromScopus)
 			personnelAdmin.GET("/research", personnelHandler.GetAllResearch)
+		}
+
+		personnelTeacher := v1.Group("teacher/personnel")
+		{
+			personnelTeacher.PUT("/:id", personnelHandler.UpdateTeacher)
+		}
+
+		calendarAdmin := v1.Group("admin/calendar")
+		{
+			calendarAdmin.GET("", calendarHandler.GetAllCalendars)
+			calendarAdmin.GET("/:id", calendarHandler.GetCalendarByID)
+			calendarAdmin.POST("", calendarHandler.CreateCalendar)
+			calendarAdmin.PUT("/:id", calendarHandler.UpdateCalendar)
+			calendarAdmin.DELETE("/:id", calendarHandler.DeleteCalendar)
 		}
 
 	}

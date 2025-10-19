@@ -36,8 +36,6 @@ CREATE TABLE IF NOT EXISTS plo (
     plo TEXT NOT NULL
 );
 
--- ระดับปริญญา + สาขา + ปี
-
 CREATE TABLE IF NOT EXISTS courses (
     course_id VARCHAR(10) PRIMARY KEY,
     degree VARCHAR(100) NOT NULL,
@@ -159,7 +157,15 @@ CREATE TABLE IF NOT EXISTS research (
     FOREIGN KEY (personnel_id) REFERENCES personnels(personnel_id) ON DELETE CASCADE           
 );
 
--- FOREIGN KEY (type_id) REFERENCES type_personnel(type_id) ON DELETE CASCADE,
+-- create calendar
+
+CREATE TABLE IF NOT EXISTS calendar (
+    calendar_id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,  
+    detail TEXT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL
+);
 
 -- TRIGGER
 
@@ -349,3 +355,9 @@ FROM '/docker-entrypoint-initdb.d/csv/personnel/personnels.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 SELECT setval('personnels_personnel_id_seq', (SELECT MAX(personnel_id) FROM personnels));
+
+-- insert calendar
+INSERT INTO calendar(title,detail,start_date,end_date) VALUES
+('มหกรรมการสอบ','มหกรรมการสอบ', '2025-10-27', '2025-11-08'),
+('test1','test1','2025-10-29', '2025-11-05'),
+('test2','test2','2025-11-09', '2025-11-09');

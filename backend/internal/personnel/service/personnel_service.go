@@ -23,6 +23,7 @@ type PersonnelService interface {
 	GetPersonnelByID(id int) (*models.Personnels, error)
 	CreatePersonnel(req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
 	UpdatePersonnel(id int, req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
+	UpdateTeacher(id int, req models.TeacherRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
 	DeletePersonnel(id int) error
 	SyncResearch(personnelID int) ([]models.Research, error)
 	GetResearchFromScopus(scopusID string) ([]models.Research, error)
@@ -78,6 +79,39 @@ func (s *personnelService) UpdatePersonnel(id int, req models.PersonnelRequest, 
 		req.FileImage = url
 	}
 	return s.repo.UpdatePersonnel(id, req)
+}
+
+func (s *personnelService) UpdateTeacher(id int, req models.TeacherRequest, fileImage *multipart.FileHeader) (*models.Personnels, error) {
+	if fileImage != nil {
+		url, err := s.UploadFile(fileImage)
+		if err != nil {
+			return nil, err
+		}
+		req.FileImage = url
+	}
+
+	existing, err := s.repo.GetPersonnelByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	personnelReq := models.PersonnelRequest{
+		TypePersonnel:        existing.TypePersonnel,
+		DepartmentPositionID: existing.DepartmentPositionID,
+		AcademicPositionID:   existing.AcademicPositionID,
+		ThaiAcademicPosition: existing.ThaiAcademicPosition,
+		EngAcademicPosition:  existing.EngAcademicPosition,
+		ThaiName:             req.ThaiName,
+		EngName:              req.EngName,
+		Education:            req.Education,
+		RelatedFields:        req.RelatedFields,
+		Email:                req.Email,
+		Website:              req.Website,
+		FileImage:            req.FileImage,
+		ScopusID:             req.ScopusID,
+	}
+
+	return s.repo.UpdatePersonnel(id, personnelReq)
 }
 
 func (s *personnelService) DeletePersonnel(id int) error {

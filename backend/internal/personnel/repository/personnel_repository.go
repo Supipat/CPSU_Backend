@@ -14,6 +14,7 @@ type PersonnelRepository interface {
 	GetPersonnelByID(id int) (*models.Personnels, error)
 	CreatePersonnel(req models.PersonnelRequest) (*models.Personnels, error)
 	UpdatePersonnel(id int, req models.PersonnelRequest) (*models.Personnels, error)
+	UpdateTeacher(id int, req models.TeacherRequest) (*models.Personnels, error)
 	DeletePersonnel(id int) error
 	GetScopusIDByPersonnelID(id int) (*string, error)
 	SaveResearch(personnelID int, researches []models.Research) (err error)
@@ -252,6 +253,39 @@ func (r *personnelRepository) UpdatePersonnel(id int, req models.PersonnelReques
 	}
 
 	return r.GetPersonnelByID(updatedID)
+}
+
+func (r *personnelRepository) UpdateTeacher(id int, req models.TeacherRequest) (*models.Personnels, error) {
+	query := `
+		UPDATE personnels
+		SET thai_name = $1, eng_name = $2, education = $3, related_fields = $4,
+			email = $5, website = $6, file_image = $7, scopus_id = $8
+		WHERE personnel_id = $9
+		RETURNING personnel_id, type_personnel, department_position_id,
+				  department_position_name, academic_position_id, 
+				  thai_academic_position, eng_academic_position, 
+				  thai_name, eng_name, education, related_fields, 
+				  email, website, file_image, scopus_id
+	`
+
+	var teacher models.Personnels
+	err := r.db.QueryRow(
+		query, req.ThaiName, req.EngName, req.Education, req.RelatedFields,
+		req.Email, req.Website, req.FileImage, req.ScopusID, id,
+	).Scan(
+		&teacher.PersonnelID, &teacher.TypePersonnel, &teacher.DepartmentPositionID, &teacher.DepartmentPositionName,
+		&teacher.AcademicPositionID, &teacher.ThaiAcademicPosition, &teacher.EngAcademicPosition,
+		&teacher.ThaiName, &teacher.EngName, &teacher.Education, &teacher.RelatedFields, &teacher.Email,
+		&teacher.Website, &teacher.FileImage, &teacher.ScopusID,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+
+	return &teacher, nil
 }
 
 func (r *personnelRepository) DeletePersonnel(id int) error {

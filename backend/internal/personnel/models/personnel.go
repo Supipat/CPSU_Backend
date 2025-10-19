@@ -47,6 +47,17 @@ type PersonnelRequest struct {
 	ScopusID             *string `json:"scopus_id"`
 }
 
+type TeacherRequest struct {
+	ThaiName      string  `json:"thai_name"`
+	EngName       string  `json:"eng_name"`
+	Education     *string `json:"education"`
+	RelatedFields *string `json:"related_fields"`
+	Email         *string `json:"email"`
+	Website       *string `json:"website"`
+	FileImage     string  `json:"file_image"`
+	ScopusID      *string `json:"scopus_id"`
+}
+
 type Research struct {
 	ResearchID  int       `json:"research_id"`
 	PersonnelID int       `json:"personnel_id"`

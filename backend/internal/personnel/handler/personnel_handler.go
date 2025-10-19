@@ -125,6 +125,38 @@ func (h *PersonnelHandler) UpdatePersonnel(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedPersonnel)
 }
 
+func (h *PersonnelHandler) UpdateTeacher(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid personnel ID"})
+		return
+	}
+
+	req := models.TeacherRequest{
+		ThaiName:      c.PostForm("thai_name"),
+		EngName:       c.PostForm("eng_name"),
+		Education:     strPtr(c.PostForm("education")),
+		RelatedFields: strPtr(c.PostForm("related_fields")),
+		Email:         strPtr(c.PostForm("email")),
+		Website:       strPtr(c.PostForm("website")),
+		ScopusID:      strPtr(c.PostForm("scopus_id")),
+	}
+
+	fileImage, _ := c.FormFile("file_image")
+
+	updatedTeacher, err := h.personnelService.UpdateTeacher(id, req, fileImage)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "teacher ID not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, updatedTeacher)
+}
+
 func (h *PersonnelHandler) DeletePersonnel(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
