@@ -1,0 +1,26 @@
+.header-component {
+  background-color: #38419d;
+  color: #fff;
+  padding: 5px;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* เริ่มต้นจากซ้าย */
+  gap: 1rem; /* ช่องว่างระหว่าง item */
+  /* position: relative; */
+}
+
+/* ให้ปุ่ม Login อยู่ด้านขวาสุด */
+.btn-login {
+
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+

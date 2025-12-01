@@ -1,0 +1,242 @@
+const MOCK_DATA = [
+  {
+    course_id: "CS65",
+    degree: "ปริญญาตรี",
+    major: "วิทยาการคอมพิวเตอร์",
+    year: 2565,
+    thai_course:
+      "(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565",
+    eng_course: "Bachelor of Science Program in Computer Science 2022",
+    thai_degree: "วิทยาศาสตรบัณฑิต (วิทยาการคอมพิวเตอร์)",
+    eng_degree: "Bachelor of Science (Computer Science)",
+    admission_req: "สำเร็จการศึกษาระดับมัธยมศึกษาปีที่ 6 หรือเทียบเท่า",
+    graduation_req: "เกรดเฉลี่ยไม่ต่ำกว่า 2.00 และผ่านรายวิชาบังคับทั้งหมด",
+    philosophy:
+      "ผลิตบัณฑิตที่มีความรู้และทักษะด้านวิทยาการคอมพิวเตอร์ที่ทันสมัยและสามารถประยุกต์ใช้ได้จริง",
+    objective:
+      "มุ่งเน้นให้บัณฑิตมีความรู้ความสามารถในการวิเคราะห์ ออกแบบ และพัฒนาระบบซอฟต์แวร์",
+    tuition: "ประมาณ 20,000 บาทต่อเทอม",
+    credits: "ไม่น้อยกว่า 133 หน่วยกิต",
+    career_paths_id: 1,
+    career_paths:
+      "1) นักพัฒนาซอฟต์แวร์\n2) นักวิเคราะห์ระบบ\n3) นักวิทยาการข้อมูล\n4) นักวิจัยด้านคอมพิวเตอร์\n5) นักวิทยาศาสตร์ข้อมูล",
+    plo_id: 1,
+    plo: "PLO1: เข้าใจและอธิบายหลักการพื้นฐานของวิทยาการคอมพิวเตอร์\nPLO2: ออกแบบและพัฒนาระบบซอฟต์แวร์\nPLO3: วิเคราะห์และแก้ไขปัญหาทางคอมพิวเตอร์\nPLO4: ทำงานร่วมกับผู้อื่นได้อย่างมีประสิทธิภาพ\nPLO5: ปฏิบัติตนตามจริยธรรมและกฎหมายที่เกี่ยวข้อง",
+    detail_url: "https://www.cp.su.ac.th/file/show/cs65",
+    status: "แสดง",
+    roadmap_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg",
+    structure_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png",
+  },
+  {
+    course_id: "CS60",
+    degree: "ปริญญาตรี",
+    major: "วิทยาการคอมพิวเตอร์",
+    year: 2560,
+    thai_course:
+      "(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2560",
+    eng_course: "Bachelor of Science Program in Computer Science 2017",
+    thai_degree: "วิทยาศาสตรบัณฑิต (วิทยาการคอมพิวเตอร์)",
+    eng_degree: "Bachelor of Science (Computer Science)",
+    admission_req: "สำเร็จการศึกษาระดับมัธยมศึกษาปีที่ 6 หรือเทียบเท่า",
+    graduation_req: "เกรดเฉลี่ยไม่น้อยกว่า 2.00 และผ่านรายวิชาบังคับ",
+    philosophy:
+      "ผลิตบัณฑิตที่มีความรู้ด้านวิทยาการคอมพิวเตอร์และสามารถพัฒนาระบบสารสนเทศได้",
+    objective:
+      "มุ่งเน้นให้นักศึกษาเข้าใจหลักการและสามารถประยุกต์ใช้เทคโนโลยีสารสนเทศ",
+    tuition: "ประมาณ 20,000 บาทต่อเทอม",
+    credits: "ไม่น้อยกว่า 133 หน่วยกิต",
+    career_paths_id: 1,
+    career_paths:
+      "1) นักพัฒนาซอฟต์แวร์\n2) นักวิเคราะห์ระบบ\n3) นักวิทยาการข้อมูล\n4) นักวิจัยด้านคอมพิวเตอร์",
+    plo_id: 1,
+    plo: "PLO1: เข้าใจพื้นฐานวิทยาการคอมพิวเตอร์\nPLO2: ออกแบบระบบและซอฟต์แวร์\nPLO3: วิเคราะห์และแก้ปัญหา\nPLO4: มีจริยธรรมและรับผิดชอบ",
+    detail_url: "https://www.cp.su.ac.th/file/show/cs60",
+    status: "แสดง",
+    roadmap_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg",
+    structure_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png",
+  },
+  {
+    course_id: "CS55",
+    degree: "ปริญญาตรี",
+    major: "วิทยาการคอมพิวเตอร์",
+    year: 2555,
+    thai_course:
+      "(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2555",
+    eng_course: "Bachelor of Science Program in Computer Science 2012",
+    thai_degree: "วิทยาศาสตรบัณฑิต (วิทยาการคอมพิวเตอร์)",
+    eng_degree: "Bachelor of Science (Computer Science)",
+    admission_req: "สำเร็จการศึกษาระดับมัธยมศึกษาปีที่ 6 หรือเทียบเท่า",
+    graduation_req: "เกรดเฉลี่ยไม่น้อยกว่า 2.00 และผ่านรายวิชาบังคับทั้งหมด",
+    philosophy:
+      "ผลิตบัณฑิตที่มีพื้นฐานความรู้วิทยาการคอมพิวเตอร์และทักษะการพัฒนาระบบ",
+    objective:
+      "มุ่งเน้นให้นักศึกษามีความรู้เชิงลึกด้านวิทยาการคอมพิวเตอร์และประยุกต์ใช้งานจริง",
+    tuition: "ประมาณ 20,000 บาทต่อเทอม",
+    credits: "ไม่น้อยกว่า 133 หน่วยกิต",
+    career_paths_id: 1,
+    career_paths:
+      "1) นักพัฒนาซอฟต์แวร์\n2) นักวิเคราะห์ระบบ\n3) นักวิจัยด้านคอมพิวเตอร์",
+    plo_id: 1,
+    plo: "PLO1: เข้าใจวิทยาการคอมพิวเตอร์\nPLO2: ออกแบบและพัฒนาซอฟต์แวร์\nPLO3: วิเคราะห์และแก้ปัญหา\nPLO4: มีจริยธรรม",
+    detail_url: "https://www.cp.su.ac.th/file/show/cs55",
+    status: "แสดง",
+    roadmap_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg",
+    structure_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png",
+  },
+  {
+    course_id: "IT65",
+    degree: "ปริญญาตรี",
+    major: "เทคโนโลยีสารสนเทศ",
+    year: 2565,
+    thai_course:
+      "(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565",
+    eng_course: "Bachelor of Science Program in Information Technology 2022",
+    thai_degree: "วิทยาศาสตรบัณฑิต (เทคโนโลยีสารสนเทศ)",
+    eng_degree: "Bachelor of Science (Information Technology)",
+    admission_req: "สำเร็จการศึกษาระดับมัธยมศึกษาปีที่ 6 หรือเทียบเท่า",
+    graduation_req: "เกรดเฉลี่ยไม่น้อยกว่า 2.00 และผ่านรายวิชาบังคับ",
+    philosophy:
+      "สร้างบัณฑิตที่มีคุณภาพ คุณธรรม จริยธรรม และวินัย พร้อมทักษะด้านเทคโนโลยีสารสนเทศ",
+    objective:
+      "มุ่งผลิตบัณฑิตที่มีความรู้และทักษะในสาขาเทคโนโลยีสารสนเทศเพื่อรองรับการทำงานและวิจัย",
+    tuition: "ประมาณ 20,000 บาทต่อเทอม",
+    credits: "ไม่น้อยกว่า 133 หน่วยกิต",
+    career_paths_id: 2,
+    career_paths:
+      "1) นักเทคโนโลยีสารสนเทศ\n2) นักพัฒนาระบบ\n3) ผู้ดูแลระบบฐานข้อมูล\n4) นักวิเคราะห์ระบบ\n5) ผู้จัดการโครงการสารสนเทศ",
+    plo_id: 2,
+    plo: "PLO1: อธิบายความหมายของเทคโนโลยีสารสนเทศ\nPLO2: ใช้เทคโนโลยีสารสนเทศได้อย่างเหมาะสม\nPLO3: พัฒนาระบบสารสนเทศ\nPLO4: ปฏิบัติตามจริยธรรม",
+    detail_url: "https://www.cp.su.ac.th/file/show/1118",
+    status: "แสดง",
+    roadmap_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg",
+    structure_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png",
+  },
+  {
+    course_id: "IT60",
+    degree: "ปริญญาตรี",
+    major: "เทคโนโลยีสารสนเทศ",
+    year: 2560,
+    thai_course:
+      "(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2560",
+    eng_course: "Bachelor of Science Program in Information Technology 2017",
+    thai_degree: "วิทยาศาสตรบัณฑิต (เทคโนโลยีสารสนเทศ)",
+    eng_degree: "Bachelor of Science (Information Technology)",
+    admission_req: "สำเร็จมัธยมศึกษาปีที่ 6 หรือเทียบเท่า",
+    graduation_req: "เกรดเฉลี่ยไม่น้อยกว่า 2.00",
+    philosophy: "ผลิตบัณฑิตที่มีความรู้ด้านเทคโนโลยีสารสนเทศและมีคุณธรรม",
+    objective: "พัฒนาบัณฑิตให้มีทักษะและความรู้ด้าน IT เพื่อทำงานและศึกษาต่อ",
+    tuition: "ประมาณ 20,000 บาทต่อเทอม",
+    credits: "ไม่น้อยกว่า 133 หน่วยกิต",
+    career_paths_id: 2,
+    career_paths:
+      "1) นักเทคโนโลยีสารสนเทศ\n2) นักพัฒนาระบบ\n3) นักวิเคราะห์ระบบ",
+    plo_id: 2,
+    plo: "PLO1: เข้าใจเทคโนโลยีสารสนเทศ\nPLO2: ใช้งานและพัฒนาระบบสารสนเทศ\nPLO3: มีจริยธรรม",
+    detail_url: "https://www.cp.su.ac.th/file/show/it60",
+    status: "แสดง",
+    roadmap_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg",
+    structure_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png",
+  },
+  {
+    course_id: "DS65",
+    degree: "ปริญญาตรี",
+    major: "วิทยาการข้อมูล",
+    year: 2565,
+    thai_course: "(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการข้อมูล 2565",
+    eng_course: "Bachelor of Science Program in Data Science 2022",
+    thai_degree: "วิทยาศาสตรบัณฑิต (วิทยาการข้อมูล)",
+    eng_degree: "Bachelor of Science (Data Science)",
+    admission_req: "สำเร็จมัธยมศึกษาปีที่ 6 หรือเทียบเท่า",
+    graduation_req: "เกรดเฉลี่ยไม่น้อยกว่า 2.00 และผ่านรายวิชาบังคับ",
+    philosophy:
+      "ผลิตบัณฑิตที่มีความรู้ด้านวิทยาการข้อมูลและสามารถวิเคราะห์ข้อมูลขนาดใหญ่",
+    objective:
+      "มุ่งเน้นให้บัณฑิตสามารถประมวลผลและวิเคราะห์ข้อมูลเพื่อสนับสนุนการตัดสินใจ",
+    tuition: "ประมาณ 20,000 บาทต่อเทอม",
+    credits: "ไม่น้อยกว่า 133 หน่วยกิต",
+    career_paths_id: 3,
+    career_paths:
+      "1) นักวิทยาการข้อมูล\n2) นักวิเคราะห์ข้อมูล\n3) นักวิจัยข้อมูล\n4) นักพัฒนาระบบวิเคราะห์ข้อมูล",
+    plo_id: 3,
+    plo: "PLO1: เข้าใจหลักการวิทยาการข้อมูล\nPLO2: วิเคราะห์และประมวลผลข้อมูล\nPLO3: ใช้เครื่องมือวิเคราะห์ข้อมูล\nPLO4: มีจริยธรรมและความรับผิดชอบ",
+    detail_url: "https://www.cp.su.ac.th/file/show/ds65",
+    status: "แสดง",
+    roadmap_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg",
+    structure_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png",
+  },
+  {
+    course_id: "MIT66",
+    degree: "ปริญญาโท",
+    major: "เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล",
+    year: 2566,
+    thai_course:
+      "(วท.ม) หลักสูตรวิทยาศาสตรมหาบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล 2566",
+    eng_course:
+      "Master of Science Program in Information Technology and Digital Innovation 2023",
+    thai_degree: "วิทยาศาสตรมหาบัณฑิต (เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล)",
+    eng_degree:
+      "Master of Science (Information Technology and Digital Innovation)",
+    admission_req: "สำเร็จปริญญาตรีในสาขาที่เกี่ยวข้อง",
+    graduation_req: "ผ่านหลักสูตรและทำวิทยานิพนธ์ตามเกณฑ์",
+    philosophy:
+      "พัฒนาผู้เรียนให้มีความรู้และทักษะสูงในเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล",
+    objective:
+      "เสริมสร้างความเชี่ยวชาญด้านเทคโนโลยีและนวัตกรรมเพื่อตอบโจทย์ภาคอุตสาหกรรม",
+    tuition: "ประมาณ 30,000 บาทต่อเทอม",
+    credits: "ไม่น้อยกว่า 36 หน่วยกิต",
+    career_paths_id: 4,
+    career_paths:
+      "1) นักวิจัย\n2) ผู้จัดการโครงการ IT\n3) ผู้เชี่ยวชาญด้านนวัตกรรมดิจิทัล",
+    plo_id: 4,
+    plo: "PLO1: เข้าใจเทคโนโลยีและนวัตกรรมดิจิทัล\nPLO2: วิเคราะห์และพัฒนาระบบสารสนเทศขั้นสูง\nPLO3: ทำวิจัยและประยุกต์ใช้เทคโนโลยี\nPLO4: มีจริยธรรมการวิจัย",
+    detail_url: "https://www.cp.su.ac.th/file/show/mit66",
+    status: "แสดง",
+    roadmap_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg",
+    structure_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png",
+  },
+  {
+    course_id: "PHD66",
+    degree: "ปริญญาเอก",
+    major: "เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล",
+    year: 2566,
+    thai_course:
+      "(วท.ด) หลักสูตรดุษฎีบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล 2566",
+    eng_course:
+      "Doctor of Philosophy Program in Information Technology and Digital Innovation 2023",
+    thai_degree: "ดุษฎีบัณฑิต (เทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล)",
+    eng_degree:
+      "Doctor of Philosophy (Information Technology and Digital Innovation)",
+    admission_req: "สำเร็จปริญญาโทที่เกี่ยวข้อง",
+    graduation_req: "ผ่านหลักสูตรและสอบวิทยานิพนธ์",
+    philosophy: "พัฒนางานวิจัยและนวัตกรรมที่ก้าวหน้าในสาขาเทคโนโลยีสารสนเทศ",
+    objective:
+      "ผลิตนักวิจัยชั้นนำที่มีศักยภาพในการสร้างสรรค์นวัตกรรมและเทคโนโลยี",
+    tuition: "ประมาณ 40,000 บาทต่อเทอม",
+    credits: "ไม่น้อยกว่า 48 หน่วยกิต",
+    career_paths_id: 5,
+    career_paths:
+      "1) นักวิจัยระดับสูง\n2) อาจารย์มหาวิทยาลัย\n3) ผู้เชี่ยวชาญด้านเทคโนโลยีและนวัตกรรม",
+    plo_id: 5,
+    plo: "PLO1: ทำวิจัยและสร้างนวัตกรรมขั้นสูง\nPLO2: นำเสนอผลงานวิจัยในระดับสากล\nPLO3: มีจริยธรรมและรับผิดชอบต่อสังคม",
+    detail_url: "https://www.cp.su.ac.th/file/show/phd66",
+    status: "แสดง",
+    roadmap_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg",
+    structure_url:
+      "https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png",
+  },
+];

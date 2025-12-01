@@ -1,0 +1,68 @@
+/* ปุ่มเพิ่มบุคลากร */
+.btn-addpersonnel {
+  color: white;
+  background-color: #1e40af;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-addpersonnel:hover {
+  background-color: #173390;
+  color: white;
+}
+
+/* หัวข้อหน้า */
+#personnel-title {
+  padding: 10px;
+  font-weight: 600;
+  font-size: 24px;
+  color: #1e3a8a;
+  text-align: left;
+}
+
+/* รูปภาพบุคลากร */
+.personnel-img {
+  height: 220px;
+  object-fit: cover;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+/* ชื่อบุคลากร */
+.name-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.4;
+  text-align: center;
+  min-height: 3em;
+}
+
+/* การ์ด effect */
+.card:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease-in-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ช่องว่างด้านล่าง */
+#space {
+  margin-bottom: 30px;
+}
+
+/* Responsive ปรับขนาดมือถือ */
+@media (max-width: 768px) {
+  .btn-addpersonnel {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  #personnel-title {
+    font-size: 20px;
+    text-align: center;
+  }
+}

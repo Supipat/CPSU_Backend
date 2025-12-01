@@ -1,0 +1,61 @@
+#course-title {
+  padding: 10px;
+  font-weight: 600;
+  font-size: 24px;
+  color: #1e3a8a;
+  text-align: left;
+}
+
+.course-card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.course-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+  min-height: 130px; /* กำหนดสูง */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+
+.course-card .card-body {
+  text-align: left;
+}
+
+.course-card-title {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.course-card-eng {
+  font-style: italic;
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+.degree-section {
+  margin-bottom: 3rem;
+}
+
+.major-section {
+  margin-bottom: 1.5rem;
+  padding-left: 1rem;
+  border-left: 4px solid #0d6efd; /* Bootstrap primary color */
+}
+
+.degree-header {
+  background: #38419d;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .course-card-container {
+    grid-template-columns: 1fr;
+  }
+}

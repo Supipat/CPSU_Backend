@@ -1,0 +1,88 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mitr */
+
+/* body, html {
+  font-family: 'Mitr', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #222;
+}
+
+h1, h2, h3, h4, h5, h6,
+p, li, button, a, .navbar, .card, .btn {
+  font-family: 'Mitr', sans-serif !important;
+} */
+
+/* Kanit */
+/* body, html {
+  font-family: 'Kanit', sans-serif;
+  line-height: 1.6;
+  color: #1e293b; 
+}
+
+h1, h2, h3, h4, h5, h6,
+p, li, button, a, .navbar, .card, .btn {
+  font-family: 'Kanit', sans-serif !important;
+} */
+
+/* Prompt */
+/* body, html {
+  font-family: 'Prompt', sans-serif;
+  line-height: 1.6;
+  color: #1e293b;  
+}
+
+h1, h2, h3, h4, h5, h6,
+p, li, button, a, .navbar, .card, .btn {
+  font-family: 'Prompt', sans-serif !important;
+} */
+
+
+body, html {
+  font-family: 'Noto Sans Thai', sans-serif;
+  line-height: 1.6;
+  color: #1e293b;  
+}
+
+h1, h2, h3, h4, h5, h6,
+p, li, button, a, .navbar, .card, .btn {
+  font-family: 'Noto Sans Thai', sans-serif !important;
+}

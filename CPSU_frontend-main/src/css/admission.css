@@ -1,0 +1,14 @@
+.accordion-button {
+  font-weight: bold;
+  background-color: #f8f9fa;
+  color: #003366;
+}
+
+.accordion-body h5 {
+  color: #1a237e;
+}
+
+.accordion-body ul {
+  padding-left: 1.2rem;
+  list-style: square;
+}

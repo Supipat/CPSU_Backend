@@ -1,0 +1,26 @@
+.profile-menu {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: white;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.profile-icon {
+  font-size: 32px;
+  margin-right: 10px;
+}
+
+.profile-name {
+  font-style: italic;
+  margin-right: 8px;
+}
+
+.dropdown-icon {
+  font-size: 20px;
+}
