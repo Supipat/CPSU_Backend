@@ -8,7 +8,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"sort"
 	"strconv"
 	"time"
 
@@ -257,19 +256,13 @@ func (s *personnelService) SyncAllFromScopus() (int, error) {
 		if p.ScopusID == nil || *p.ScopusID == "" {
 			continue
 		}
+
 		rs, err := s.GetResearchFromScopus(*p.ScopusID)
 		if err != nil {
 			continue
 		}
 		if len(rs) == 0 {
 			continue
-		}
-
-		sort.Slice(rs, func(i, j int) bool {
-			return rs[i].Year > rs[j].Year
-		})
-		if len(rs) > 5 {
-			rs = rs[:5]
 		}
 
 		for i := range rs {
@@ -283,6 +276,7 @@ func (s *personnelService) SyncAllFromScopus() (int, error) {
 			processed++
 		}
 	}
+
 	return processed, nil
 }
 
