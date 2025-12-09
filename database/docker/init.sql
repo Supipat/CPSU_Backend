@@ -108,8 +108,6 @@ CREATE TABLE IF NOT EXISTS subjects (
     FOREIGN KEY (clo_id) REFERENCES clo(clo_id) ON DELETE CASCADE
 );
 
-
-
 -- create personnel
 
 CREATE TABLE IF NOT EXISTS department_position (
@@ -165,6 +163,69 @@ CREATE TABLE IF NOT EXISTS calendar (
     detail TEXT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL
+);
+
+-- create google sso
+
+CREATE TABLE users (
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    google_sub VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    image_url TEXT,
+    role VARCHAR(50) DEFAULT 'user',
+    status VARCHAR(20) DEFAULT 'active', -- disabled
+    last_login TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sessions (
+    session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+    refresh_token TEXT,
+    expires_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- create permissions
+
+CREATE TABLE roles (
+  role_id SERIAL PRIMARY KEY,
+  name VARCHAR(100) UNIQUE NOT NULL,  -- 'user', 'teacher', 'staff', 'admin', 'super_admin'
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE permissions (
+  permission_id SERIAL PRIMARY KEY,
+  name VARCHAR(150) UNIQUE NOT NULL,  -- create_course', 'edit_course', 'can_assign_role'
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE role_permissions (
+  role_id INT REFERENCES roles(role_id) ON DELETE CASCADE,
+  permission_id INT REFERENCES permissions(permission_id) ON DELETE CASCADE,
+  PRIMARY KEY (role_id, permission_id)
+);
+
+CREATE TABLE user_roles (
+  user_role_id SERIAL PRIMARY KEY,
+  user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+  role_id INT REFERENCES roles(role_id) ON DELETE CASCADE,
+  granted_by UUID REFERENCES users(user_id) ON DELETE CASCADE,
+  granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE role_assignments_audit (
+  id SERIAL PRIMARY KEY,
+  user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+  role_id INT REFERENCES roles(role_id) ON DELETE CASCADE,
+  action VARCHAR(20),
+  performed_by UUID,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- TRIGGER
