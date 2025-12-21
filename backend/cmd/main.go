@@ -11,6 +11,14 @@ import (
 	"cpsu/internal/config"
 	"cpsu/internal/connectdb"
 
+	authHandler "cpsu/internal/auth/handler"
+	authRepo "cpsu/internal/auth/repository"
+	authService "cpsu/internal/auth/service"
+
+	permissionHandler "cpsu/internal/permission/handler"
+	permissionRepo "cpsu/internal/permission/repository"
+	permissionService "cpsu/internal/permission/service"
+
 	newsHandler "cpsu/internal/news/handler"
 	newsRepo "cpsu/internal/news/repository"
 	newsService "cpsu/internal/news/service"
@@ -34,6 +42,10 @@ import (
 	personnelHandler "cpsu/internal/personnel/handler"
 	personnelRepo "cpsu/internal/personnel/repository"
 	personnelService "cpsu/internal/personnel/service"
+
+	admissionHandler "cpsu/internal/admission/handler"
+	admissionRepo "cpsu/internal/admission/repository"
+	admissionService "cpsu/internal/admission/service"
 
 	calendarHandler "cpsu/internal/calendar/handler"
 	calendarRepo "cpsu/internal/calendar/repository"
@@ -61,6 +73,14 @@ func main() {
 	}
 	defer db.Close()
 
+	authRepo := authRepo.NewAuthRepository(db.GetDB())
+	authService := authService.NewAuthService(authRepo)
+	authHandler := authHandler.NewAuthHandler(authService)
+
+	permissionRepo := permissionRepo.NewPermissionRepository(db.GetDB())
+	permissionService := permissionService.NewPermissionService(permissionRepo)
+	permissionHandler := permissionHandler.NewPermissionHandler(permissionService)
+
 	newsRepo := newsRepo.NewNewsRepository(db.GetDB())
 	newsService := newsService.NewNewsService(newsRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
 	newsHandler := newsHandler.NewNewsHandler(newsService)
@@ -84,6 +104,10 @@ func main() {
 	personnelRepo := personnelRepo.NewPersonnelRepository(db.GetDB())
 	personnelService := personnelService.NewPersonnelService(personnelRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
 	personnelHandler := personnelHandler.NewPersonnelHandler(personnelService)
+
+	admissionRepo := admissionRepo.NewAdmissionRepository(db.GetDB())
+	admissionService := admissionService.NewAdmissionService(admissionRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
+	admissionHandler := admissionHandler.NewAdmissionHandler(admissionService)
 
 	calendarRepo := calendarRepo.NewCalendarRepository(db.GetDB())
 	calendarService := calendarService.NewCalendarService(calendarRepo)
@@ -127,6 +151,17 @@ func main() {
 
 	v1 := r.Group("/api/v1")
 	{
+		auth := v1.Group("auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+		}
+
+		permissionAdmin := v1.Group("admin/permission")
+		{
+			permissionAdmin.PUT("role/:id", permissionHandler.UpdateUserRole)
+		}
+
 		newsAdmin := v1.Group("admin/news")
 		{
 			newsAdmin.GET("", newsHandler.GetAllNews)
@@ -184,6 +219,15 @@ func main() {
 		personnelTeacher := v1.Group("teacher/personnel")
 		{
 			personnelTeacher.PUT("/:id", personnelHandler.UpdateTeacher)
+		}
+
+		admission := v1.Group("admin/admission")
+		{
+			admission.GET("", admissionHandler.GetAllAdmission)
+			admission.GET("/:id", admissionHandler.GetAdmissionByID)
+			admission.POST("", admissionHandler.CreateAdmission)
+			admission.PUT("/:id", admissionHandler.UpdateAdmission)
+			admission.DELETE("/:id", admissionHandler.DeleteAdmission)
 		}
 
 		calendarAdmin := v1.Group("admin/calendar")

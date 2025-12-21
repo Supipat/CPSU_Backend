@@ -24,225 +24,6 @@ CREATE TABLE IF NOT EXISTS news_images (
     FOREIGN KEY (news_id) REFERENCES news(news_id) ON DELETE CASCADE
 );
 
--- create courses
-
-CREATE TABLE IF NOT EXISTS career_paths (
-    career_paths_id SERIAL PRIMARY KEY,
-    career_paths TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS plo (
-    plo_id SERIAL PRIMARY KEY,
-    plo TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS courses (
-    course_id VARCHAR(10) PRIMARY KEY,
-    degree VARCHAR(100) NOT NULL,
-    major VARCHAR(100) NOT NULL,
-    year INT NOT NULL,
-    thai_course VARCHAR(255) NOT NULL,
-    eng_course VARCHAR(255) NOT NULL,
-    thai_degree VARCHAR(255) NOT NULL,
-    eng_degree VARCHAR(255) NOT NULL,
-    admission_req TEXT NOT NULL,
-    graduation_req TEXT NOT NULL,
-    philosophy TEXT NOT NULL,
-    objective TEXT NOT NULL,
-    tuition TEXT NOT NULL,
-    credits VARCHAR(50) NOT NULL,
-    career_paths_id INT NOT NULL,
-    plo_id INT NOT NULL,
-    detail_url TEXT NOT NULL,
-    status VARCHAR(25) NOT NULL,
-    FOREIGN KEY (career_paths_id) REFERENCES career_paths(career_paths_id) ON DELETE CASCADE,
-    FOREIGN KEY (plo_id) REFERENCES plo(plo_id) ON DELETE CASCADE
-);
-
--- create course structure
-
-CREATE TABLE IF NOT EXISTS course_structure (
-    course_structure_id SERIAL PRIMARY KEY,
-    course_id VARCHAR(10) NOT NULL,
-    course_structure_url TEXT NOT NULL,
-    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
-);
-
--- create roadmap
-
-CREATE TABLE IF NOT EXISTS roadmap (
-    roadmap_id SERIAL PRIMARY KEY,
-    course_id VARCHAR(10) NOT NULL,
-    roadmap_url TEXT NOT NULL,
-    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
-);
-
--- create subject
-
-CREATE TABLE IF NOT EXISTS description (
-    description_id VARCHAR(6) PRIMARY KEY,
-    description_thai TEXT NULL,
-    description_eng TEXT NULL
-);
-
-CREATE TABLE IF NOT EXISTS clo (
-    clo_id VARCHAR(6) PRIMARY KEY,
-    clo TEXT NULL
-);
-
-CREATE TABLE IF NOT EXISTS subjects (
-    id SERIAL PRIMARY KEY,
-    subject_id VARCHAR(10) NOT NULL,
-    course_id VARCHAR(10) NOT NULL,
-    plan_type VARCHAR(50) NOT NULL,
-    semester VARCHAR(50) NOT NULL,
-    thai_subject VARCHAR(100) NOT NULL,
-    eng_subject VARCHAR(100) NULL,
-    credits VARCHAR(50) NOT NULL,
-    compulsory_subject VARCHAR(255) NULL,
-    condition VARCHAR(255) NULL,
-    description_id VARCHAR(6) NULL,
-    clo_id VARCHAR(6) NULL,
-    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
-    FOREIGN KEY (description_id) REFERENCES description(description_id) ON DELETE CASCADE,
-    FOREIGN KEY (clo_id) REFERENCES clo(clo_id) ON DELETE CASCADE
-);
-
--- create personnel
-
-CREATE TABLE IF NOT EXISTS department_position (
-    department_position_id SERIAL PRIMARY KEY,
-    department_position_name VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS academic_position (
-    academic_position_id SERIAL PRIMARY KEY,
-    thai_academic_position VARCHAR(50) NOT NULL,
-    eng_academic_position VARCHAR(50) NULL
-);
-
-CREATE TABLE IF NOT EXISTS personnels (
-    personnel_id SERIAL PRIMARY KEY,
-    type_personnel VARCHAR(50) NOT NULL,
-    department_position_id INT NOT NULL,
-    academic_position_id INT NULL,
-    thai_name VARCHAR(50) NOT NULL,
-    eng_name VARCHAR(50) NOT NULL,
-    education TEXT NULL,
-    related_fields TEXT NULL,
-    email VARCHAR(100) NULL,
-    website TEXT NULL,
-    file_image TEXT NOT NULL,
-    scopus_id VARCHAR(50) NULL,
-    FOREIGN KEY (department_position_id) REFERENCES department_position(department_position_id) ON DELETE CASCADE,
-    FOREIGN KEY (academic_position_id) REFERENCES academic_position(academic_position_id) ON DELETE CASCADE
-);
-
--- create research
-
-CREATE TABLE IF NOT EXISTS research (
-    research_id SERIAL PRIMARY KEY,
-    personnel_id INT NOT NULL,
-    title TEXT NOT NULL,                                       
-    journal VARCHAR(255) NOT NULL,              
-    year INT NOT NULL,                         
-    volume VARCHAR(50) NULL,                         
-    issue VARCHAR(50) NULL,                         
-    pages VARCHAR(50) NULL,                          
-    doi TEXT NULL,                          
-    cited INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (personnel_id) REFERENCES personnels(personnel_id) ON DELETE CASCADE           
-);
-
--- create calendar
-
-CREATE TABLE IF NOT EXISTS calendar (
-    calendar_id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL,  
-    detail TEXT NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL
-);
-
--- create google sso
-
-CREATE TABLE users (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    google_sub VARCHAR(255) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    image_url TEXT,
-    role VARCHAR(50) DEFAULT 'user',
-    status VARCHAR(20) DEFAULT 'active', -- disabled
-    last_login TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE sessions (
-    session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-    refresh_token TEXT,
-    expires_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- create permissions
-
-CREATE TABLE roles (
-  role_id SERIAL PRIMARY KEY,
-  name VARCHAR(100) UNIQUE NOT NULL,  -- 'user', 'teacher', 'staff', 'admin', 'super_admin'
-  description TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE permissions (
-  permission_id SERIAL PRIMARY KEY,
-  name VARCHAR(150) UNIQUE NOT NULL,  -- create_course', 'edit_course', 'can_assign_role'
-  description TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE role_permissions (
-  role_id INT REFERENCES roles(role_id) ON DELETE CASCADE,
-  permission_id INT REFERENCES permissions(permission_id) ON DELETE CASCADE,
-  PRIMARY KEY (role_id, permission_id)
-);
-
-CREATE TABLE user_roles (
-  user_role_id SERIAL PRIMARY KEY,
-  user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  role_id INT REFERENCES roles(role_id) ON DELETE CASCADE,
-  granted_by UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  active BOOLEAN DEFAULT true
-);
-
-CREATE TABLE role_assignments_audit (
-  id SERIAL PRIMARY KEY,
-  user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-  role_id INT REFERENCES roles(role_id) ON DELETE CASCADE,
-  action VARCHAR(20),
-  performed_by UUID,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- TRIGGER
-
-CREATE OR REPLACE FUNCTION update_modified_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = now(); 
-    RETURN NEW;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE TRIGGER update_news_modtime
-BEFORE UPDATE ON news
-FOR EACH ROW
-EXECUTE PROCEDURE update_modified_column();
-
 -- insert news
 
 INSERT INTO news_types(type_name) VALUES
@@ -325,6 +106,41 @@ INSERT INTO news_images(news_id,file_image) VALUES
 ((SELECT news_id FROM news WHERE title = 'งานสานสัมพันธ์ภาคคอมพิวเตอร์' LIMIT 1),
     'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/cpsu_event.png');
 
+-- create courses
+
+CREATE TABLE IF NOT EXISTS career_paths (
+    career_paths_id SERIAL PRIMARY KEY,
+    career_paths TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS plo (
+    plo_id SERIAL PRIMARY KEY,
+    plo TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS courses (
+    course_id VARCHAR(10) PRIMARY KEY,
+    degree VARCHAR(100) NOT NULL,
+    major VARCHAR(100) NOT NULL,
+    year INT NOT NULL,
+    thai_course VARCHAR(255) NOT NULL,
+    eng_course VARCHAR(255) NOT NULL,
+    thai_degree VARCHAR(255) NOT NULL,
+    eng_degree VARCHAR(255) NOT NULL,
+    admission_req TEXT NOT NULL,
+    graduation_req TEXT NOT NULL,
+    philosophy TEXT NOT NULL,
+    objective TEXT NOT NULL,
+    tuition TEXT NOT NULL,
+    credits VARCHAR(50) NOT NULL,
+    career_paths_id INT NOT NULL,
+    plo_id INT NOT NULL,
+    detail_url TEXT NOT NULL,
+    status VARCHAR(25) NOT NULL,
+    FOREIGN KEY (career_paths_id) REFERENCES career_paths(career_paths_id) ON DELETE CASCADE,
+    FOREIGN KEY (plo_id) REFERENCES plo(plo_id) ON DELETE CASCADE
+);
+
 -- insert courses
 
 COPY career_paths(career_paths)
@@ -342,6 +158,15 @@ WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 SELECT setval('career_paths_career_paths_id_seq', (SELECT MAX(career_paths_id) FROM career_paths));
 SELECT setval('plo_plo_id_seq', (SELECT MAX(plo_id) FROM plo));
 
+-- create course structure
+
+CREATE TABLE IF NOT EXISTS course_structure (
+    course_structure_id SERIAL PRIMARY KEY,
+    course_id VARCHAR(10) NOT NULL,
+    course_structure_url TEXT NOT NULL,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);
+
 -- insert course structure
 
 INSERT INTO course_structure(course_id,course_structure_url) VALUES
@@ -350,6 +175,15 @@ INSERT INTO course_structure(course_id,course_structure_url) VALUES
 ((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
     'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png');
 
+-- create roadmap
+
+CREATE TABLE IF NOT EXISTS roadmap (
+    roadmap_id SERIAL PRIMARY KEY,
+    course_id VARCHAR(10) NOT NULL,
+    roadmap_url TEXT NOT NULL,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+);
+
 -- insert roadmap
 
 INSERT INTO roadmap(course_id,roadmap_url) VALUES
@@ -357,6 +191,37 @@ INSERT INTO roadmap(course_id,roadmap_url) VALUES
     'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg'),
 ((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
     'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_IT_65.jpg');
+
+-- create subject
+
+CREATE TABLE IF NOT EXISTS description (
+    description_id VARCHAR(6) PRIMARY KEY,
+    description_thai TEXT NULL,
+    description_eng TEXT NULL
+);
+
+CREATE TABLE IF NOT EXISTS clo (
+    clo_id VARCHAR(6) PRIMARY KEY,
+    clo TEXT NULL
+);
+
+CREATE TABLE IF NOT EXISTS subjects (
+    id SERIAL PRIMARY KEY,
+    subject_id VARCHAR(10) NOT NULL,
+    course_id VARCHAR(10) NOT NULL,
+    plan_type VARCHAR(50) NOT NULL,
+    semester VARCHAR(50) NOT NULL,
+    thai_subject VARCHAR(100) NOT NULL,
+    eng_subject VARCHAR(100) NULL,
+    credits VARCHAR(50) NOT NULL,
+    compulsory_subject VARCHAR(255) NULL,
+    condition VARCHAR(255) NULL,
+    description_id VARCHAR(6) NULL,
+    clo_id VARCHAR(6) NULL,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
+    FOREIGN KEY (description_id) REFERENCES description(description_id) ON DELETE CASCADE,
+    FOREIGN KEY (clo_id) REFERENCES clo(clo_id) ON DELETE CASCADE
+);
 
 -- insert subject
 
@@ -398,6 +263,36 @@ WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 SELECT setval('subjects_id_seq', (SELECT MAX(id) FROM subjects));
 
+-- create personnel
+
+CREATE TABLE IF NOT EXISTS department_position (
+    department_position_id SERIAL PRIMARY KEY,
+    department_position_name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS academic_position (
+    academic_position_id SERIAL PRIMARY KEY,
+    thai_academic_position VARCHAR(50) NOT NULL,
+    eng_academic_position VARCHAR(50) NULL
+);
+
+CREATE TABLE IF NOT EXISTS personnels (
+    personnel_id SERIAL PRIMARY KEY,
+    type_personnel VARCHAR(50) NOT NULL,
+    department_position_id INT NOT NULL,
+    academic_position_id INT NULL,
+    thai_name VARCHAR(50) NOT NULL,
+    eng_name VARCHAR(50) NOT NULL,
+    education TEXT NULL,
+    related_fields TEXT NULL,
+    email VARCHAR(100) NULL,
+    website TEXT NULL,
+    file_image TEXT NOT NULL,
+    scopus_id VARCHAR(50) NULL,
+    FOREIGN KEY (department_position_id) REFERENCES department_position(department_position_id) ON DELETE CASCADE,
+    FOREIGN KEY (academic_position_id) REFERENCES academic_position(academic_position_id) ON DELETE CASCADE
+);
+
 -- insert personnel
 
 INSERT INTO department_position(department_position_name) VALUES
@@ -417,8 +312,276 @@ WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
 
 SELECT setval('personnels_personnel_id_seq', (SELECT MAX(personnel_id) FROM personnels));
 
+-- create research
+
+CREATE TABLE IF NOT EXISTS research (
+    research_id SERIAL PRIMARY KEY,
+    personnel_id INT NOT NULL,
+    title TEXT NOT NULL,                                       
+    journal VARCHAR(255) NOT NULL,              
+    year INT NOT NULL,                         
+    volume VARCHAR(50) NULL,                         
+    issue VARCHAR(50) NULL,                         
+    pages VARCHAR(50) NULL,                          
+    doi TEXT NULL,                          
+    cited INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (personnel_id) REFERENCES personnels(personnel_id) ON DELETE CASCADE           
+);
+
+-- create admission
+
+CREATE TABLE IF NOT EXISTS admission (
+    admission_id SERIAL PRIMARY KEY,
+    round VARCHAR(25) NOT NULL,
+    detail TEXT NOT NULL,
+    file_image TEXT NOT NULL
+);
+
+-- create calendar
+
+CREATE TABLE IF NOT EXISTS calendar (
+    calendar_id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,  
+    detail TEXT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL
+);
+
 -- insert calendar
+
 INSERT INTO calendar(title,detail,start_date,end_date) VALUES
 ('มหกรรมการสอบ','มหกรรมการสอบ', '2025-10-27', '2025-11-08'),
 ('test1','test1','2025-10-29', '2025-11-05'),
 ('test2','test2','2025-11-09', '2025-11-09');
+
+-- create user
+
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    email_verified BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP
+);
+
+-- Index สำหรับ login
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_active ON users(is_active);
+
+-- create role
+
+CREATE TABLE roles (
+    role_id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    is_system BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_roles_name ON roles(name);
+
+-- insert roles
+
+INSERT INTO roles (name, description, is_system) VALUES
+('admin', 'Administrator with full system access', true),
+('staff', 'Can create and edit content', true),
+('teacher', 'Edit personal information', true),
+('user', 'Default role for new users', true);
+
+
+CREATE TABLE user_roles (
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    role_id INTEGER NOT NULL REFERENCES roles(role_id) ON DELETE CASCADE,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    assigned_by INTEGER REFERENCES users(user_id),
+    PRIMARY KEY (user_id, role_id)
+);
+
+CREATE INDEX idx_user_roles_user ON user_roles(user_id);
+CREATE INDEX idx_user_roles_role ON user_roles(role_id);
+
+-- create permissions
+
+CREATE TABLE permissions (
+    permission_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    resource VARCHAR(50) NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_permissions_name ON permissions(name);
+CREATE INDEX idx_permissions_resource ON permissions(resource);
+
+-- insert permissions
+
+INSERT INTO permissions (name, description, resource, action) VALUES
+-- news permissions
+('news:read', 'Can view news', 'news', 'read'),
+('news:create', 'Can create new news', 'news', 'create'),
+('news:update', 'Can update news', 'news', 'update'),
+('news:delete', 'Can delete news', 'news', 'delete'),
+
+-- courses permissions
+('courses:read', 'Can view courses', 'courses', 'read'),
+('courses:create', 'Can create new courses', 'courses', 'create'),
+('courses:update', 'Can update courses', 'courses', 'update'),
+('courses:delete', 'Can delete courses', 'courses', 'delete'),
+
+-- course_structure permissions
+('course_structure:read', 'Can view course_structure', 'course_structure', 'read'),
+('course_structure:create', 'Can create new course_structure', 'course_structure', 'create'),
+('course_structure:delete', 'Can delete course_structure', 'course_structure', 'delete'),
+
+-- roadmap permissions
+('roadmap:read', 'Can view roadmap', 'roadmap', 'read'),
+('roadmap:create', 'Can create new roadmap', 'roadmap', 'create'),
+('roadmap:delete', 'Can delete roadmap', 'roadmap', 'delete'),
+
+-- subject permissions
+('subject:read', 'Can view subject', 'subject', 'read'),
+('subject:create', 'Can create new subject', 'subject', 'create'),
+('subject:update', 'Can update subject', 'subject', 'update'),
+('subject:delete', 'Can delete subject', 'subject', 'delete'),
+
+-- personnel permissions
+('personnel:read', 'Can view personnel', 'personnel', 'read'),
+('personnel:create', 'Can create new personnel', 'personnel', 'create'),
+('personnel:update', 'Can update personnel', 'personnel', 'update'),
+('your_personnel:update', 'Can update your personal information', 'personnel', 'update'),
+('personnel:delete', 'Can delete personnel', 'personnel', 'delete'),
+
+-- research permissions
+('scopus:read', 'Research data is accessible', 'research', 'read'),
+('research:read', 'Can view research', 'research', 'read'),
+
+-- calendar permissions
+('calendar:read', 'Can view calendar', 'calendar', 'read'),
+('calendar:create', 'Can create new calendar', 'calendar', 'create'),
+('calendar:update', 'Can update calendar', 'calendar', 'update'),
+('calendar:delete', 'Can delete calendar', 'calendar', 'delete'),
+
+-- Roles permissions
+('roles:read', 'Can view roles', 'roles', 'read'),
+('roles:assign', 'Can assign roles to users', 'roles', 'assign');
+
+CREATE TABLE role_permissions (
+    role_id INTEGER NOT NULL REFERENCES roles(role_id) ON DELETE CASCADE,
+    permission_id INTEGER NOT NULL REFERENCES permissions(permission_id) ON DELETE CASCADE,
+    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (role_id, permission_id)
+);
+
+CREATE INDEX idx_role_perms_role ON role_permissions(role_id);
+CREATE INDEX idx_role_perms_perm ON role_permissions(permission_id);
+
+-- insert role permissions
+
+-- Admin: ทุก permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT
+    (SELECT role_id FROM roles WHERE name = 'admin'),
+    permission_id FROM permissions;
+
+-- Staff: ทุก permissions (ยกเว้น Roles permissions)
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT
+    (SELECT role_id FROM roles WHERE name = 'staff'),
+    permission_id FROM permissions
+WHERE name IN (
+    'news:read', 'news:create', 'news:update', 'news:delete',
+    'courses:read', 'courses:create', 'courses:update', 'courses:delete',
+    'course_structure:read', 'course_structure:create', 'course_structure:delete',
+    'roadmap:read', 'roadmap:create', 'roadmap:delete',
+    'subject:read', 'subject:create', 'subject:update', 'subject:delete',
+    'personnel:read', 'personnel:create', 'personnel:update', 'your_personnel:update', 'personnel:delete',
+    'scopus:read', 'research:read',
+    'calendar:read', 'calendar:create', 'calendar:update', 'calendar:delete'
+);
+
+-- Teacher your_personnel:update
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT
+    (SELECT role_id FROM roles WHERE name = 'teacher'),
+    permission_id FROM permissions WHERE name = 'your_personnel:update';
+
+-- User
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT
+    (SELECT role_id FROM roles WHERE name = 'user'),
+    permission_id FROM permissions
+WHERE name IN (
+    'news:read',
+    'courses:read',
+    'course_structure:read',
+    'roadmap:read',
+    'subject:read',
+    'personnel:read',
+    'calendar:read'
+);
+
+-- Refresh Tokens (สำหรับ JWT refresh)
+CREATE TABLE refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    token VARCHAR(500) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    revoked_at TIMESTAMP,
+    replaced_by VARCHAR(500)
+);
+
+CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at);
+
+-- Audit Logs (สำหรับ tracking)  'update', 'delete'
+CREATE TABLE audit_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    action VARCHAR(100) NOT NULL,  -- 'login', 'logout', 'create', 'update', 'delete'
+    resource VARCHAR(50),           -- 'books', 'users', 'roles'
+    resource_id VARCHAR(50),
+    details JSONB,
+    ip_address VARCHAR(50),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
+
+-- TRIGGER
+
+CREATE OR REPLACE FUNCTION update_modified_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP; 
+    RETURN NEW;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER update_news_modtime
+BEFORE UPDATE ON news
+FOR EACH ROW
+EXECUTE PROCEDURE update_modified_column();
+
+CREATE TRIGGER update_users_modtime
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE PROCEDURE update_modified_column();
+
+CREATE TRIGGER update_roles_modtime
+BEFORE UPDATE ON roles
+FOR EACH ROW
+EXECUTE PROCEDURE update_modified_column();
