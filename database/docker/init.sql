@@ -163,17 +163,9 @@ SELECT setval('plo_plo_id_seq', (SELECT MAX(plo_id) FROM plo));
 CREATE TABLE IF NOT EXISTS course_structure (
     course_structure_id SERIAL PRIMARY KEY,
     course_id VARCHAR(10) NOT NULL,
-    course_structure_url TEXT NOT NULL,
+    detail TEXT NOT NULL,
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
 );
-
--- insert course structure
-
-INSERT INTO course_structure(course_id,course_structure_url) VALUES
-((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_CS_65.png'),
-((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/course_structure_IT_65.png');
 
 -- create roadmap
 

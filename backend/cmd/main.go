@@ -90,7 +90,7 @@ func main() {
 	courseHandler := courseHandler.NewCourseHandler(courseService)
 
 	structureRepo := structureRepo.NewCourseStructureRepository(db.GetDB())
-	structureService := structureService.NewCourseStructureService(structureRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
+	structureService := structureService.NewCourseStructureService(structureRepo)
 	structureHandler := structureHandler.NewCourseStructureHandler(structureService)
 
 	roadmapRepo := roadmapRepo.NewRoadmapRepository(db.GetDB())
@@ -185,6 +185,7 @@ func main() {
 			structureAdmin.GET("", structureHandler.GetAllCourseStructure)
 			structureAdmin.GET("/:id", structureHandler.GetCourseStructureByID)
 			structureAdmin.POST("", structureHandler.CreateCourseStructure)
+			structureAdmin.PUT("/:id", structureHandler.UpdateCourseStructure)
 			structureAdmin.DELETE("/:id", structureHandler.DeleteCourseStructure)
 		}
 

@@ -12,6 +12,7 @@ type CourseStructureRepository interface {
 	GetAllCourseStructure(param models.CourseStructureQueryParam) ([]models.CourseStructure, error)
 	GetCourseStructureByID(id int) (*models.CourseStructure, error)
 	CreateCourseStructure(req *models.CourseStructureRequest) (*models.CourseStructure, error)
+	UpdateCourseStructure(id int, req models.CourseStructureRequest) (*models.CourseStructure, error)
 	DeleteCourseStructure(id int) error
 }
 
@@ -25,7 +26,8 @@ func NewCourseStructureRepository(db *sql.DB) CourseStructureRepository {
 
 func (r *courseStructureRepository) GetAllCourseStructure(param models.CourseStructureQueryParam) ([]models.CourseStructure, error) {
 	query := `
-		SELECT cs.course_structure_id, c.course_id, c.thai_course, cs.course_structure_url
+		SELECT 
+			cs.course_structure_id, c.course_id, c.thai_course, cs.detail
 		FROM course_structure cs
 		LEFT JOIN courses c ON cs.course_id = c.course_id
 	`
@@ -39,12 +41,20 @@ func (r *courseStructureRepository) GetAllCourseStructure(param models.CourseStr
 		args = append(args, param.CourseID)
 		argIndex++
 	}
+
+	if param.Search != "" {
+		conditions = append(conditions, "cs.detail ILIKE $"+strconv.Itoa(argIndex))
+		args = append(args, "%"+param.Search+"%")
+		argIndex++
+	}
+
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
 	sort := "cs.course_structure_id"
-	if param.Sort != "" {
+	switch param.Sort {
+	case "course_id", "detail":
 		sort = "cs." + param.Sort
 	}
 
@@ -65,34 +75,37 @@ func (r *courseStructureRepository) GetAllCourseStructure(param models.CourseStr
 	}
 	defer rows.Close()
 
-	var courseStructures []models.CourseStructure
+	var result []models.CourseStructure
 	for rows.Next() {
 		var cs models.CourseStructure
-		err := rows.Scan(&cs.CourseStructureID, &cs.CourseID, &cs.ThaiCourse, &cs.CourseStructureURL)
-		if err != nil {
+		if err := rows.Scan(
+			&cs.CourseStructureID, &cs.CourseID, &cs.ThaiCourse, &cs.Detail,
+		); err != nil {
 			return nil, err
 		}
-		courseStructures = append(courseStructures, cs)
+		result = append(result, cs)
 	}
 
-	return courseStructures, nil
+	return result, nil
 }
 
 func (r *courseStructureRepository) GetCourseStructureByID(id int) (*models.CourseStructure, error) {
+
 	query := `
-		SELECT cs.course_structure_id, c.course_id, c.thai_course, cs.course_structure_url
+		SELECT 
+			cs.course_structure_id, c.course_id,
+			c.thai_course, cs.detail
 		FROM course_structure cs
 		LEFT JOIN courses c ON cs.course_id = c.course_id
 		WHERE cs.course_structure_id = $1
 	`
-	row := r.db.QueryRow(query, id)
 
 	var cs models.CourseStructure
-	err := row.Scan(&cs.CourseStructureID, &cs.CourseID, &cs.ThaiCourse, &cs.CourseStructureURL)
+	err := r.db.QueryRow(query, id).Scan(
+		&cs.CourseStructureID, &cs.CourseID, &cs.ThaiCourse, &cs.Detail,
+	)
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, sql.ErrNoRows
-		}
 		return nil, err
 	}
 
@@ -101,22 +114,55 @@ func (r *courseStructureRepository) GetCourseStructureByID(id int) (*models.Cour
 
 func (r *courseStructureRepository) CreateCourseStructure(req *models.CourseStructureRequest) (*models.CourseStructure, error) {
 	query := `
-		INSERT INTO course_structure (course_id, course_structure_url)
+		INSERT INTO course_structure (course_id, detail)
 		VALUES ($1, $2)
 		RETURNING course_structure_id
 	`
 
 	var cs models.CourseStructure
-	err := r.db.QueryRow(query, req.CourseID, req.CourseStructureURL).Scan(&cs.CourseStructureID)
+	err := r.db.QueryRow(query, req.CourseID, req.Detail).
+		Scan(&cs.CourseStructureID)
 	if err != nil {
 		return nil, err
 	}
 
 	cs.CourseID = req.CourseID
-	cs.CourseStructureURL = req.CourseStructureURL
+	cs.Detail = req.Detail
 
-	row := r.db.QueryRow("SELECT thai_course FROM courses WHERE course_id = $1", req.CourseID)
-	_ = row.Scan(&cs.ThaiCourse)
+	_ = r.db.QueryRow(
+		"SELECT thai_course FROM courses WHERE course_id = $1",
+		req.CourseID,
+	).Scan(&cs.ThaiCourse)
+
+	return &cs, nil
+}
+
+func (r *courseStructureRepository) UpdateCourseStructure(id int, req models.CourseStructureRequest) (*models.CourseStructure, error) {
+	query := `
+		UPDATE course_structure
+		SET course_id = $1, detail = $2
+		WHERE course_structure_id = $3
+		RETURNING course_structure_id, course_id, detail
+	`
+
+	var cs models.CourseStructure
+	err := r.db.QueryRow(
+		query, req.CourseID, req.Detail, id,
+	).Scan(
+		&cs.CourseStructureID, &cs.CourseID, &cs.Detail,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+
+	_ = r.db.QueryRow(
+		"SELECT thai_course FROM courses WHERE course_id = $1",
+		cs.CourseID,
+	).Scan(&cs.ThaiCourse)
 
 	return &cs, nil
 }

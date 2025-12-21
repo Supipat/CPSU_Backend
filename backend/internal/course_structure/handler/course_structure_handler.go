@@ -22,7 +22,7 @@ func NewCourseStructureHandler(courseStructureService service.CourseStructureSer
 
 func (h *CourseStructureHandler) GetAllCourseStructure(c *gin.Context) {
 	var param models.CourseStructureQueryParam
-	if err := c.BindQuery(&param); err != nil {
+	if err := c.ShouldBindQuery(&param); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -44,7 +44,7 @@ func (h *CourseStructureHandler) GetCourseStructureByID(c *gin.Context) {
 		return
 	}
 
-	cs, err := h.courseStructureService.GetCourseStructureByID(id)
+	courseStructures, err := h.courseStructureService.GetCourseStructureByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "course_structure not found"})
@@ -54,29 +54,51 @@ func (h *CourseStructureHandler) GetCourseStructureByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, cs)
+	c.JSON(http.StatusOK, courseStructures)
 }
 
 func (h *CourseStructureHandler) CreateCourseStructure(c *gin.Context) {
-	courseID := c.PostForm("course_id")
-	if courseID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course ID"})
+	var req models.CourseStructureRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	file, err := c.FormFile("course_structure_url")
+	created, err := h.courseStructureService.CreateCourseStructure(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "course_structure_url is required"})
-		return
-	}
-
-	created, err := h.courseStructureService.CreateCourseStructure(courseID, file)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusCreated, created)
+}
+
+func (h *CourseStructureHandler) UpdateCourseStructure(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid course_structure_id"})
+		return
+	}
+
+	var req models.CourseStructureRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updated, err := h.courseStructureService.UpdateCourseStructure(id, req)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "course_structure not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, updated)
 }
 
 func (h *CourseStructureHandler) DeleteCourseStructure(c *gin.Context) {

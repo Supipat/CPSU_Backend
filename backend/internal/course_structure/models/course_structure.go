@@ -1,10 +1,10 @@
 package models
 
 type CourseStructure struct {
-	CourseStructureID  int    `json:"course_structure_id"`
-	CourseID           string `json:"course_id"`
-	ThaiCourse         string `json:"thai_course"`
-	CourseStructureURL string `json:"course_structure_url"`
+	CourseStructureID int    `json:"course_structure_id"`
+	CourseID          string `json:"course_id"`
+	ThaiCourse        string `json:"thai_course"`
+	Detail            string `json:"detail"`
 }
 
 type CourseStructureQueryParam struct {
@@ -16,6 +16,6 @@ type CourseStructureQueryParam struct {
 }
 
 type CourseStructureRequest struct {
-	CourseID           string `json:"course_id"`
-	CourseStructureURL string `json:"course_structure_url"`
+	CourseID string `json:"course_id"`
+	Detail   string `json:"detail"`
 }
