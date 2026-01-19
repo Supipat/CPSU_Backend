@@ -2,53 +2,64 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"cpsu/internal/auth/models"
 	"cpsu/internal/auth/repository"
-
-	"golang.org/x/crypto/bcrypt"
+	"cpsu/internal/auth/utils"
 )
 
 type AuthService struct {
-	UserRepo repository.AuthRepository
+	UserRepo  *repository.UserRepository
+	RoleRepo  *repository.RoleRepository
+	TokenRepo *repository.TokenRepository
+	AuditRepo *repository.AuditRepository
 }
 
-const bcryptCost = 12
-
-func NewAuthService(userRepo repository.AuthRepository) *AuthService {
+func NewAuthService(
+	userRepo *repository.UserRepository,
+	roleRepo *repository.RoleRepository,
+	tokenRepo *repository.TokenRepository,
+	auditRepo *repository.AuditRepository,
+) *AuthService {
 	return &AuthService{
-		UserRepo: userRepo,
+		UserRepo:  userRepo,
+		RoleRepo:  roleRepo,
+		TokenRepo: tokenRepo,
+		AuditRepo: auditRepo,
 	}
 }
 
-func (s *AuthService) Register(req models.RegisterRequest) error {
-	if req.Username == "" || req.Email == "" || req.Password == "" {
-		return errors.New("missing required fields")
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcryptCost)
+func (s *AuthService) Register(req models.RegisterRequest, ipAddress string, userAgent string) error {
+	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return err
 	}
 
-	user := models.Users{
-		Username:      req.Username,
-		Email:         req.Email,
-		PasswordHash:  string(hash),
-		EmailVerified: false,
-		IsActive:      true,
+	userID, err := s.UserRepo.Register(req.Username, req.Email, hashedPassword)
+	if err != nil {
+		return err
 	}
 
-	return s.UserRepo.CreateUser(user)
+	_ = s.AuditRepo.LogAudit(
+		userID, "register", "auth", "",
+		map[string]interface{}{
+			"email":    req.Email,
+			"username": req.Username,
+		},
+		ipAddress,
+		userAgent,
+	)
+
+	return nil
 }
 
-func (s *AuthService) Login(req models.LoginRequest) (*models.Users, error) {
-	if req.Email == "" || req.Password == "" {
-		return nil, errors.New("email and password required")
-	}
-
-	user, err := s.UserRepo.GetByEmail(req.Email)
+func (s *AuthService) Login(req models.LoginRequest, ipAddress string, userAgent string) (*models.LoginResponse, error) {
+	user, err := s.UserRepo.FindByEmail(req.Email)
 	if err != nil {
+		return nil, err
+	}
+	if user == nil {
 		return nil, errors.New("invalid email or password")
 	}
 
@@ -56,12 +67,81 @@ func (s *AuthService) Login(req models.LoginRequest) (*models.Users, error) {
 		return nil, errors.New("account is disabled")
 	}
 
-	if err := bcrypt.CompareHashAndPassword(
-		[]byte(user.PasswordHash),
-		[]byte(req.Password),
-	); err != nil {
+	if err := utils.VerifyPassword(user.PasswordHash, req.Password); err != nil {
 		return nil, errors.New("invalid email or password")
 	}
 
-	return user, nil
+	roles, err := s.RoleRepo.GetUserRoles(user.UserID)
+	if err != nil {
+		roles = []string{}
+	}
+
+	accessToken, err := utils.GenerateAccessToken(user.UserID, user.Username, roles)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken(user.UserID, user.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+	_ = s.TokenRepo.StoreRefreshToken(user.UserID, refreshToken, expiresAt)
+	_ = s.UserRepo.UpdateLastLogin(user.UserID)
+
+	_ = s.AuditRepo.LogAudit(
+		user.UserID, "login", "auth", "",
+		map[string]interface{}{
+			"email": user.Email,
+		},
+		ipAddress,
+		userAgent,
+	)
+
+	return &models.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		User: models.UserInfo{
+			UserID:   user.UserID,
+			Username: user.Username,
+			Email:    user.Email,
+			Roles:    roles,
+		},
+	}, nil
+}
+
+func (s *AuthService) RefreshToken(refreshToken string) (string, error) {
+	userID, ok, err := s.TokenRepo.IsRefreshTokenValid(refreshToken)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", errors.New("invalid refresh token")
+	}
+
+	user, err := s.UserRepo.FindByID(userID)
+	if err != nil || user == nil {
+		return "", errors.New("user not found")
+	}
+
+	roles, err := s.RoleRepo.GetUserRoles(user.UserID)
+	if err != nil {
+		roles = []string{}
+	}
+
+	accessToken, err := utils.GenerateAccessToken(user.UserID, user.Username, roles)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
+func (s *AuthService) Logout(refreshToken string, userID int, ipAddress string, userAgent string) error {
+	if refreshToken != "" {
+		_ = s.TokenRepo.RevokeRefreshToken(refreshToken)
+	}
+	_ = s.AuditRepo.LogAudit(userID, "logout", "auth", "", nil, ipAddress, userAgent)
+	return nil
 }

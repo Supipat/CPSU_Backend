@@ -1,0 +1,55 @@
+package repository
+
+import (
+	"database/sql"
+)
+
+type RoleRepository struct {
+	DB *sql.DB
+}
+
+func NewRoleRepository(db *sql.DB) *RoleRepository {
+	return &RoleRepository{DB: db}
+}
+
+func (r *RoleRepository) GetUserRoles(userID int) ([]string, error) {
+	query := `
+		SELECT r.name
+		FROM roles r
+		JOIN user_roles ur ON r.role_id = ur.role_id
+		WHERE ur.user_id = $1
+	`
+	rows, err := r.DB.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var roles []string
+	for rows.Next() {
+		var role string
+		if err := rows.Scan(&role); err != nil {
+			return nil, err
+		}
+		roles = append(roles, role)
+	}
+	return roles, nil
+}
+
+func (r *RoleRepository) AssignRole(userID, roleID, assignedBy int) error {
+	query := `
+		INSERT INTO user_roles (user_id, role_id, assigned_by)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id, role_id) DO NOTHING
+	`
+	_, err := r.DB.Exec(query, userID, roleID, assignedBy)
+	return err
+}
+
+func (r *RoleRepository) RemoveRole(userID, roleID int) error {
+	query := `
+		DELETE FROM user_roles
+		WHERE user_id = $1 AND role_id = $2
+	`
+	_, err := r.DB.Exec(query, userID, roleID)
+	return err
+}

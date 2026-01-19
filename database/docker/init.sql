@@ -355,7 +355,7 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     is_active BOOLEAN DEFAULT true,
-    email_verified BOOLEAN DEFAULT false,
+    email_verified BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP
@@ -372,7 +372,6 @@ CREATE TABLE roles (
     role_id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
-    is_system BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -381,11 +380,10 @@ CREATE INDEX idx_roles_name ON roles(name);
 
 -- insert roles
 
-INSERT INTO roles (name, description, is_system) VALUES
-('admin', 'Administrator with full system access', true),
-('staff', 'Can create and edit content', true),
-('teacher', 'Edit personal information', true),
-('user', 'Default role for new users', true);
+INSERT INTO roles (name, description) VALUES
+('admin', 'Administrator with full system access'),
+('staff', 'Can create and edit content'),
+('teacher', 'Edit personal information');
 
 
 CREATE TABLE user_roles (
@@ -416,53 +414,68 @@ CREATE INDEX idx_permissions_resource ON permissions(resource);
 -- insert permissions
 
 INSERT INTO permissions (name, description, resource, action) VALUES
--- news permissions
+-- news
 ('news:read', 'Can view news', 'news', 'read'),
+('news:read_id', 'Can view news id', 'news', 'read'),
 ('news:create', 'Can create new news', 'news', 'create'),
 ('news:update', 'Can update news', 'news', 'update'),
 ('news:delete', 'Can delete news', 'news', 'delete'),
 
--- courses permissions
+-- courses 
 ('courses:read', 'Can view courses', 'courses', 'read'),
+('courses:read_id', 'Can view courses id', 'courses', 'read'),
 ('courses:create', 'Can create new courses', 'courses', 'create'),
 ('courses:update', 'Can update courses', 'courses', 'update'),
 ('courses:delete', 'Can delete courses', 'courses', 'delete'),
 
--- course_structure permissions
+-- course_structure 
 ('course_structure:read', 'Can view course_structure', 'course_structure', 'read'),
+('course_structure:read_id', 'Can view course_structure id', 'course_structure', 'read'),
 ('course_structure:create', 'Can create new course_structure', 'course_structure', 'create'),
+('course_structure:update', 'Can update new course_structure', 'course_structure', 'update'),
 ('course_structure:delete', 'Can delete course_structure', 'course_structure', 'delete'),
 
--- roadmap permissions
+-- roadmap 
 ('roadmap:read', 'Can view roadmap', 'roadmap', 'read'),
+('roadmap:read_id', 'Can view roadmap id', 'roadmap', 'read'),
 ('roadmap:create', 'Can create new roadmap', 'roadmap', 'create'),
 ('roadmap:delete', 'Can delete roadmap', 'roadmap', 'delete'),
 
--- subject permissions
+-- subject 
 ('subject:read', 'Can view subject', 'subject', 'read'),
+('subject:read_id', 'Can view subject id', 'subject', 'read'),
 ('subject:create', 'Can create new subject', 'subject', 'create'),
 ('subject:update', 'Can update subject', 'subject', 'update'),
 ('subject:delete', 'Can delete subject', 'subject', 'delete'),
 
--- personnel permissions
+-- personnel
 ('personnel:read', 'Can view personnel', 'personnel', 'read'),
+('personnel:read_id', 'Can view personnel id', 'personnel', 'read'),
 ('personnel:create', 'Can create new personnel', 'personnel', 'create'),
 ('personnel:update', 'Can update personnel', 'personnel', 'update'),
 ('your_personnel:update', 'Can update your personal information', 'personnel', 'update'),
 ('personnel:delete', 'Can delete personnel', 'personnel', 'delete'),
 
--- research permissions
+-- research
 ('scopus:read', 'Research data is accessible', 'research', 'read'),
 ('research:read', 'Can view research', 'research', 'read'),
 
--- calendar permissions
+-- admission
+('admission:read', 'Can view admission', 'admission', 'read'),
+('admission:read_id', 'Can view admission id', 'admission', 'read'),
+('admission:create', 'Can create new admission', 'admission', 'create'),
+('admission:update', 'Can update admission', 'admission', 'update'),
+('admission:delete', 'Can delete admission', 'admission', 'delete'),
+
+-- calendar
 ('calendar:read', 'Can view calendar', 'calendar', 'read'),
+('calendar:read_id', 'Can view calendar id', 'calendar', 'read'),
 ('calendar:create', 'Can create new calendar', 'calendar', 'create'),
 ('calendar:update', 'Can update calendar', 'calendar', 'update'),
 ('calendar:delete', 'Can delete calendar', 'calendar', 'delete'),
 
--- Roles permissions
-('roles:read', 'Can view roles', 'roles', 'read'),
+-- Roles
+('users:read', 'Can view users', 'users', 'read'),
 ('roles:assign', 'Can assign roles to users', 'roles', 'assign');
 
 CREATE TABLE role_permissions (
@@ -489,14 +502,15 @@ SELECT
     (SELECT role_id FROM roles WHERE name = 'staff'),
     permission_id FROM permissions
 WHERE name IN (
-    'news:read', 'news:create', 'news:update', 'news:delete',
-    'courses:read', 'courses:create', 'courses:update', 'courses:delete',
-    'course_structure:read', 'course_structure:create', 'course_structure:delete',
-    'roadmap:read', 'roadmap:create', 'roadmap:delete',
-    'subject:read', 'subject:create', 'subject:update', 'subject:delete',
-    'personnel:read', 'personnel:create', 'personnel:update', 'your_personnel:update', 'personnel:delete',
+    'news:read', 'news:read_id', 'news:create', 'news:update', 'news:delete',
+    'courses:read', 'courses:read_id', 'courses:create', 'courses:update', 'courses:delete',
+    'course_structure:read', 'course_structure:read_id', 'course_structure:create', 'course_structure:update', 'course_structure:delete',
+    'roadmap:read', 'roadmap:read_id', 'roadmap:create', 'roadmap:delete',
+    'subject:read', 'subject:read_id', 'subject:create', 'subject:update', 'subject:delete',
+    'personnel:read', 'personnel:read_id', 'personnel:create', 'personnel:update', 'your_personnel:update', 'personnel:delete',
     'scopus:read', 'research:read',
-    'calendar:read', 'calendar:create', 'calendar:update', 'calendar:delete'
+    'admission:read', 'admission:read_id', 'admission:create', 'admission:update', 'admission:delete',
+    'calendar:read', 'calendar:read_id', 'calendar:create', 'calendar:update', 'calendar:delete'
 );
 
 -- Teacher your_personnel:update
@@ -504,21 +518,6 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT
     (SELECT role_id FROM roles WHERE name = 'teacher'),
     permission_id FROM permissions WHERE name = 'your_personnel:update';
-
--- User
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT
-    (SELECT role_id FROM roles WHERE name = 'user'),
-    permission_id FROM permissions
-WHERE name IN (
-    'news:read',
-    'courses:read',
-    'course_structure:read',
-    'roadmap:read',
-    'subject:read',
-    'personnel:read',
-    'calendar:read'
-);
 
 -- Refresh Tokens (สำหรับ JWT refresh)
 CREATE TABLE refresh_tokens (
@@ -535,10 +534,10 @@ CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
 CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at);
 
--- Audit Logs (สำหรับ tracking)  'update', 'delete'
+-- Audit Logs (สำหรับ tracking)
 CREATE TABLE audit_logs (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
+    user_id INTEGER REFERENCES users(user_id),
     action VARCHAR(100) NOT NULL,  -- 'login', 'logout', 'create', 'update', 'delete'
     resource VARCHAR(50),           -- 'books', 'users', 'roles'
     resource_id VARCHAR(50),
@@ -547,7 +546,6 @@ CREATE TABLE audit_logs (
     user_agent TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_action ON audit_logs(action);

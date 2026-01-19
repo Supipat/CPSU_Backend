@@ -15,9 +15,7 @@ import (
 	authRepo "cpsu/internal/auth/repository"
 	authService "cpsu/internal/auth/service"
 
-	permissionHandler "cpsu/internal/permission/handler"
-	permissionRepo "cpsu/internal/permission/repository"
-	permissionService "cpsu/internal/permission/service"
+	middlewares "cpsu/internal/auth/middlewares"
 
 	newsHandler "cpsu/internal/news/handler"
 	newsRepo "cpsu/internal/news/repository"
@@ -73,13 +71,15 @@ func main() {
 	}
 	defer db.Close()
 
-	authRepo := authRepo.NewAuthRepository(db.GetDB())
-	authService := authService.NewAuthService(authRepo)
-	authHandler := authHandler.NewAuthHandler(authService)
+	authUserRepo := authRepo.NewUserRepository(db.GetDB())
+	authRoleRepo := authRepo.NewRoleRepository(db.GetDB())
+	authPermissionRepo := authRepo.NewPermissionRepository(db.GetDB())
+	authTokenRepo := authRepo.NewTokenRepository(db.GetDB())
+	authAuditRepo := authRepo.NewAuditRepository(db.GetDB())
 
-	permissionRepo := permissionRepo.NewPermissionRepository(db.GetDB())
-	permissionService := permissionService.NewPermissionService(permissionRepo)
-	permissionHandler := permissionHandler.NewPermissionHandler(permissionService)
+	authService := authService.NewAuthService(authUserRepo, authRoleRepo, authTokenRepo, authAuditRepo)
+	authHandler := authHandler.NewAuthHandler(authService)
+	permissionMiddleware := middlewares.NewPermissionMiddleware(authPermissionRepo)
 
 	newsRepo := newsRepo.NewNewsRepository(db.GetDB())
 	newsService := newsService.NewNewsService(newsRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
@@ -149,97 +149,127 @@ func main() {
 		c.JSON(200, gin.H{"status": "healthy", "database": "connected"})
 	})
 
-	v1 := r.Group("/api/v1")
+	public := r.Group("/api/v1")
 	{
-		auth := v1.Group("auth")
+		public.POST("/auth/register", authHandler.Register)
+		public.POST("/auth/login", authHandler.Login)
+		public.POST("/auth/refresh", authHandler.RefreshToken)
+
+		public.GET("/news", newsHandler.GetAllNews)
+		public.GET("/news/:id", newsHandler.GetNewsByID)
+
+		public.GET("/course", courseHandler.GetAllCourses)
+		public.GET("/course/:id", courseHandler.GetCourseByID)
+
+		public.GET("/structure", structureHandler.GetAllCourseStructure)
+		public.GET("/structure/:id", structureHandler.GetCourseStructureByID)
+
+		public.GET("/roadmap", roadmapHandler.GetAllRoadmap)
+		public.GET("/roadmap/:id", roadmapHandler.GetRoadmapByID)
+
+		public.GET("/subject", subjectHandler.GetAllSubjects)
+		public.GET("/subject/:id", subjectHandler.GetSubjectByID)
+
+		public.GET("/personnel", personnelHandler.GetAllPersonnels)
+		public.GET("/personnel/:id", personnelHandler.GetPersonnelByID)
+		public.GET("/personnel/research", personnelHandler.GetAllResearch)
+
+		public.GET("/admission", admissionHandler.GetAllAdmission)
+		public.GET("/admission/:id", admissionHandler.GetAdmissionByID)
+
+		public.GET("/calendar", calendarHandler.GetAllCalendars)
+		public.GET("/calendar/:id", calendarHandler.GetCalendarByID)
+
+	}
+
+	protected := r.Group("/api/v1")
+	protected.Use(middlewares.AuthMiddleware())
+	{
+		protected.POST("/auth/logout", authHandler.Logout)
+	}
+
+	admin := protected.Group("/admin")
+	{
+		newsAdmin := admin.Group("/news")
 		{
-			auth.POST("/register", authHandler.Register)
-			auth.POST("/login", authHandler.Login)
+			newsAdmin.GET("", permissionMiddleware.RequirePermission("news:read"), newsHandler.GetAllNews)
+			newsAdmin.GET("/:id", permissionMiddleware.RequirePermission("news:read_id"), newsHandler.GetNewsByID)
+			newsAdmin.POST("", permissionMiddleware.RequirePermission("news:create"), newsHandler.CreateNews)
+			newsAdmin.PUT("/:id", permissionMiddleware.RequirePermission("news:update"), newsHandler.UpdateNews)
+			newsAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("news:delete"), newsHandler.DeleteNews)
 		}
 
-		permissionAdmin := v1.Group("admin/permission")
+		courseAdmin := admin.Group("/course")
 		{
-			permissionAdmin.PUT("role/:id", permissionHandler.UpdateUserRole)
+			courseAdmin.GET("", permissionMiddleware.RequirePermission("courses:read"), courseHandler.GetAllCourses)
+			courseAdmin.GET("/:id", permissionMiddleware.RequirePermission("courses:read_id"), courseHandler.GetCourseByID)
+			courseAdmin.POST("", permissionMiddleware.RequirePermission("courses:create"), courseHandler.CreateCourse)
+			courseAdmin.PUT("/:id", permissionMiddleware.RequirePermission("courses:update"), courseHandler.UpdateCourse)
+			courseAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("courses:delete"), courseHandler.DeleteCourse)
 		}
 
-		newsAdmin := v1.Group("admin/news")
+		structureAdmin := admin.Group("/structure")
 		{
-			newsAdmin.GET("", newsHandler.GetAllNews)
-			newsAdmin.GET("/:id", newsHandler.GetNewsByID)
-			newsAdmin.POST("", newsHandler.CreateNews)
-			newsAdmin.PUT("/:id", newsHandler.UpdateNews)
-			newsAdmin.DELETE("/:id", newsHandler.DeleteNews)
+			structureAdmin.GET("", permissionMiddleware.RequirePermission("course_structure:read"), structureHandler.GetAllCourseStructure)
+			structureAdmin.GET("/:id", permissionMiddleware.RequirePermission("course_structure:read_id"), structureHandler.GetCourseStructureByID)
+			structureAdmin.POST("", permissionMiddleware.RequirePermission("course_structure:create"), structureHandler.CreateCourseStructure)
+			structureAdmin.PUT("/:id", permissionMiddleware.RequirePermission("course_structure:update"), structureHandler.UpdateCourseStructure)
+			structureAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("course_structure:delete"), structureHandler.DeleteCourseStructure)
 		}
 
-		courseAdmin := v1.Group("admin/course")
+		roadmapAdmin := admin.Group("/roadmap")
 		{
-			courseAdmin.GET("", courseHandler.GetAllCourses)
-			courseAdmin.GET("/:id", courseHandler.GetCourseByID)
-			courseAdmin.POST("", courseHandler.CreateCourse)
-			courseAdmin.PUT("/:id", courseHandler.UpdateCourse)
-			courseAdmin.DELETE("/:id", courseHandler.DeleteCourse)
+			roadmapAdmin.GET("", permissionMiddleware.RequirePermission("roadmap:read"), roadmapHandler.GetAllRoadmap)
+			roadmapAdmin.GET("/:id", permissionMiddleware.RequirePermission("roadmap:read_id"), roadmapHandler.GetRoadmapByID)
+			roadmapAdmin.POST("", permissionMiddleware.RequirePermission("roadmap:create"), roadmapHandler.CreateRoadmap)
+			roadmapAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("roadmap:delete"), roadmapHandler.DeleteRoadmap)
 		}
 
-		structureAdmin := v1.Group("admin/structure")
+		subjectAdmin := admin.Group("/subject")
 		{
-			structureAdmin.GET("", structureHandler.GetAllCourseStructure)
-			structureAdmin.GET("/:id", structureHandler.GetCourseStructureByID)
-			structureAdmin.POST("", structureHandler.CreateCourseStructure)
-			structureAdmin.PUT("/:id", structureHandler.UpdateCourseStructure)
-			structureAdmin.DELETE("/:id", structureHandler.DeleteCourseStructure)
+			subjectAdmin.GET("", permissionMiddleware.RequirePermission("subject:read"), subjectHandler.GetAllSubjects)
+			subjectAdmin.GET("/:id", permissionMiddleware.RequirePermission("subject:read_id"), subjectHandler.GetSubjectByID)
+			subjectAdmin.POST("", permissionMiddleware.RequirePermission("subject:create"), subjectHandler.CreateSubject)
+			subjectAdmin.PUT("/:id", permissionMiddleware.RequirePermission("subject:update"), subjectHandler.UpdateSubject)
+			subjectAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("subject:delete"), subjectHandler.DeleteSubject)
 		}
 
-		roadmapAdmin := v1.Group("admin/roadmap")
+		personnelAdmin := admin.Group("/personnel")
 		{
-			roadmapAdmin.GET("", roadmapHandler.GetAllRoadmap)
-			roadmapAdmin.GET("/:id", roadmapHandler.GetRoadmapByID)
-			roadmapAdmin.POST("", roadmapHandler.CreateRoadmap)
-			roadmapAdmin.DELETE("/:id", roadmapHandler.DeleteRoadmap)
+			personnelAdmin.GET("", permissionMiddleware.RequirePermission("personnel:read"), personnelHandler.GetAllPersonnels)
+			personnelAdmin.GET("/:id", permissionMiddleware.RequirePermission("personnel:read_id"), personnelHandler.GetPersonnelByID)
+			personnelAdmin.POST("", permissionMiddleware.RequirePermission("personnel:create"), personnelHandler.CreatePersonnel)
+			personnelAdmin.PUT("/:id", permissionMiddleware.RequirePermission("personnel:update"), personnelHandler.UpdatePersonnel)
+			personnelAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("personnel:delete"), personnelHandler.DeletePersonnel)
+			personnelAdmin.GET("/scopus", permissionMiddleware.RequirePermission("scopus:read"), personnelHandler.GetResearchfromScopus)
+			personnelAdmin.GET("/research", permissionMiddleware.RequirePermission("research:read"), personnelHandler.GetAllResearch)
 		}
 
-		subjectAdmin := v1.Group("admin/subject")
+		admission := admin.Group("/admission")
 		{
-			subjectAdmin.GET("", subjectHandler.GetAllSubjects)
-			subjectAdmin.GET("/:id", subjectHandler.GetSubjectByID)
-			subjectAdmin.POST("", subjectHandler.CreateSubject)
-			subjectAdmin.PUT("/:id", subjectHandler.UpdateSubject)
-			subjectAdmin.DELETE("/:id", subjectHandler.DeleteSubject)
+			admission.GET("", permissionMiddleware.RequirePermission("admission:read"), admissionHandler.GetAllAdmission)
+			admission.GET("/:id", permissionMiddleware.RequirePermission("admission:read_id"), admissionHandler.GetAdmissionByID)
+			admission.POST("", permissionMiddleware.RequirePermission("admission:create"), admissionHandler.CreateAdmission)
+			admission.PUT("/:id", permissionMiddleware.RequirePermission("admission:update"), admissionHandler.UpdateAdmission)
+			admission.DELETE("/:id", permissionMiddleware.RequirePermission("admission:delete"), admissionHandler.DeleteAdmission)
 		}
 
-		personnelAdmin := v1.Group("admin/personnel")
+		calendarAdmin := admin.Group("/calendar")
 		{
-			personnelAdmin.GET("", personnelHandler.GetAllPersonnels)
-			personnelAdmin.GET("/:id", personnelHandler.GetPersonnelByID)
-			personnelAdmin.POST("", personnelHandler.CreatePersonnel)
-			personnelAdmin.PUT("/:id", personnelHandler.UpdatePersonnel)
-			personnelAdmin.DELETE("/:id", personnelHandler.DeletePersonnel)
-			personnelAdmin.GET("/scopus", personnelHandler.GetResearchfromScopus)
-			personnelAdmin.GET("/research", personnelHandler.GetAllResearch)
+			calendarAdmin.GET("", permissionMiddleware.RequirePermission("calendar:read"), calendarHandler.GetAllCalendars)
+			calendarAdmin.GET("/:id", permissionMiddleware.RequirePermission("calendar:read_id"), calendarHandler.GetCalendarByID)
+			calendarAdmin.POST("", permissionMiddleware.RequirePermission("calendar:create"), calendarHandler.CreateCalendar)
+			calendarAdmin.PUT("/:id", permissionMiddleware.RequirePermission("calendar:update"), calendarHandler.UpdateCalendar)
+			calendarAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("calendar:delete"), calendarHandler.DeleteCalendar)
 		}
+	}
 
-		personnelTeacher := v1.Group("teacher/personnel")
+	teacher := protected.Group("/teacher")
+	{
+		teacherPersonnel := teacher.Group("/personnel")
 		{
-			personnelTeacher.PUT("/:id", personnelHandler.UpdateTeacher)
+			teacherPersonnel.PUT("/:id", permissionMiddleware.RequirePermission("your_personnel:update"), personnelHandler.UpdateTeacher)
 		}
-
-		admission := v1.Group("admin/admission")
-		{
-			admission.GET("", admissionHandler.GetAllAdmission)
-			admission.GET("/:id", admissionHandler.GetAdmissionByID)
-			admission.POST("", admissionHandler.CreateAdmission)
-			admission.PUT("/:id", admissionHandler.UpdateAdmission)
-			admission.DELETE("/:id", admissionHandler.DeleteAdmission)
-		}
-
-		calendarAdmin := v1.Group("admin/calendar")
-		{
-			calendarAdmin.GET("", calendarHandler.GetAllCalendars)
-			calendarAdmin.GET("/:id", calendarHandler.GetCalendarByID)
-			calendarAdmin.POST("", calendarHandler.CreateCalendar)
-			calendarAdmin.PUT("/:id", calendarHandler.UpdateCalendar)
-			calendarAdmin.DELETE("/:id", calendarHandler.DeleteCalendar)
-		}
-
 	}
 
 	if err := r.Run(":" + cfg.AppPort); err != nil {
