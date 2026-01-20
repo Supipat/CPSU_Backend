@@ -5,11 +5,11 @@ import (
 )
 
 type PermissionRepository struct {
-	DB *sql.DB
+	db *sql.DB
 }
 
 func NewPermissionRepository(db *sql.DB) *PermissionRepository {
-	return &PermissionRepository{DB: db}
+	return &PermissionRepository{db: db}
 }
 
 func (r *PermissionRepository) CheckUserPermission(userID int, permissionName string) (bool, error) {
@@ -23,7 +23,7 @@ func (r *PermissionRepository) CheckUserPermission(userID int, permissionName st
 	`
 
 	var permissionID int
-	err := r.DB.QueryRow(query, userID, permissionName).Scan(&permissionID)
+	err := r.db.QueryRow(query, userID, permissionName).Scan(&permissionID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

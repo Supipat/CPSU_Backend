@@ -3,16 +3,18 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"strconv"
+	"strings"
 
 	"cpsu/internal/auth/models"
 )
 
 type UserRepository struct {
-	DB *sql.DB
+	db *sql.DB
 }
 
 func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{DB: db}
+	return &UserRepository{db: db}
 }
 
 func (r *UserRepository) Register(username, email, passwordHash string) (int, error) {
@@ -23,7 +25,7 @@ func (r *UserRepository) Register(username, email, passwordHash string) (int, er
 	`
 
 	var userID int
-	err := r.DB.QueryRow(
+	err := r.db.QueryRow(
 		query, username, email, passwordHash,
 	).Scan(&userID)
 
@@ -32,6 +34,81 @@ func (r *UserRepository) Register(username, email, passwordHash string) (int, er
 	}
 
 	return userID, nil
+}
+
+func (r *UserRepository) GetAllUser(param models.UserQueryParam) ([]models.UserResponse, error) {
+	query := `
+		SELECT u.user_id, u.username, u.email, r.role_id, r.name
+		FROM users u
+		LEFT JOIN user_roles ur ON u.user_id = ur.user_id
+		LEFT JOIN roles r ON ur.role_id = r.role_id
+	`
+
+	conditions := []string{}
+	args := []interface{}{}
+	argIndex := 1
+
+	if param.UserID > 0 {
+		conditions = append(conditions, "u.user_id = $"+strconv.Itoa(argIndex))
+		args = append(args, param.UserID)
+		argIndex++
+	}
+
+	if param.RoleID > 0 {
+		conditions = append(conditions, "r.role_id = $"+strconv.Itoa(argIndex))
+		args = append(args, param.RoleID)
+		argIndex++
+	}
+
+	if param.Search != "" {
+		conditions = append(conditions, "(u.username ILIKE $"+strconv.Itoa(argIndex)+" OR u.email ILIKE $"+strconv.Itoa(argIndex)+")")
+		args = append(args, "%"+param.Search+"%")
+		argIndex++
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	sortColumn := "u.user_id"
+	switch param.Sort {
+	case "username":
+		sortColumn = "u.username"
+	case "email":
+		sortColumn = "u.email"
+	case "role":
+		sortColumn = "r.name"
+	}
+
+	order := "ASC"
+	if strings.ToUpper(param.Order) == "DESC" {
+		order = "DESC"
+	}
+
+	query += " ORDER BY " + sortColumn + " " + order
+
+	if param.Limit > 0 {
+		query += " LIMIT " + strconv.Itoa(param.Limit)
+	}
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.UserResponse
+	for rows.Next() {
+		var u models.UserResponse
+		if err := rows.Scan(
+			&u.UserID, &u.Username, &u.Email, &u.RoleID, &u.Name,
+		); err != nil {
+			return nil, err
+		}
+		result = append(result, u)
+	}
+
+	return result, nil
 }
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
@@ -44,7 +121,7 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
 	var lastLogin sql.NullTime
 
-	err := r.DB.QueryRow(query, email).Scan(
+	err := r.db.QueryRow(query, email).Scan(
 		&user.UserID, &user.Username, &user.Email, &user.PasswordHash,
 		&user.IsActive, &user.CreatedAt, &lastLogin,
 	)
@@ -65,8 +142,7 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 
 func (r *UserRepository) FindByID(userID int) (*models.User, error) {
 	query := `
-		SELECT
-			user_id, username, email, password_hash, is_active, created_at, last_login
+		SELECT user_id, username, email, password_hash, is_active, created_at, last_login
 		FROM users
 		WHERE user_id = $1
 	`
@@ -74,7 +150,7 @@ func (r *UserRepository) FindByID(userID int) (*models.User, error) {
 	var user models.User
 	var lastLogin sql.NullTime
 
-	err := r.DB.QueryRow(query, userID).Scan(
+	err := r.db.QueryRow(query, userID).Scan(
 		&user.UserID, &user.Username, &user.Email, &user.PasswordHash,
 		&user.IsActive, &user.CreatedAt, &lastLogin,
 	)
@@ -100,6 +176,6 @@ func (r *UserRepository) UpdateLastLogin(userID int) error {
 		    updated_at = NOW()
 		WHERE user_id = $1
 	`
-	_, err := r.DB.Exec(query, userID)
+	_, err := r.db.Exec(query, userID)
 	return err
 }

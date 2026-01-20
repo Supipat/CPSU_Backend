@@ -17,6 +17,10 @@ import (
 
 	middlewares "cpsu/internal/auth/middlewares"
 
+	userHandler "cpsu/internal/auth/handler"
+	userRepo "cpsu/internal/auth/repository"
+	userService "cpsu/internal/auth/service"
+
 	newsHandler "cpsu/internal/news/handler"
 	newsRepo "cpsu/internal/news/repository"
 	newsService "cpsu/internal/news/service"
@@ -80,6 +84,10 @@ func main() {
 	authService := authService.NewAuthService(authUserRepo, authRoleRepo, authTokenRepo, authAuditRepo)
 	authHandler := authHandler.NewAuthHandler(authService)
 	permissionMiddleware := middlewares.NewPermissionMiddleware(authPermissionRepo)
+
+	userRepo := userRepo.NewUserRepository(db.GetDB())
+	userService := userService.NewUserService(userRepo)
+	userHandler := userHandler.NewUserHandler(userService)
 
 	newsRepo := newsRepo.NewNewsRepository(db.GetDB())
 	newsService := newsService.NewNewsService(newsRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
@@ -197,6 +205,11 @@ func main() {
 			newsAdmin.POST("", permissionMiddleware.RequirePermission("news:create"), newsHandler.CreateNews)
 			newsAdmin.PUT("/:id", permissionMiddleware.RequirePermission("news:update"), newsHandler.UpdateNews)
 			newsAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("news:delete"), newsHandler.DeleteNews)
+		}
+
+		userAdmin := admin.Group("/user")
+		{
+			userAdmin.GET("", permissionMiddleware.RequirePermission("users:read"), userHandler.GetAllUser)
 		}
 
 		courseAdmin := admin.Group("/course")

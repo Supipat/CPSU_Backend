@@ -6,11 +6,11 @@ import (
 )
 
 type AuditRepository struct {
-	DB *sql.DB
+	db *sql.DB
 }
 
 func NewAuditRepository(db *sql.DB) *AuditRepository {
-	return &AuditRepository{DB: db}
+	return &AuditRepository{db: db}
 }
 
 func (r *AuditRepository) LogAudit(userID int, action string, resource string, resourceID string, details map[string]interface{}, ipAddress string, userAgent string) error {
@@ -24,7 +24,7 @@ func (r *AuditRepository) LogAudit(userID int, action string, resource string, r
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
-	_, err := r.DB.Exec(
+	_, err := r.db.Exec(
 		query, userID, action, resource, resourceID,
 		detailsJSON, ipAddress, userAgent,
 	)

@@ -6,11 +6,11 @@ import (
 )
 
 type TokenRepository struct {
-	DB *sql.DB
+	db *sql.DB
 }
 
 func NewTokenRepository(db *sql.DB) *TokenRepository {
-	return &TokenRepository{DB: db}
+	return &TokenRepository{db: db}
 }
 
 func (r *TokenRepository) StoreRefreshToken(userID int, token string, expiresAt time.Time) error {
@@ -18,7 +18,7 @@ func (r *TokenRepository) StoreRefreshToken(userID int, token string, expiresAt 
 		INSERT INTO refresh_tokens (user_id, token, expires_at)
 		VALUES ($1, $2, $3)
 	`
-	_, err := r.DB.Exec(query, userID, token, expiresAt)
+	_, err := r.db.Exec(query, userID, token, expiresAt)
 	return err
 }
 
@@ -28,7 +28,7 @@ func (r *TokenRepository) RevokeRefreshToken(token string) error {
 		SET revoked_at = NOW()
 		WHERE token = $1 AND revoked_at IS NULL
 	`
-	_, err := r.DB.Exec(query, token)
+	_, err := r.db.Exec(query, token)
 	return err
 }
 
@@ -42,7 +42,7 @@ func (r *TokenRepository) IsRefreshTokenValid(token string) (int, bool, error) {
 	`
 
 	var userID int
-	err := r.DB.QueryRow(query, token).Scan(&userID)
+	err := r.db.QueryRow(query, token).Scan(&userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return 0, false, nil

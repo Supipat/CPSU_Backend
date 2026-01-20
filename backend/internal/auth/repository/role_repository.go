@@ -5,11 +5,11 @@ import (
 )
 
 type RoleRepository struct {
-	DB *sql.DB
+	db *sql.DB
 }
 
 func NewRoleRepository(db *sql.DB) *RoleRepository {
-	return &RoleRepository{DB: db}
+	return &RoleRepository{db: db}
 }
 
 func (r *RoleRepository) GetUserRoles(userID int) ([]string, error) {
@@ -19,7 +19,7 @@ func (r *RoleRepository) GetUserRoles(userID int) ([]string, error) {
 		JOIN user_roles ur ON r.role_id = ur.role_id
 		WHERE ur.user_id = $1
 	`
-	rows, err := r.DB.Query(query, userID)
+	rows, err := r.db.Query(query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (r *RoleRepository) AssignRole(userID, roleID, assignedBy int) error {
 		VALUES ($1, $2, $3)
 		ON CONFLICT (user_id, role_id) DO NOTHING
 	`
-	_, err := r.DB.Exec(query, userID, roleID, assignedBy)
+	_, err := r.db.Exec(query, userID, roleID, assignedBy)
 	return err
 }
 
@@ -50,6 +50,6 @@ func (r *RoleRepository) RemoveRole(userID, roleID int) error {
 		DELETE FROM user_roles
 		WHERE user_id = $1 AND role_id = $2
 	`
-	_, err := r.DB.Exec(query, userID, roleID)
+	_, err := r.db.Exec(query, userID, roleID)
 	return err
 }
