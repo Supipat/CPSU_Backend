@@ -45,26 +45,3 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-
-// func AuthMiddleware() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		tokenString, err := c.Cookie("access_token")
-// 		if err != nil {
-// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "access token required"})
-// 			c.Abort()
-// 			return
-// 		}
-
-// 		claims, err := utils.VerifyToken(tokenString)
-// 		if err != nil {
-// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
-// 			c.Abort()
-// 			return
-// 		}
-
-// 		c.Set("user_id", claims.UserID)
-// 		c.Set("username", claims.Username)
-// 		c.Set("roles", claims.Roles)
-// 		c.Next()
-// 	}
-// }
