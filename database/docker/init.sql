@@ -474,8 +474,12 @@ INSERT INTO permissions (name, description, resource, action) VALUES
 ('calendar:update', 'Can update calendar', 'calendar', 'update'),
 ('calendar:delete', 'Can delete calendar', 'calendar', 'delete'),
 
--- Roles
+-- users
 ('users:read', 'Can view users', 'users', 'read'),
+('users:create', 'Can create new users', 'users', 'create'),
+('users:delete', 'Can delete users', 'users', 'delete'),
+
+-- Roles
 ('roles:assign', 'Can assign roles to users', 'roles', 'assign');
 
 CREATE TABLE role_permissions (

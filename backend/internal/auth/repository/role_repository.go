@@ -38,18 +38,16 @@ func (r *RoleRepository) GetUserRoles(userID int) ([]string, error) {
 func (r *RoleRepository) AssignRole(userID, roleID, assignedBy int) error {
 	query := `
 		INSERT INTO user_roles (user_id, role_id, assigned_by)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (user_id, role_id) DO NOTHING
+		VALUES ($1, $2, $3)	
 	`
 	_, err := r.db.Exec(query, userID, roleID, assignedBy)
 	return err
 }
 
-func (r *RoleRepository) RemoveRole(userID, roleID int) error {
-	query := `
-		DELETE FROM user_roles
-		WHERE user_id = $1 AND role_id = $2
-	`
-	_, err := r.db.Exec(query, userID, roleID)
+func (r *RoleRepository) RemoveRole(userID int) error {
+	_, err := r.db.Exec(
+		`DELETE FROM user_roles WHERE user_id = $1`,
+		userID,
+	)
 	return err
 }

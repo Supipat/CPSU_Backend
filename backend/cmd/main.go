@@ -85,6 +85,10 @@ func main() {
 	authHandler := authHandler.NewAuthHandler(authService)
 	permissionMiddleware := middlewares.NewPermissionMiddleware(authPermissionRepo)
 
+	roleRepo := userRepo.NewRoleRepository(db.GetDB())
+	roleService := userService.NewRoleService(roleRepo)
+	roleHandler := userHandler.NewRoleHandler(roleService)
+
 	userRepo := userRepo.NewUserRepository(db.GetDB())
 	userService := userService.NewUserService(userRepo)
 	userHandler := userHandler.NewUserHandler(userService)
@@ -210,6 +214,13 @@ func main() {
 		userAdmin := admin.Group("/user")
 		{
 			userAdmin.GET("", permissionMiddleware.RequirePermission("users:read"), userHandler.GetAllUser)
+			// userAdmin.POST("", permissionMiddleware.RequirePermission("users:create"), userHandler.CreateUser)
+			// userAdmin.PUT("", permissionMiddleware.RequirePermission("users:delete"), userHandler.DeleteUser)
+		}
+
+		permissionAdmin := admin.Group("/permission/user")
+		{
+			permissionAdmin.POST("/:id", permissionMiddleware.RequirePermission("roles:assign"), roleHandler.AssignRole)
 		}
 
 		courseAdmin := admin.Group("/course")
