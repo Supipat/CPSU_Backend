@@ -1,17 +1,18 @@
 package service
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"mime/multipart"
-	"strings"
+	"path/filepath"
 
 	"cpsu/internal/roadmap/models"
 	"cpsu/internal/roadmap/repository"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type RoadmapService interface {
@@ -22,22 +23,35 @@ type RoadmapService interface {
 }
 
 type roadmapService struct {
-	repo   repository.RoadmapRepository
-	upload *s3manager.Uploader
-	bucket string
+	repo        repository.RoadmapRepository
+	minioClient *minio.Client
+	bucket      string
+	publicBase  string
 }
 
-func NewRoadmapService(repo repository.RoadmapRepository, awsRegion, awsAccessKeyID, awsSecretAccessKey, bucket string) RoadmapService {
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region:      aws.String(awsRegion),
-		Credentials: credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, ""),
-	}))
-	upload := s3manager.NewUploader(sess)
+func NewRoadmapService(
+	repo repository.RoadmapRepository,
+	endpoint string,
+	accessKey string,
+	secretKey string,
+	bucket string,
+	useSSL bool,
+	publicBaseURL string,
+) RoadmapService {
+
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	return &roadmapService{
-		repo:   repo,
-		upload: upload,
-		bucket: bucket,
+		repo:        repo,
+		minioClient: client,
+		bucket:      bucket,
+		publicBase:  publicBaseURL,
 	}
 }
 
@@ -57,7 +71,7 @@ func (s *roadmapService) CreateRoadmap(courseID string, file *multipart.FileHead
 		return nil, errors.New("roadmap image is required")
 	}
 
-	url, err := s.UploadFile(file)
+	url, err := s.uploadFile(file)
 	if err != nil {
 		return nil, err
 	}
@@ -74,26 +88,40 @@ func (s *roadmapService) DeleteRoadmap(id int) error {
 	return s.repo.DeleteRoadmap(id)
 }
 
-func (s *roadmapService) UploadFile(fileHeader *multipart.FileHeader) (string, error) {
+func (s *roadmapService) uploadFile(fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
-	fileName := strings.ReplaceAll(fileHeader.Filename, " ", "_")
-	key := "images/course/" + fileName
+	ext := filepath.Ext(fileHeader.Filename)
+	objectName := fmt.Sprintf(
+		"roadmap/%s%s",
+		uuid.New().String(),
+		ext,
+	)
 
-	uploadInput := &s3manager.UploadInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(key),
-		Body:   file,
-	}
-
-	result, err := s.upload.Upload(uploadInput)
+	_, err = s.minioClient.PutObject(
+		context.Background(),
+		s.bucket,
+		objectName,
+		file,
+		fileHeader.Size,
+		minio.PutObjectOptions{
+			ContentType: fileHeader.Header.Get("Content-Type"),
+		},
+	)
 	if err != nil {
 		return "", err
 	}
 
-	return result.Location, nil
+	imageURL := fmt.Sprintf(
+		"%s/%s/%s",
+		s.publicBase,
+		s.bucket,
+		objectName,
+	)
+
+	return imageURL, nil
 }

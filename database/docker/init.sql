@@ -37,74 +37,74 @@ INSERT INTO news(title,content,type_id,detail_url,cover_image) VALUES
     'คู่มือแนะนำ การลงทะเบียนรายวิชาเรียน การเพิ่ม - ถอน - การเปลี่ยนกลุ่มเรียน ในรายวิชาเดิม การถอนรายวิชาโดยติดสัญลักษณ์ W ช่องทางการชำระค่าธรรมเนียมการศึกษา เอกสารแนบเบิกค่าเล่าเรียน การลาพักการศึกษา นักศึกษาที่คาดว่าจะสำเร็จการศึกษา การขอหนังสือสำคัญทางการศึกษา การติดต่อเจ้าหน้าที่งานทะเบียนและประมวลผล ช่องทางติดต่อคณะวิชา กองกิจการนักศึกษา การให้บริการสำหรับนักศึกษา วิทยาเขตสารสนเทศเพชรบุรี สำนักดิจิทัลเทคโนโลยี หอสมุด มหาวิทยาลัยศิลปากร ประกันอุบัติเหตุส่วนบุคคล ศูนย์บริการสุขภาพ คณะเภสัชศาสตร์ บริการด้านสุขภาพร่างกาย เครื่องแบบนักศึกษา / บัตรนักศึกษาอิเล็กทรอนิกส์',
     (SELECT type_id FROM news_types WHERE type_name = 'ข่าวประชาสัมพันธ์' LIMIT 1),
     'https://drive.google.com/file/d/1FnJRketlluku27HQqs-mVPnxMJ5wFxqZ/view?usp=sharing&fbclid=IwZXh0bgNhZW0CMTAAAR3M6TbS4tN1DUSa-z2NaM1ekAOELZp7TnsIhJWC6g_dvfz-sD_b0La0S7U_aem_K5_Zhi2eLKhIpJxaeszOlQ',
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/manual.jpg'),
+    'http://localhost:9000/images/news/manual.jpg'),
 ('เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล',
     'เปิดรับสมัครแล้ว! ภาควิชาคอมพิวเตอร์ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร เปิดรับสมัครนักศึกษาระดับบัณฑิตศึกษา ปริญญาโท - ปริญญาเอก หลักสูตร IT สำหรับคนทำงาน สู่ผู้เชี่ยวชาญด้านวิจัยและนวัตกรรม เน้นเรียนรู้กระบวนทำวิจัยเพื่อแก้ปัญหาจริง มีทุนผู้ช่วยวิจัยและทุนนำเสนอผลงานในงานประชุมวิชาการ มีทั้งภาคปกติ (เรียนวันธรรมดา) และโครงการพิเศษ (เรียน ส อา) มี 3 แผนการเรียนให้เลือก Data Science, Project Management, DevOps เปิดรับสมัครรอบ 1 วันที่ 16 ธ.ค. 67 - 21 ก.พ. 68 เปิดรับสมัครรอบ 2 วันี่ต่ 3 มี.ค. 68 - 7 พ.ค. 68 สมัครง่าย ๆ ผ่านช่องทางออนไลน์ได้ที่ https://graduate.su.ac.th มีข้อสงสัยสอบถามเพิ่มเติมได้ที่ เพจ Facebook : https://www.facebook.com/computingsu/ หรือ โทร 034-272-923',
     (SELECT type_id FROM news_types WHERE type_name = 'ข่าวประชาสัมพันธ์' LIMIT 1),
     'https://graduate.su.ac.th',
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree1.jpg'),
-('กำหนดการรับสมัครและสัมภาษณ์ทุนการศึกษา ประจำปีการศึกษา 2568 (ครั้งที่ 1)',
-    'กำหนดการรับสมัครและสัมภาษณ์ทุนการศึกษา ของคณะวิทยาศาสตร์ เพื่อขอทุนการศึกษาสำหรับนักศึกษาปริญญาตรี ภาคการศึกษาต้น ปีการศึกษา 2568 สังกัดคณะวิทย์ ขาดแคลนทุน เกรดไม่ต่ำกว่า 2.00 ขอและยื่นใบสัมครได้ที่ " งานบริการการศึกษา ชั้น 1 อาคารวิทย์ 1 "',
+    'http://localhost:9000/images/news/degree1.jpg'),
+('เปิดรับสมัครทุนการศึกษา คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร สำหรับนักศึกษาระดับปริญญาตรี ภาคการศึกษาต้น ปีการศึกษา 2568',
+    'เปิดรับสมัครทุนการศึกษา! คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร สำหรับนักศึกษาระดับปริญญาตรี ภาคการศึกษาต้น ปีการศึกษา 2568 เปิดรับสมัคร: ตั้งแต่วันที่ 1 กรกฎาคม - 29 สิงหาคม 2568 คุณสมบัติผู้สมัคร: 1.เป็นนักศึกษาระดับปริญญาตรี ของคณะวิทยาศาสตร์ 2.ขาดแคลนทุนทรัพย์ และมีเกรดเฉลี่ยสะสมไม่ต่ำกว่า 2.00 3.นักศึกษาที่กู้ยืม กยศ./กรอ. สามารถสมัครได้',
     (SELECT type_id FROM news_types WHERE type_name = 'ทุนการศึกษา' LIMIT 1),
-    'https://dsa.su.ac.th/ksu/wp-content/uploads/2025/06/%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%81%E0%B8%B2%E0%B8%A8%E0%B8%81%E0%B8%AD%E0%B8%87%E0%B8%81%E0%B8%B4%E0%B8%88%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%99%E0%B8%B1%E0%B8%81%E0%B8%A8%E0%B8%B6%E0%B8%81%E0%B8%A9%E0%B8%B2-%E0%B9%80%E0%B8%A3%E0%B8%B7%E0%B9%88%E0%B8%AD%E0%B8%87-%E0%B8%81%E0%B8%B3%E0%B8%AB%E0%B8%99%E0%B8%94%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A3.pdf',
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/scholarship.jpg'),
+    'https://drive.su.ac.th/s/tHXDdo3mpJ9L45d',
+    'http://localhost:9000/images/news/scholarship.jpg'),
 ('ขอแสดงความยินดีกับ ผู้ช่วยศาสตราจารย์ ดร.อรวรรณ เชาวลิต อาจารย์ประจำภาควิชาคอมพิวเตอร์',
     'คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร ขอแสดงความยินดีกับ ผู้ช่วยศาสตราจารย์ ดร.อรวรรณ เชาวลิต ภาควิชาคอมพิวเตอร์ ในโอกาสที่ตีพิมพ์ผลงานวิจัยในวารสาร ICIC Express Letters, Part B: Applications ในฐานข้อมูล Scopus (ScimagoJR, Quartile 4) เรื่อง Multivariate time series forecasting Thailand soybean meal price with deep learning models ICIC Express Letters, Part B: Applications 2025, 16(3), 317-323. http://www.icicelb.org/ellb/contents/2025/3/elb-16-03-10.pdf SDG 8 DECENT WORK AND ECONOMIC GROWTH',
     (SELECT type_id FROM news_types WHERE type_name = 'รางวัลที่ได้รับ' LIMIT 1),
     'http://www.icicelb.org/ellb/contents/2025/3/elb-16-03-10.pdf',
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-orawan.jpg'),
+    'http://localhost:9000/images/news/reward-orawan.jpg'),
 ('ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์ ดร.ปัญญนัท อ้นพงษ์ เนื่องในโอกาสได้รับการแต่งตั้งให้ดำรงตำแหน่งทางวิชาการ',
-    'ภาควิชาคอมพิวเตอร์ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์ ดร.ปัญญนัท อ้นพงษ์ เนื่องในโอกาสได้รับการแต่งตั้งให้ดำรงตำแหน่งทางวิชาการ ตำแหน่ง “ผู้ช่วยศาสตราจารย์” ในสาขาวิชาเทคโนโลยีสารสนเทศ (1806)',
+    'ภาควิชาคอมพิวเตอร์ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์ ดร.ปัญญนัท อ้นพงษ์ เนื่องในโอกาสได้รับการแต่งตั้งให้ดำรงตำแหน่งทางวิชาการ ตำแหน่ง “ผู้ช่วยศาสตราจารย์” ในสาขาวิชาเทคโนโลยีสารสนเทศ',
     (SELECT type_id FROM news_types WHERE type_name = 'รางวัลที่ได้รับ' LIMIT 1),
     'https://www.facebook.com/ScienceSilpakornUniversity/posts/คณะวิทยาศาสตร์-มหาวิทยาลัยศิลปากร-ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์-ดรปัญญนัท/982826210555894/',
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-panyanut.jpg'),
+    'http://localhost:9000/images/news/reward-panyanut.jpg'),
 ('ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล',
     'ภาควิชาคอมพิวเตอร์ ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล ที่ได้รับรางวัล Best Presentation ในงาน The 6th Asia Joint Conference on Computing (AJCC 2025) ณ เมือง Osaka ประเทศญี่ปุ่นจาก Paper หัวข้อ "Intention Classification of Chinese Topics on Thai Facebook Pages Using Transformer Models with Emotional Features" อาจารย์ที่ปรึกษา อ.ดร.สัจจาภรณ์ ไวจรรยา และ ผศ.ดร.ณัฐโชติ พรหมฤทธิ์',
     (SELECT type_id FROM news_types WHERE type_name = 'รางวัลที่ได้รับ' LIMIT 1),
     'https://www.facebook.com/computingsu/posts/-ภาควิชาคอมพิวเตอร์-ขอแสดงความยินดีกับ-นายภากร-กัทชลี-นักศึกษา-ปริญญาเอก-หลักสูต/122207080106177331/',
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-phakon1.jpg'),
+    'http://localhost:9000/images/news/reward-phakon1.jpg'),
 ('ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร',
     'ภาควิชาคอมพิวเตอร์ ขอแสดงความยินดีกับนักศึกษาและอาจารย์ที่ปรึกษา ที่เข้าร่วมนำเสนอผลงานและได้รับรางวัลในงาน การประชุมวิชาการระดับปริญญาตรีด้านคอมพิวเตอร์ภูมิภาคเอเชีย ครั้งที่ 13 (The 13th Asia Undergraduate Conference on Computing: AUCC 2025) ในระหว่างวันที่ 19 - 21 กุมภาพันธ์ พ.ศ. 2568 ณ มหาวิทยาลัยราชภัฏอุตรดิตถ์ จังหวัดอุตรดิตถ์ รางวัลรองชนะเลิศอันดับ 1 Track นวัตกรรม กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร (Development of examination Management system for the Faculty of Science)" ซึ่งผลงานนี้ได้มีการนำไปใช้จริงทดแทนระบบเดิม ในการจัดสอบของคณะฯ เมื่อช่วงสอบกลางภาคการศึกษาที่ผ่านมา นักศึกษาที่เข้านำเสนอ - นาย ณัฐพิสิษ กังวานธรรมกุล - นาย นัทธพงศ์ เป็กทอง - นาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ อาจารย์ที่ปรึกษา ผศ.ดร.ณัฐโชติ พรหมฤทธิ์ และ อ.ดร.สัจจาภรณ์ ไวจรรยา',
     (SELECT type_id FROM news_types WHERE type_name = 'รางวัลที่ได้รับ' LIMIT 1),
     'https://www.facebook.com/computingsu/posts/-ภาควิชาคอมพิวเตอร์-ขอแสดงความยินดีกับนักศึกษาและอาจารย์ที่ปรึกษา-ที่เข้าร่วมนำเ/122194936622177331/',
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd1.jpg'),
+    'http://localhost:9000/images/news/reward2nd1.jpg'),
 ('งานสานสัมพันธ์ภาคคอมพิวเตอร์',
     'เตรียมตัวให้พร้อม! งานสานสัมพันธ์ภาคคอมพิวเตอร์กำลังจะเริ่มขึ้น! เจอกันวันที่ 28 กุมภาพันธ์ 2568 ณ ลานจอดรถตึก 4 เวลา 17:30 - 21:30 น. ธีม: ย้อนยุค ไม่จำกัดช่วงเวลา! จะเป็นยุคหิน มนุษย์ถ้ำ อารยธรรมโบราณ หรือยุคใดก็ได้ จัดเต็มมาให้สุด! มีรางวัลแต่งกายยอดเยี่ยม 3 รางวัล!ใครแต่งตัวเข้าธีมและโดดเด่นที่สุด มีสิทธิ์คว้ารางวัลไปเลย! สนุกไปกับการแสดงสุดพิเศษ, เกมสุดมันส์, ลุ้นรางวัล และดนตรีสดปิดท้าย! ใครลงชื่อไว้แล้ว เจอกันแน่นอน! เตรียมชุดให้พร้อม แล้วมาสนุกไปด้วยกัน!',
     (SELECT type_id FROM news_types WHERE type_name = 'กิจกรรมของภาควิชา' LIMIT 1),
     '',
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/cpsu_event.png');
+    'http://localhost:9000/images/news/cpsu_event.jpg');
 
 INSERT INTO news_images(news_id,file_image) VALUES
 ((SELECT news_id FROM news WHERE title = 'คู่มือแนะนำนักศึกษาใหม่ ปีการศึกษา 2568' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/manual.jpg'),
+    'http://localhost:9000/images/news/manual.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree1.jpg'),
+    'http://localhost:9000/images/news/degree1.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree2.jpg'),
+    'http://localhost:9000/images/news/degree2.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree3.jpg'),
+    'http://localhost:9000/images/news/degree3.jpg'),
 ((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/degree4.jpg'),
-((SELECT news_id FROM news WHERE title = 'กำหนดการรับสมัครและสัมภาษณ์ทุนการศึกษา ประจำปีการศึกษา 2568 (ครั้งที่ 1)' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/scholarship.jpg'),
+    'http://localhost:9000/images/news/degree4.jpg'),
+((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครทุนการศึกษา คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร สำหรับนักศึกษาระดับปริญญาตรี ภาคการศึกษาต้น ปีการศึกษา 2568' LIMIT 1),
+    'http://localhost:9000/images/news/scholarship.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ ผู้ช่วยศาสตราจารย์ ดร.อรวรรณ เชาวลิต อาจารย์ประจำภาควิชาคอมพิวเตอร์' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-orawan.jpg'),
+    'http://localhost:9000/images/news/reward-orawan.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์ ดร.ปัญญนัท อ้นพงษ์ เนื่องในโอกาสได้รับการแต่งตั้งให้ดำรงตำแหน่งทางวิชาการ' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-panyanut.jpg'),
+    'http://localhost:9000/images/news/reward-panyanut.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-phakon1.jpg'),
+    'http://localhost:9000/images/news/reward-phakon1.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward-phakon2.jpg'),
+    'http://localhost:9000/images/news/reward-phakon2.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd1.jpg'),
+    'http://localhost:9000/images/news/reward2nd1.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd2.jpg'),
+    'http://localhost:9000/images/news/reward2nd2.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd3.jpg'),
+    'http://localhost:9000/images/news/reward2nd3.jpg'),
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/reward2nd4.jpg'),
+    'http://localhost:9000/images/news/reward2nd4.jpg'),
 ((SELECT news_id FROM news WHERE title = 'งานสานสัมพันธ์ภาคคอมพิวเตอร์' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/news/cpsu_event.png');
+    'http://localhost:9000/images/news/cpsu_event.png');
 
 -- create courses
 
@@ -180,9 +180,9 @@ CREATE TABLE IF NOT EXISTS roadmap (
 
 INSERT INTO roadmap(course_id,roadmap_url) VALUES
 ((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ 2565' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_CS_65.jpg'),
+    'http://localhost:9000/images/roadmap/roadmap_CS_65.jpg'),
 ((SELECT course_id FROM courses WHERE thai_course = '(วท.บ) หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ 2565' LIMIT 1),
-    'https://cpsu-website.s3.ap-southeast-2.amazonaws.com/images/course/roadmap_IT_65.jpg');
+    'http://localhost:9000/images/roadmap/roadmap_IT_65.jpg');
 
 -- create subject
 
@@ -366,6 +366,37 @@ CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_active ON users(is_active);
 
+INSERT INTO users(username, email) VALUES
+('kaewjamnong_s','kaewjamnong_s@su.ac.th'),
+('wongtaweesap_o','wongtaweesap_o@su.ac.th'),
+('worrawichaipat_p','worrawichaipat_p@su.ac.th'),
+('tantatsanawong_p','tantatsanawong_p@su.ac.th'),
+('sitdhisanguan_k','sitdhisanguan_k@su.ac.th'),
+('seepanomwan_k','seepanomwan_k@su.ac.th'),
+('praditwong_k','praditwong_k@su.ac.th'),
+('promrit_n','promrit_n@su.ac.th'),
+('soonklang_t','soonklang_t@su.ac.th'),
+('aonpong_p','aonpong_p@su.ac.th'),
+('kanawong_r','kanawong_r@su.ac.th'),
+('muangon_w','muangon_w@su.ac.th'),
+('waijanya_s','waijanya_s@su.ac.th'),
+('pongpinigpinyo_s','pongpinigpinyo_s@su.ac.th'),
+('chaowalit_o','chaowalit_o@su.ac.th'),
+('tangjui_n','tangjui_n@su.ac.th'),
+('pansri_b','kaewjamnong_s@su.ac.th'),
+('wasara','wasara@cp.su.ac.th'), --*
+('arampongsanuwat_s','arampongsanuwat_s@su.ac.th'),
+('rodhetbhai_s','rodhetbhai_s@su.ac.th'),
+('hongwitayakorn_a','hongwitayakorn_a@su.ac.th'),
+-- Admin, Staff
+('luangsamankul_p','kaewjamnong_s@su.ac.th'),
+('sonsanguan_w','sonsanguan_w@su.ac.th'),
+('tatong_k','tatong_k@su.ac.th'),
+('jancharoen_k','jancharoen_k@su.ac.th'),
+('chaysirikhae_t','chaysirikhae_t@su.ac.th'),
+('yahom_s','yahom_s@su.ac.th'),
+('khanthamala_a','khanthamala_a@su.ac.th'); --*
+
 -- create role
 
 CREATE TABLE roles (
@@ -396,6 +427,37 @@ CREATE TABLE user_roles (
 
 CREATE INDEX idx_user_roles_user ON user_roles(user_id);
 CREATE INDEX idx_user_roles_role ON user_roles(role_id);
+
+INSERT INTO user_roles (user_id, role_id, assigned_by) VALUES
+(1, 3, 23),
+(2, 3, 23),
+(3, 3, 23),
+(4, 3, 23),
+(5, 3, 23),
+(6, 3, 23),
+(7, 3, 23),
+(8, 3, 23),
+(9, 3, 23),
+(10, 3, 23),
+(11, 3, 23),
+(12, 3, 23),
+(13, 3, 23),
+(14, 3, 23),
+(15, 3, 23),
+(16, 3, 23),
+(17, 3, 23),
+(18, 3, 23),
+(19, 3, 23),
+(20, 3, 23),
+(21, 3, 23),
+-- Admin, Staff
+(22, 2, 23),
+(23, 1, 23),
+(24, 2, 23),
+(25, 2, 23),
+(26, 2, 23),
+(27, 2, 23),
+(28, 2, 23);
 
 -- create permissions
 

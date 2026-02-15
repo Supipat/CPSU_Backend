@@ -17,28 +17,6 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 	return &AuthHandler{AuthService: authService}
 }
 
-func (h *AuthHandler) Register(c *gin.Context) {
-	var req models.RegisterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request"})
-		return
-	}
-
-	err := h.AuthService.Register(
-		req,
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "register success",
-	})
-}
-
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -21,6 +21,8 @@ import (
 	userRepo "cpsu/internal/auth/repository"
 	userService "cpsu/internal/auth/service"
 
+	auditRepo "cpsu/internal/auth/repository"
+
 	newsHandler "cpsu/internal/news/handler"
 	newsRepo "cpsu/internal/news/repository"
 	newsService "cpsu/internal/news/service"
@@ -89,12 +91,14 @@ func main() {
 	roleService := userService.NewRoleService(roleRepo)
 	roleHandler := userHandler.NewRoleHandler(roleService)
 
+	auditRepo := auditRepo.NewAuditRepository(db.GetDB())
+
 	userRepo := userRepo.NewUserRepository(db.GetDB())
-	userService := userService.NewUserService(userRepo)
+	userService := userService.NewUserService(userRepo, auditRepo)
 	userHandler := userHandler.NewUserHandler(userService)
 
 	newsRepo := newsRepo.NewNewsRepository(db.GetDB())
-	newsService := newsService.NewNewsService(newsRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
+	newsService := newsService.NewNewsService(newsRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
 	newsHandler := newsHandler.NewNewsHandler(newsService)
 
 	courseRepo := courseRepo.NewCourseRepository(db.GetDB())
@@ -106,7 +110,7 @@ func main() {
 	structureHandler := structureHandler.NewCourseStructureHandler(structureService)
 
 	roadmapRepo := roadmapRepo.NewRoadmapRepository(db.GetDB())
-	roadmapService := roadmapService.NewRoadmapService(roadmapRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
+	roadmapService := roadmapService.NewRoadmapService(roadmapRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
 	roadmapHandler := roadmapHandler.NewRoadmapHandler(roadmapService)
 
 	subjectRepo := subjectRepo.NewSubjectRepository(db.GetDB())
@@ -114,11 +118,11 @@ func main() {
 	subjectHandler := subjectHandler.NewSubjectHandler(subjectService)
 
 	personnelRepo := personnelRepo.NewPersonnelRepository(db.GetDB())
-	personnelService := personnelService.NewPersonnelService(personnelRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
+	personnelService := personnelService.NewPersonnelService(personnelRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
 	personnelHandler := personnelHandler.NewPersonnelHandler(personnelService)
 
 	admissionRepo := admissionRepo.NewAdmissionRepository(db.GetDB())
-	admissionService := admissionService.NewAdmissionService(admissionRepo, cfg.AWSRegion, cfg.AWSAccessKeyID, cfg.AWSSecretAccessKey, cfg.S3BucketName)
+	admissionService := admissionService.NewAdmissionService(admissionRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
 	admissionHandler := admissionHandler.NewAdmissionHandler(admissionService)
 
 	calendarRepo := calendarRepo.NewCalendarRepository(db.GetDB())
@@ -163,7 +167,6 @@ func main() {
 
 	public := r.Group("/api/v1")
 	{
-		public.POST("/auth/register", authHandler.Register)
 		public.POST("/auth/login", authHandler.Login)
 		public.POST("/auth/refresh", authHandler.RefreshToken)
 
@@ -191,7 +194,6 @@ func main() {
 
 		public.GET("/calendar", calendarHandler.GetAllCalendars)
 		public.GET("/calendar/:id", calendarHandler.GetCalendarByID)
-
 	}
 
 	protected := r.Group("/api/v1")
@@ -214,8 +216,8 @@ func main() {
 		userAdmin := admin.Group("/user")
 		{
 			userAdmin.GET("", permissionMiddleware.RequirePermission("users:read"), userHandler.GetAllUser)
-			// userAdmin.POST("", permissionMiddleware.RequirePermission("users:create"), userHandler.CreateUser)
-			// userAdmin.PUT("", permissionMiddleware.RequirePermission("users:delete"), userHandler.DeleteUser)
+			userAdmin.POST("", permissionMiddleware.RequirePermission("users:create"), userHandler.CreateUser)
+			userAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("users:delete"), userHandler.DeleteUser)
 		}
 
 		permissionAdmin := admin.Group("/permission/user")

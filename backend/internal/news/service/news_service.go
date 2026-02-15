@@ -1,17 +1,19 @@
 package service
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"mime/multipart"
+	"path/filepath"
 	"strings"
 
 	"cpsu/internal/news/models"
 	"cpsu/internal/news/repository"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type NewsService interface {
@@ -23,22 +25,35 @@ type NewsService interface {
 }
 
 type newsService struct {
-	repo   repository.NewsRepository
-	upload *s3manager.Uploader
-	bucket string
+	repo        repository.NewsRepository
+	minioClient *minio.Client
+	bucket      string
+	publicBase  string
 }
 
-func NewNewsService(repo repository.NewsRepository, awsRegion, awsAccessKeyID, awsSecretAccessKey, bucket string) NewsService {
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region:      aws.String(awsRegion),
-		Credentials: credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, ""),
-	}))
-	upload := s3manager.NewUploader(sess)
+func NewNewsService(
+	repo repository.NewsRepository,
+	endpoint string,
+	accessKey string,
+	secretKey string,
+	bucket string,
+	useSSL bool,
+	publicBaseURL string,
+) NewsService {
+
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	return &newsService{
-		repo:   repo,
-		upload: upload,
-		bucket: bucket,
+		repo:        repo,
+		minioClient: client,
+		bucket:      bucket,
+		publicBase:  publicBaseURL,
 	}
 }
 
@@ -166,18 +181,33 @@ func (s *newsService) UploadImages(fileHeader *multipart.FileHeader) (string, er
 	}
 	defer file.Close()
 
-	key := "images/news/" + fileHeader.Filename
+	ext := filepath.Ext(fileHeader.Filename)
+	objectName := fmt.Sprintf(
+		"news/%s%s",
+		uuid.New().String(),
+		ext,
+	)
 
-	newsImage := &s3manager.UploadInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(key),
-		Body:   file,
-	}
-
-	result, err := s.upload.Upload(newsImage)
+	_, err = s.minioClient.PutObject(
+		context.Background(),
+		s.bucket,
+		objectName,
+		file,
+		fileHeader.Size,
+		minio.PutObjectOptions{
+			ContentType: fileHeader.Header.Get("Content-Type"),
+		},
+	)
 	if err != nil {
 		return "", err
 	}
 
-	return result.Location, nil
+	imageURL := fmt.Sprintf(
+		"%s/%s/%s",
+		s.publicBase,
+		s.bucket,
+		objectName,
+	)
+
+	return imageURL, nil
 }

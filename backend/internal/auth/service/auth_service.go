@@ -30,30 +30,6 @@ func NewAuthService(
 	}
 }
 
-func (s *AuthService) Register(req models.RegisterRequest, ipAddress string, userAgent string) error {
-	hashedPassword, err := utils.HashPassword(req.Password)
-	if err != nil {
-		return err
-	}
-
-	userID, err := s.UserRepo.Register(req.Username, req.Email, hashedPassword)
-	if err != nil {
-		return err
-	}
-
-	_ = s.AuditRepo.LogAudit(
-		userID, "register", "auth", "",
-		map[string]interface{}{
-			"email":    req.Email,
-			"username": req.Username,
-		},
-		ipAddress,
-		userAgent,
-	)
-
-	return nil
-}
-
 func (s *AuthService) Login(req models.LoginRequest, ipAddress string, userAgent string) (*models.LoginResponse, error) {
 	user, err := s.UserRepo.FindByEmail(req.Email)
 	if err != nil {

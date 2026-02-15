@@ -1,14 +1,17 @@
 package service
 
 import (
+	"context"
+	"fmt"
+	"mime/multipart"
+	"path/filepath"
+
 	"cpsu/internal/admission/models"
 	"cpsu/internal/admission/repository"
-	"mime/multipart"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type AdmissionService interface {
@@ -20,30 +23,35 @@ type AdmissionService interface {
 }
 
 type admissionService struct {
-	repo   repository.AdmissionRepository
-	upload *s3manager.Uploader
-	bucket string
+	repo        repository.AdmissionRepository
+	minioClient *minio.Client
+	bucket      string
+	publicBase  string
 }
 
 func NewAdmissionService(
 	repo repository.AdmissionRepository,
-	awsRegion,
-	awsAccessKeyID,
-	awsSecretAccessKey,
+	endpoint string,
+	accessKey string,
+	secretKey string,
 	bucket string,
+	useSSL bool,
+	publicBaseURL string,
 ) AdmissionService {
 
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region:      aws.String(awsRegion),
-		Credentials: credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, ""),
-	}))
-
-	uploader := s3manager.NewUploader(sess)
+	client, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	return &admissionService{
-		repo:   repo,
-		upload: uploader,
-		bucket: bucket,
+		repo:        repo,
+		minioClient: client,
+		bucket:      bucket,
+		publicBase:  publicBaseURL,
 	}
 }
 
@@ -61,7 +69,7 @@ func (s *admissionService) CreateAdmission(
 ) (*models.Admission, error) {
 
 	if fileImage != nil {
-		url, err := s.UploadFile(fileImage)
+		url, err := s.uploadFile(fileImage)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +86,7 @@ func (s *admissionService) UpdateAdmission(
 ) (*models.Admission, error) {
 
 	if fileImage != nil {
-		url, err := s.UploadFile(fileImage)
+		url, err := s.uploadFile(fileImage)
 		if err != nil {
 			return nil, err
 		}
@@ -92,25 +100,41 @@ func (s *admissionService) DeleteAdmission(id int) error {
 	return s.repo.DeleteAdmission(id)
 }
 
-func (s *admissionService) UploadFile(fileHeader *multipart.FileHeader) (string, error) {
+func (s *admissionService) uploadFile(fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
-	key := "images/admission/" + fileHeader.Filename
+	ext := filepath.Ext(fileHeader.Filename)
+	objectName := fmt.Sprintf(
+		"admission/%s%s",
+		uuid.New().String(),
+		ext,
+	)
 
-	input := &s3manager.UploadInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(key),
-		Body:   file,
-	}
-
-	result, err := s.upload.Upload(input)
+	_, err = s.minioClient.PutObject(
+		context.Background(),
+		s.bucket,
+		objectName,
+		file,
+		fileHeader.Size,
+		minio.PutObjectOptions{
+			ContentType: fileHeader.Header.Get("Content-Type"),
+		},
+	)
 	if err != nil {
 		return "", err
 	}
 
-	return result.Location, nil
+	// URL ถาวร (Public Bucket)
+	imageURL := fmt.Sprintf(
+		"%s/%s/%s",
+		s.publicBase,
+		s.bucket,
+		objectName,
+	)
+
+	return imageURL, nil
 }

@@ -18,10 +18,12 @@ type Config struct {
 	DatabaseName     string
 	DatabaseSSLMode  string
 
-	AWSRegion          string
-	AWSAccessKeyID     string
-	AWSSecretAccessKey string
-	S3BucketName       string
+	MinioEndpoint      string
+	MinioAccessKey     string
+	MinioSecretKey     string
+	MinioBucket        string
+	MinioUseSSL        bool
+	MinioPublicBaseURL string
 
 	CalendarID string
 }
@@ -44,10 +46,16 @@ func LoadConfig() (Config, error) {
 	viper.SetDefault("POSTGRES.DBNAME", "cpsu")
 	viper.SetDefault("POSTGRES.SSLMODE", "disable")
 
-	viper.SetDefault("AWS.REGION", "ap-southeast-2")
-	viper.SetDefault("S3.BUCKET_NAME", "cpsu-website")
+	viper.SetDefault("MINIO_ENDPOINT", "localhost:9000")
+	viper.SetDefault("MINIO_ACCESS_KEY", "minioadmin")
+	viper.SetDefault("MINIO_SECRET_KEY", "minioadmin123")
+	viper.SetDefault("MINIO_BUCKET", "images")
+	viper.SetDefault("MINIO_USE_SSL", false)
+	viper.SetDefault("MINIO_PUBLIC_BASE_URL", "http://localhost:9000")
 
 	viper.SetDefault("CALENDAR.ID", "")
+
+	useSSL := viper.GetBool("MINIO_USE_SSL")
 
 	// Set config values
 	config := Config{
@@ -58,10 +66,12 @@ func LoadConfig() (Config, error) {
 		DatabasePassword:   viper.GetString("POSTGRES.PASSWORD"),
 		DatabaseName:       viper.GetString("POSTGRES.DBNAME"),
 		DatabaseSSLMode:    viper.GetString("POSTGRES.SSLMODE"),
-		AWSRegion:          viper.GetString("AWS.REGION"),
-		AWSAccessKeyID:     viper.GetString("AWS.ACCESS_KEY_ID"),
-		AWSSecretAccessKey: viper.GetString("AWS.SECRET_ACCESS_KEY"),
-		S3BucketName:       viper.GetString("S3.BUCKET_NAME"),
+		MinioEndpoint:      viper.GetString("MINIO_ENDPOINT"),
+		MinioAccessKey:     viper.GetString("MINIO_ACCESS_KEY"),
+		MinioSecretKey:     viper.GetString("MINIO_SECRET_KEY"),
+		MinioBucket:        viper.GetString("MINIO_BUCKET"),
+		MinioUseSSL:        useSSL,
+		MinioPublicBaseURL: viper.GetString("MINIO_PUBLIC_BASE_URL"),
 		CalendarID:         viper.GetString("CALENDAR.ID"),
 	}
 

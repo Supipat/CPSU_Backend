@@ -17,25 +17,6 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Register(username, email, passwordHash string) (int, error) {
-	query := `
-		INSERT INTO users (username, email, password_hash, is_active)
-		VALUES ($1, $2, $3, true)
-		RETURNING user_id
-	`
-
-	var userID int
-	err := r.db.QueryRow(
-		query, username, email, passwordHash,
-	).Scan(&userID)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return userID, nil
-}
-
 func (r *UserRepository) GetAllUser(param models.UserQueryParam) ([]models.UserResponse, error) {
 	query := `
 		SELECT u.user_id, u.username, u.email, r.role_id, r.name
@@ -109,6 +90,40 @@ func (r *UserRepository) GetAllUser(param models.UserQueryParam) ([]models.UserR
 	}
 
 	return result, nil
+}
+
+func (r *UserRepository) CreateUser(username, email, passwordHash string) (int, error) {
+	query := `
+		INSERT INTO users (username, email, password_hash, is_active)
+		VALUES ($1, $2, $3, true)
+		RETURNING user_id
+	`
+
+	var userID int
+	err := r.db.QueryRow(
+		query, username, email, passwordHash,
+	).Scan(&userID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return userID, nil
+}
+
+func (r *UserRepository) DeleteUser(id int) error {
+	result, err := r.db.Exec("DELETE FROM users WHERE user_id = $1", id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
