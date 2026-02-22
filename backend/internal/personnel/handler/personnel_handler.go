@@ -9,11 +9,14 @@ import (
 	"cpsu/internal/personnel/models"
 	"cpsu/internal/personnel/service"
 
+	"cpsu/internal/auth/repository"
+
 	"github.com/gin-gonic/gin"
 )
 
 type PersonnelHandler struct {
 	personnelService service.PersonnelService
+	auditRepo        *repository.AuditRepository
 }
 
 func NewPersonnelHandler(personnelService service.PersonnelService) *PersonnelHandler {
@@ -78,6 +81,18 @@ func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "create", "personnel",
+		strconv.Itoa(createdPersonnel.PersonnelID),
+		map[string]interface{}{
+			"thai_name": createdPersonnel.ThaiName,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusCreated, createdPersonnel)
 }
@@ -154,6 +169,18 @@ func (h *PersonnelHandler) UpdateTeacher(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "update", "personnel",
+		strconv.Itoa(updatedTeacher.PersonnelID),
+		map[string]interface{}{
+			"thai_name": updatedTeacher.ThaiName,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusOK, updatedTeacher)
 }
 
@@ -173,6 +200,17 @@ func (h *PersonnelHandler) DeletePersonnel(c *gin.Context) {
 		}
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "delete", "personnel", strconv.Itoa(id),
+		map[string]interface{}{
+			"personnel_id": id,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "personnel deleted successfully"})
 }

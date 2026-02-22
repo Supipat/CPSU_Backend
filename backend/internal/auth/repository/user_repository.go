@@ -81,14 +81,24 @@ func (r *UserRepository) GetAllUser(param models.UserQueryParam) ([]models.UserR
 	var result []models.UserResponse
 	for rows.Next() {
 		var u models.UserResponse
-		if err := rows.Scan(
-			&u.UserID, &u.Username, &u.Email, &u.RoleID, &u.Name,
-		); err != nil {
+
+		var roleID sql.NullInt64
+		var roleName sql.NullString
+
+		if err := rows.Scan(&u.UserID, &u.Username, &u.Email, &roleID, &roleName); err != nil {
 			return nil, err
 		}
+
+		if roleID.Valid {
+			u.RoleID = int(roleID.Int64)
+		}
+
+		if roleName.Valid {
+			u.Name = roleName.String
+		}
+
 		result = append(result, u)
 	}
-
 	return result, nil
 }
 
@@ -112,10 +122,17 @@ func (r *UserRepository) CreateUser(username, email, passwordHash string) (int, 
 }
 
 func (r *UserRepository) DeleteUser(id int) error {
-	result, err := r.db.Exec("DELETE FROM users WHERE user_id = $1", id)
+	query := `
+		UPDATE users
+		SET deleted_at = NOW()
+		WHERE user_id = $1
+		  AND deleted_at IS NULL
+	`
+	result, err := r.db.Exec(query, id)
 	if err != nil {
 		return err
 	}
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err
@@ -123,14 +140,17 @@ func (r *UserRepository) DeleteUser(id int) error {
 	if rowsAffected == 0 {
 		return sql.ErrNoRows
 	}
+
 	return nil
 }
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 	query := `
-		SELECT user_id, username, email, password_hash, is_active, created_at, last_login
+		SELECT user_id, username, email, password_hash, is_active,
+		       created_at, last_login, deleted_at
 		FROM users
 		WHERE email = $1
+		  AND deleted_at IS NULL
 	`
 
 	var user models.User
@@ -138,7 +158,7 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 
 	err := r.db.QueryRow(query, email).Scan(
 		&user.UserID, &user.Username, &user.Email, &user.PasswordHash,
-		&user.IsActive, &user.CreatedAt, &lastLogin,
+		&user.IsActive, &user.CreatedAt, &lastLogin, &user.DeletedAt,
 	)
 
 	if err != nil {

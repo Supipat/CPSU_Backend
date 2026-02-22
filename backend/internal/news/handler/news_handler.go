@@ -10,11 +10,14 @@ import (
 	"cpsu/internal/news/models"
 	"cpsu/internal/news/service"
 
+	"cpsu/internal/auth/repository"
+
 	"github.com/gin-gonic/gin"
 )
 
 type NewsHandler struct {
 	newsService service.NewsService
+	auditRepo   *repository.AuditRepository
 }
 
 func NewNewsHandler(newsService service.NewsService) *NewsHandler {
@@ -84,11 +87,25 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 		fileImages = form.File["images"]
 	}
 
-	created, err := h.newsService.CreateNews(title, content, typeID, "", detailURL, coverImage, fileImages)
+	created, err := h.newsService.CreateNews(
+		title, content, typeID, "", detailURL, coverImage, fileImages,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "create", "news",
+		strconv.Itoa(created.NewsID),
+		map[string]interface{}{
+			"title": created.Title,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusCreated, created)
 }
@@ -126,13 +143,21 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 
 	updated, err := h.newsService.UpdateNews(id, title, content, typeID, "", detailURL, coverImage, fileImages)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "update", "news",
+		strconv.Itoa(updated.NewsID),
+		map[string]interface{}{
+			"title": updated.Title,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusOK, updated)
 }
@@ -154,6 +179,17 @@ func (h *NewsHandler) DeleteNews(c *gin.Context) {
 		}
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "delete", "news", strconv.Itoa(id),
+		map[string]interface{}{
+			"news_id": id,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "News deleted successfully"})
 }

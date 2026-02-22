@@ -9,11 +9,14 @@ import (
 	"cpsu/internal/subject/models"
 	"cpsu/internal/subject/service"
 
+	"cpsu/internal/auth/repository"
+
 	"github.com/gin-gonic/gin"
 )
 
 type SubjectHandler struct {
 	subjectService service.SubjectService
+	auditRepo      *repository.AuditRepository
 }
 
 func NewSubjectHandler(subjectService service.SubjectService) *SubjectHandler {
@@ -71,6 +74,18 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "create", "subject",
+		createdSubject.SubjectID,
+		map[string]interface{}{
+			"thai_subject": createdSubject.ThaiSubject,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusCreated, createdSubject)
 }
 
@@ -98,6 +113,18 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "update", "subject",
+		updatedSubject.SubjectID,
+		map[string]interface{}{
+			"thai_subject": updatedSubject.ThaiSubject,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusOK, updatedSubject)
 }
 
@@ -118,6 +145,17 @@ func (h *SubjectHandler) DeleteSubject(c *gin.Context) {
 		}
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "delete", "subject", strconv.Itoa(id),
+		map[string]interface{}{
+			"subject_id": id,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "subject deleted successfully"})
 }

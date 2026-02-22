@@ -45,6 +45,7 @@ import (
 
 	personnelHandler "cpsu/internal/personnel/handler"
 	personnelRepo "cpsu/internal/personnel/repository"
+	"cpsu/internal/personnel/service"
 	personnelService "cpsu/internal/personnel/service"
 
 	admissionHandler "cpsu/internal/admission/handler"
@@ -120,6 +121,7 @@ func main() {
 	personnelRepo := personnelRepo.NewPersonnelRepository(db.GetDB())
 	personnelService := personnelService.NewPersonnelService(personnelRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
 	personnelHandler := personnelHandler.NewPersonnelHandler(personnelService)
+	service.SyncScopus(personnelService)
 
 	admissionRepo := admissionRepo.NewAdmissionRepository(db.GetDB())
 	admissionService := admissionService.NewAdmissionService(admissionRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
@@ -167,6 +169,7 @@ func main() {
 
 	public := r.Group("/api/v1")
 	{
+		public.POST("/user", userHandler.CreateUser)
 		public.POST("/auth/login", authHandler.Login)
 		public.POST("/auth/refresh", authHandler.RefreshToken)
 
@@ -217,7 +220,7 @@ func main() {
 		{
 			userAdmin.GET("", permissionMiddleware.RequirePermission("users:read"), userHandler.GetAllUser)
 			userAdmin.POST("", permissionMiddleware.RequirePermission("users:create"), userHandler.CreateUser)
-			userAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("users:delete"), userHandler.DeleteUser)
+			userAdmin.PUT("/:id", permissionMiddleware.RequirePermission("users:delete"), userHandler.DeleteUser)
 		}
 
 		permissionAdmin := admin.Group("/permission/user")

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS news (
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     type_id INT NOT NULL,
-    detail_url TEXT NOT NULL,
+    detail_url TEXT NULL,
     cover_image TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -353,12 +353,13 @@ CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NULL,
     is_active BOOLEAN DEFAULT true,
     email_verified BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP
+    last_login TIMESTAMP,
+    deleted_at TIMESTAMP NULL
 );
 
 -- Index สำหรับ login
@@ -383,13 +384,13 @@ INSERT INTO users(username, email) VALUES
 ('pongpinigpinyo_s','pongpinigpinyo_s@su.ac.th'),
 ('chaowalit_o','chaowalit_o@su.ac.th'),
 ('tangjui_n','tangjui_n@su.ac.th'),
-('pansri_b','kaewjamnong_s@su.ac.th'),
+('pansri_b','pansri_b@su.ac.th'),
 ('wasara','wasara@cp.su.ac.th'), --*
 ('arampongsanuwat_s','arampongsanuwat_s@su.ac.th'),
 ('rodhetbhai_s','rodhetbhai_s@su.ac.th'),
 ('hongwitayakorn_a','hongwitayakorn_a@su.ac.th'),
 -- Admin, Staff
-('luangsamankul_p','kaewjamnong_s@su.ac.th'),
+('luangsamankul_p','luangsamankul_p@su.ac.th'),
 ('sonsanguan_w','sonsanguan_w@su.ac.th'),
 ('tatong_k','tatong_k@su.ac.th'),
 ('jancharoen_k','jancharoen_k@su.ac.th'),
@@ -630,14 +631,14 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER update_news_modtime
 BEFORE UPDATE ON news
 FOR EACH ROW
-EXECUTE PROCEDURE update_modified_column();
+EXECUTE FUNCTION update_modified_column();
 
 CREATE TRIGGER update_users_modtime
 BEFORE UPDATE ON users
 FOR EACH ROW
-EXECUTE PROCEDURE update_modified_column();
+EXECUTE FUNCTION update_modified_column();
 
 CREATE TRIGGER update_roles_modtime
 BEFORE UPDATE ON roles
 FOR EACH ROW
-EXECUTE PROCEDURE update_modified_column();
+EXECUTE FUNCTION update_modified_column();

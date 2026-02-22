@@ -9,11 +9,14 @@ import (
 	"cpsu/internal/calendar/models"
 	"cpsu/internal/calendar/service"
 
+	"cpsu/internal/auth/repository"
+
 	"github.com/gin-gonic/gin"
 )
 
 type CalendarHandler struct {
 	calendarService service.CalendarService
+	auditRepo       *repository.AuditRepository
 }
 
 func NewCalendarHandler(calendarService service.CalendarService) *CalendarHandler {
@@ -70,6 +73,18 @@ func (h *CalendarHandler) CreateCalendar(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "create", "calendar",
+		strconv.Itoa(createdCalendar.CalenderID),
+		map[string]interface{}{
+			"title": createdCalendar.Title,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusCreated, createdCalendar)
 }
 
@@ -97,6 +112,18 @@ func (h *CalendarHandler) UpdateCalendar(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "update", "calendar",
+		strconv.Itoa(updatedCalendar.CalenderID),
+		map[string]interface{}{
+			"title": updatedCalendar.Title,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusOK, updatedCalendar)
 }
 
@@ -117,6 +144,17 @@ func (h *CalendarHandler) DeleteCalendar(c *gin.Context) {
 		}
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "delete", "calendar", strconv.Itoa(id),
+		map[string]interface{}{
+			"calendar_id": id,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "calendar deleted successfully"})
 }

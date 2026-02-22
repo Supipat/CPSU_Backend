@@ -10,6 +10,7 @@ type User struct {
 	IsActive     bool       `json:"is_active"`
 	CreatedAt    time.Time  `json:"created_at"`
 	LastLogin    *time.Time `json:"last_login"`
+	DeletedAt    *time.Time `json:"deleted_at"`
 }
 
 type UserResponse struct {

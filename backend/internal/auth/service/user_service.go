@@ -4,6 +4,7 @@ import (
 	"cpsu/internal/auth/models"
 	"cpsu/internal/auth/repository"
 	"cpsu/internal/auth/utils"
+	"strconv"
 )
 
 type UserService struct {
@@ -37,7 +38,7 @@ func (s *UserService) CreateUser(req models.UserRequest, ipAddress string, userA
 	}
 
 	_ = s.AuditRepo.LogAudit(
-		userID, "register", "auth", "",
+		userID, "create", "user", "",
 		map[string]interface{}{
 			"email":    req.Email,
 			"username": req.Username,
@@ -49,6 +50,16 @@ func (s *UserService) CreateUser(req models.UserRequest, ipAddress string, userA
 	return nil
 }
 
-func (s *UserService) DeleteUser(id int) error {
-	return s.UserRepo.DeleteUser(id)
+func (s *UserService) DeleteUser(targetUserID int, actorUserID int, ipAddress string, userAgent string) error {
+	if err := s.UserRepo.DeleteUser(targetUserID); err != nil {
+		return err
+	}
+
+	_ = s.AuditRepo.LogAudit(
+		actorUserID, "DELETE_USER", "user",
+		strconv.Itoa(targetUserID), nil,
+		ipAddress, userAgent,
+	)
+
+	return nil
 }

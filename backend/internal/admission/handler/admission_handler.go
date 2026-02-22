@@ -9,11 +9,14 @@ import (
 	"cpsu/internal/admission/models"
 	"cpsu/internal/admission/service"
 
+	"cpsu/internal/auth/repository"
+
 	"github.com/gin-gonic/gin"
 )
 
 type AdmissionHandler struct {
 	admissionService service.AdmissionService
+	auditRepo        *repository.AuditRepository
 }
 
 func NewAdmissionHandler(admissionService service.AdmissionService) *AdmissionHandler {
@@ -70,6 +73,18 @@ func (h *AdmissionHandler) CreateAdmission(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "create", "admission",
+		strconv.Itoa(created.AdmissionID),
+		map[string]interface{}{
+			"round": created.Round,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusCreated, created)
 }
 
@@ -97,6 +112,18 @@ func (h *AdmissionHandler) UpdateAdmission(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "update", "admission",
+		strconv.Itoa(updated.AdmissionID),
+		map[string]interface{}{
+			"round": updated.Round,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusOK, updated)
 }
 
@@ -116,6 +143,17 @@ func (h *AdmissionHandler) DeleteAdmission(c *gin.Context) {
 		}
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "delete", "admission", strconv.Itoa(id),
+		map[string]interface{}{
+			"admission_id": id,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "admission deleted successfully"})
 }

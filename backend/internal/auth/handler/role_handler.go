@@ -18,25 +18,22 @@ func NewRoleHandler(roleService *service.RoleService) *RoleHandler {
 }
 
 func (h *RoleHandler) AssignRole(c *gin.Context) {
-	userIDStr := c.Param("id")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil || userID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid user_id"})
-		return
-	}
+	targetUserID, _ := strconv.Atoi(c.Param("id"))
 
 	var req struct {
 		RoleID int `json:"role_id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	assignedBy := c.GetInt("user_id")
+	actorUserID := c.GetInt("user_id")
 
-	if err := h.RoleService.AssignRole(userID, req.RoleID, assignedBy); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+	if err := h.RoleService.AssignRole(
+		targetUserID, req.RoleID, actorUserID, c.ClientIP(), c.GetHeader("User-Agent"),
+	); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

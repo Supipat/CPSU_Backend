@@ -8,11 +8,14 @@ import (
 	"cpsu/internal/course/models"
 	"cpsu/internal/course/service"
 
+	"cpsu/internal/auth/repository"
+
 	"github.com/gin-gonic/gin"
 )
 
 type CourseHandler struct {
 	courseService service.CourseService
+	auditRepo     *repository.AuditRepository
 }
 
 func NewCourseHandler(courseService service.CourseService) *CourseHandler {
@@ -65,6 +68,18 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "create", "course",
+		createdCourse.CourseID,
+		map[string]interface{}{
+			"thai_course": createdCourse.ThaiCourse,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusCreated, createdCourse)
 }
 
@@ -87,6 +102,18 @@ func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "update", "course",
+		updatedCourse.CourseID,
+		map[string]interface{}{
+			"thai_course": updatedCourse.ThaiCourse,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
+
 	c.JSON(http.StatusOK, updatedCourse)
 }
 
@@ -102,6 +129,17 @@ func (h *CourseHandler) DeleteCourse(c *gin.Context) {
 		}
 		return
 	}
+
+	userID := c.GetInt("user_id")
+
+	_ = h.auditRepo.LogAudit(
+		userID, "delete", "news", id,
+		map[string]interface{}{
+			"course_id": id,
+		},
+		c.ClientIP(),
+		c.GetHeader("User-Agent"),
+	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "course deleted successfully"})
 }
