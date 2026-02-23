@@ -398,6 +398,12 @@ INSERT INTO users(username, email) VALUES
 ('yahom_s','yahom_s@su.ac.th'),
 ('khanthamala_a','khanthamala_a@su.ac.th'); --*
 
+
+-- test Admin
+INSERT INTO users(username, email, password_hash) VALUES
+('supapanchai_r','supapanchai_r@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('saengson_s','saengson_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
+
 -- create role
 
 CREATE TABLE roles (
@@ -429,36 +435,59 @@ CREATE TABLE user_roles (
 CREATE INDEX idx_user_roles_user ON user_roles(user_id);
 CREATE INDEX idx_user_roles_role ON user_roles(role_id);
 
-INSERT INTO user_roles (user_id, role_id, assigned_by) VALUES
-(1, 3, 23),
-(2, 3, 23),
-(3, 3, 23),
-(4, 3, 23),
-(5, 3, 23),
-(6, 3, 23),
-(7, 3, 23),
-(8, 3, 23),
-(9, 3, 23),
-(10, 3, 23),
-(11, 3, 23),
-(12, 3, 23),
-(13, 3, 23),
-(14, 3, 23),
-(15, 3, 23),
-(16, 3, 23),
-(17, 3, 23),
-(18, 3, 23),
-(19, 3, 23),
-(20, 3, 23),
-(21, 3, 23),
--- Admin, Staff
-(22, 2, 23),
-(23, 1, 23),
-(24, 2, 23),
-(25, 2, 23),
-(26, 2, 23),
-(27, 2, 23),
-(28, 2, 23);
+INSERT INTO user_roles (user_id, role_id, assigned_by)
+SELECT u.user_id, r.role_id, assigner.user_id
+FROM users u
+JOIN roles r ON r.name = 'teacher'
+JOIN users assigner ON assigner.username = 'sonsanguan_w'
+WHERE u.username IN (
+    'kaewjamnong_s',
+    'wongtaweesap_o',
+    'worrawichaipat_p',
+    'tantatsanawong_p',
+    'sitdhisanguan_k',
+    'seepanomwan_k',
+    'praditwong_k',
+    'promrit_n',
+    'soonklang_t',
+    'aonpong_p',
+    'kanawong_r',
+    'muangon_w',
+    'waijanya_s',
+    'pongpinigpinyo_s',
+    'chaowalit_o',
+    'tangjui_n',
+    'pansri_b',
+    'wasara',
+    'arampongsanuwat_s',
+    'rodhetbhai_s',
+    'hongwitayakorn_a'
+);
+
+INSERT INTO user_roles (user_id, role_id, assigned_by)
+SELECT u.user_id, r.role_id, assigner.user_id
+FROM users u
+JOIN roles r ON r.name = 'staff'
+JOIN users assigner ON assigner.username = 'sonsanguan_w'
+WHERE u.username IN (
+    'luangsamankul_p',
+    'tatong_k',
+    'jancharoen_k',
+    'chaysirikhae_t',
+    'yahom_s',
+    'khanthamala_a'
+);
+
+INSERT INTO user_roles (user_id, role_id, assigned_by)
+SELECT u.user_id, r.role_id, assigner.user_id
+FROM users u
+JOIN roles r ON r.name = 'admin'
+JOIN users assigner ON assigner.username = 'sonsanguan_w'
+WHERE u.username IN (
+    'sonsanguan_w',
+    'supapanchai_r',
+    'saengson_s'
+);
 
 -- create permissions
 
@@ -543,7 +572,10 @@ INSERT INTO permissions (name, description, resource, action) VALUES
 ('users:delete', 'Can delete users', 'users', 'delete'),
 
 -- Roles
-('roles:assign', 'Can assign roles to users', 'roles', 'assign');
+('roles:assign', 'Can assign roles to users', 'roles', 'assign'),
+
+-- logs
+('logs:read', 'Can view logs', 'logs', 'read');
 
 CREATE TABLE role_permissions (
     role_id INTEGER NOT NULL REFERENCES roles(role_id) ON DELETE CASCADE,
@@ -605,8 +637,8 @@ CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at);
 CREATE TABLE audit_logs (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(user_id),
-    action VARCHAR(100) NOT NULL,  -- 'login', 'logout', 'create', 'update', 'delete'
-    resource VARCHAR(50),           -- 'books', 'users', 'roles'
+    action VARCHAR(100) NOT NULL,  
+    resource VARCHAR(50),           
     resource_id VARCHAR(50),
     details JSONB,
     ip_address VARCHAR(50),

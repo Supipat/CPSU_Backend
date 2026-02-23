@@ -21,7 +21,9 @@ import (
 	userRepo "cpsu/internal/auth/repository"
 	userService "cpsu/internal/auth/service"
 
-	auditRepo "cpsu/internal/auth/repository"
+	auditLogHandler "cpsu/internal/auth/handler"
+	auditLogRepo "cpsu/internal/auth/repository"
+	auditLogService "cpsu/internal/auth/service"
 
 	newsHandler "cpsu/internal/news/handler"
 	newsRepo "cpsu/internal/news/repository"
@@ -82,20 +84,21 @@ func main() {
 	authRoleRepo := authRepo.NewRoleRepository(db.GetDB())
 	authPermissionRepo := authRepo.NewPermissionRepository(db.GetDB())
 	authTokenRepo := authRepo.NewTokenRepository(db.GetDB())
-	authAuditRepo := authRepo.NewAuditRepository(db.GetDB())
 
-	authService := authService.NewAuthService(authUserRepo, authRoleRepo, authTokenRepo, authAuditRepo)
+	auditLogRepo := auditLogRepo.NewAuditRepository(db.GetDB())
+	auditLogService := auditLogService.NewAuditService(auditLogRepo)
+	auditLogHandler := auditLogHandler.NewAuditHandler(auditLogService)
+
+	authService := authService.NewAuthService(authUserRepo, authRoleRepo, authTokenRepo, auditLogRepo)
 	authHandler := authHandler.NewAuthHandler(authService)
 	permissionMiddleware := middlewares.NewPermissionMiddleware(authPermissionRepo)
 
 	roleRepo := userRepo.NewRoleRepository(db.GetDB())
-	roleService := userService.NewRoleService(roleRepo)
+	roleService := userService.NewRoleService(roleRepo, auditLogRepo)
 	roleHandler := userHandler.NewRoleHandler(roleService)
 
-	auditRepo := auditRepo.NewAuditRepository(db.GetDB())
-
 	userRepo := userRepo.NewUserRepository(db.GetDB())
-	userService := userService.NewUserService(userRepo, auditRepo)
+	userService := userService.NewUserService(userRepo, auditLogRepo)
 	userHandler := userHandler.NewUserHandler(userService)
 
 	newsRepo := newsRepo.NewNewsRepository(db.GetDB())
@@ -169,7 +172,6 @@ func main() {
 
 	public := r.Group("/api/v1")
 	{
-		public.POST("/user", userHandler.CreateUser)
 		public.POST("/auth/login", authHandler.Login)
 		public.POST("/auth/refresh", authHandler.RefreshToken)
 
@@ -290,6 +292,11 @@ func main() {
 			calendarAdmin.POST("", permissionMiddleware.RequirePermission("calendar:create"), calendarHandler.CreateCalendar)
 			calendarAdmin.PUT("/:id", permissionMiddleware.RequirePermission("calendar:update"), calendarHandler.UpdateCalendar)
 			calendarAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("calendar:delete"), calendarHandler.DeleteCalendar)
+		}
+
+		AuditLogAdmin := admin.Group("/logs")
+		{
+			AuditLogAdmin.GET("", permissionMiddleware.RequirePermission("logs:read"), auditLogHandler.GetAllAuditLog)
 		}
 	}
 

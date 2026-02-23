@@ -2,6 +2,7 @@ package service
 
 import (
 	"cpsu/internal/auth/repository"
+	"log"
 	"strconv"
 )
 
@@ -10,11 +11,17 @@ type RoleService struct {
 	AuditRepo *repository.AuditRepository
 }
 
-func NewRoleService(roleRepo *repository.RoleRepository) *RoleService {
-	return &RoleService{RoleRepo: roleRepo}
+func NewRoleService(
+	roleRepo *repository.RoleRepository,
+	auditRepo *repository.AuditRepository,
+) *RoleService {
+	return &RoleService{
+		RoleRepo:  roleRepo,
+		AuditRepo: auditRepo,
+	}
 }
 
-func (s *RoleService) AssignRole(userID, roleID, assignedBy int, ipAddress string, userAgent string) error {
+func (s *RoleService) AssignRole(userID, roleID, assignedBy int, ipAddress, userAgent string) error {
 	if err := s.RoleRepo.RemoveRole(userID); err != nil {
 		return err
 	}
@@ -23,15 +30,20 @@ func (s *RoleService) AssignRole(userID, roleID, assignedBy int, ipAddress strin
 		return err
 	}
 
-	_ = s.AuditRepo.LogAudit(
-		assignedBy, "assign_role", "user", strconv.Itoa(userID),
+	if err := s.AuditRepo.LogAudit(
+		assignedBy,
+		"assign_role",
+		"user",
+		strconv.Itoa(userID),
 		map[string]interface{}{
 			"user_id": userID,
 			"role_id": roleID,
 		},
 		ipAddress,
 		userAgent,
-	)
+	); err != nil {
+		log.Printf("audit failed: %v", err)
+	}
 
 	return nil
 }
