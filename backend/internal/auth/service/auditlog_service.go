@@ -23,10 +23,13 @@ func (s *AuditService) GetAllAuditLog(ctx context.Context) ([]models.AuditLogRes
 	}
 
 	var res []models.AuditLogResponse
+
 	for _, a := range audits {
 		res = append(res, models.AuditLogResponse{
 			ID:          a.ID,
 			UserID:      a.UserID,
+			Username:    a.Username,
+			Email:       a.Email,
 			Action:      a.Action,
 			Resource:    a.Resource,
 			ResourceID:  a.ResourceID,

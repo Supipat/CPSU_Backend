@@ -19,10 +19,11 @@ func (r *AuditRepository) GetAllAuditLog(ctx context.Context) ([]models.AuditLog
 
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT
-			id, user_id, action, resource,
-			resource_id, details, created_at
-		FROM audit_logs
-		ORDER BY created_at DESC
+			a.id, u.user_id, u.username, u.email, a.action, 
+			a.resource, a.resource_id, a.details, a.created_at
+		FROM audit_logs a 
+		LEFT JOIN users u ON a.user_id = u.user_id
+		ORDER BY a.created_at DESC
 	`)
 	if err != nil {
 		return nil, err
@@ -30,16 +31,25 @@ func (r *AuditRepository) GetAllAuditLog(ctx context.Context) ([]models.AuditLog
 	defer rows.Close()
 
 	var audits []models.AuditLog
+	var username, email sql.NullString
 
 	for rows.Next() {
 		var audit models.AuditLog
 		var detailsBytes []byte
 
 		err := rows.Scan(
-			&audit.ID, &audit.UserID, &audit.Action,
-			&audit.Resource, &audit.ResourceID,
+			&audit.ID, &audit.UserID, &username, &email,
+			&audit.Action, &audit.Resource, &audit.ResourceID,
 			&detailsBytes, &audit.CreatedAt,
 		)
+
+		if username.Valid {
+			audit.Username = username.String
+		}
+		if email.Valid {
+			audit.Email = email.String
+		}
+
 		if err != nil {
 			return nil, err
 		}
