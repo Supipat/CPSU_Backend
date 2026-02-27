@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"cpsu/internal/personnel/models"
+
+	"github.com/lib/pq"
 )
 
 type PersonnelRepository interface {
@@ -337,52 +339,104 @@ func (r *personnelRepository) SaveResearch(personnelID int, researches []models.
 	}
 
 	for _, rc := range researches {
+		var researchID int
+		found := false
+
 		if rc.DOI != nil && *rc.DOI != "" {
 			res, e := tx.Exec(
-				`UPDATE research SET title=$1, journal=$2, year=$3, volume=$4, issue=$5, pages=$6, cited=$7
-                 WHERE personnel_id=$8 AND doi=$9`,
-				rc.Title, rc.Journal, rc.Year, val(rc.Volume), val(rc.Issue), val(rc.Pages), rc.Cited, personnelID, *rc.DOI,
+				`UPDATE research
+				 SET title=$1, journal=$2, year=$3, volume=$4, issue=$5, pages=$6, cited=$7
+				 WHERE personnel_id=$8 AND doi=$9`,
+				rc.Title, rc.Journal, rc.Year,
+				val(rc.Volume), val(rc.Issue), val(rc.Pages),
+				rc.Cited, personnelID, *rc.DOI,
 			)
 			if e != nil {
 				return e
 			}
 			if rows, _ := res.RowsAffected(); rows > 0 {
-				continue
+				err = tx.QueryRow(
+					`SELECT research_id FROM research WHERE personnel_id=$1 AND doi=$2`,
+					personnelID, *rc.DOI,
+				).Scan(&researchID)
+				if err != nil {
+					return err
+				}
+				found = true
 			}
 		}
 
-		res, e := tx.Exec(
-			`UPDATE research SET journal=$1, volume=$2, issue=$3, pages=$4, doi=$5, cited=$6
-             WHERE personnel_id=$7 AND title=$8 AND year=$9`,
-			rc.Journal, val(rc.Volume), val(rc.Issue), val(rc.Pages), val(rc.DOI), rc.Cited, personnelID, rc.Title, rc.Year,
-		)
-		if e != nil {
-			return e
-		}
-		if rows, _ := res.RowsAffected(); rows > 0 {
-			continue
+		if !found {
+			res, e := tx.Exec(
+				`UPDATE research
+				 SET journal=$1, volume=$2, issue=$3, pages=$4, doi=$5, cited=$6
+				 WHERE personnel_id=$7 AND title=$8 AND year=$9`,
+				rc.Journal, val(rc.Volume), val(rc.Issue), val(rc.Pages),
+				val(rc.DOI), rc.Cited, personnelID, rc.Title, rc.Year,
+			)
+			if e != nil {
+				return e
+			}
+			if rows, _ := res.RowsAffected(); rows > 0 {
+				err = tx.QueryRow(
+					`SELECT research_id FROM research
+					 WHERE personnel_id=$1 AND title=$2 AND year=$3`,
+					personnelID, rc.Title, rc.Year,
+				).Scan(&researchID)
+				if err != nil {
+					return err
+				}
+				found = true
+			}
 		}
 
-		createdAt := rc.CreatedAt
-		if createdAt.IsZero() {
-			createdAt = time.Now()
+		if !found {
+			createdAt := rc.CreatedAt
+			if createdAt.IsZero() {
+				createdAt = time.Now()
+			}
+			err = tx.QueryRow(
+				`INSERT INTO research
+				 (personnel_id, title, journal, year, volume, issue, pages, doi, cited, created_at)
+				 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+				 RETURNING research_id`,
+				personnelID, rc.Title, rc.Journal, rc.Year,
+				val(rc.Volume), val(rc.Issue), val(rc.Pages),
+				val(rc.DOI), rc.Cited, createdAt,
+			).Scan(&researchID)
+			if err != nil {
+				return err
+			}
 		}
-		if _, e = tx.Exec(
-			`INSERT INTO research (personnel_id, title, journal, year, volume, issue, pages, doi, cited, created_at)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-			personnelID, rc.Title, rc.Journal, rc.Year, val(rc.Volume), val(rc.Issue), val(rc.Pages), val(rc.DOI), rc.Cited, createdAt,
-		); e != nil {
-			return e
+
+		_, err = tx.Exec(`DELETE FROM research_authors WHERE research_id=$1`, researchID)
+		if err != nil {
+			return err
+		}
+
+		for i, a := range rc.Authors {
+			_, err = tx.Exec(
+				`INSERT INTO research_authors (research_id, author_name, author_order)
+				 VALUES ($1,$2,$3)`,
+				researchID, a, i+1,
+			)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 
 func (r *personnelRepository) GetAllResearch(param models.ResearchQueryParam) ([]models.Research, error) {
 	query := `
-		SELECT r.research_id, p.personnel_id, r.title, r.journal, r.year, r.volume, r.issue, r.pages, r.doi, r.cited, r.created_at
-        FROM research r
+		SELECT r.research_id, p.personnel_id, p.thai_name, r.title, r.journal,
+    	r.year, r.volume, r.issue, r.pages, r.doi, r.cited, r.created_at,
+    	ARRAY_AGG(a.author_name ORDER BY a.author_order) AS authors
+		FROM research r
 		LEFT JOIN personnels p ON r.personnel_id = p.personnel_id
+		LEFT JOIN research_authors a ON r.research_id = a.research_id
 	`
 	conditions := []string{}
 	args := []interface{}{}
@@ -397,6 +451,10 @@ func (r *personnelRepository) GetAllResearch(param models.ResearchQueryParam) ([
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
+	query += `GROUP BY r.research_id, p.personnel_id, p.thai_name, r.title,
+    r.journal, r.year, r.volume, r.issue, r.pages, r.doi, r.cited, r.created_at
+	`
 
 	sort := "research_id"
 	if param.Sort != "" {
@@ -422,10 +480,11 @@ func (r *personnelRepository) GetAllResearch(param models.ResearchQueryParam) ([
 	for rows.Next() {
 		var r models.Research
 		var vol, iss, pages, doi sql.NullString
+		var authors []string
 
 		err := rows.Scan(
-			&r.ResearchID, &r.PersonnelID, &r.Title, &r.Journal, &r.Year,
-			&vol, &iss, &pages, &doi, &r.Cited, &r.CreatedAt,
+			&r.ResearchID, &r.PersonnelID, &r.ThaiName, &r.Title, &r.Journal, &r.Year,
+			&vol, &iss, &pages, &doi, &r.Cited, &r.CreatedAt, pq.Array(&authors),
 		)
 		if err != nil {
 			return nil, err
@@ -444,6 +503,7 @@ func (r *personnelRepository) GetAllResearch(param models.ResearchQueryParam) ([
 			r.DOI = &doi.String
 		}
 
+		r.Authors = authors
 		researches = append(researches, r)
 	}
 

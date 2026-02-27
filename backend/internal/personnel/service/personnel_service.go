@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"cpsu/internal/personnel/models"
@@ -229,12 +230,12 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 		return nil, err
 	}
 
-	sr, ok := data["search-results"].(map[string]interface{})
+	searchResults, ok := data["search-results"].(map[string]interface{})
 	if !ok {
-		return nil, nil
+		return []models.Research{}, nil
 	}
 
-	entries, ok := sr["entry"].([]interface{})
+	entries, ok := searchResults["entry"].([]interface{})
 	if !ok || len(entries) == 0 {
 		return []models.Research{}, nil
 	}
@@ -243,14 +244,15 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 		if v == nil {
 			return nil
 		}
-		s := fmt.Sprint(v)
+		s := strings.TrimSpace(fmt.Sprint(v))
 		if s == "" {
 			return nil
 		}
 		return &s
 	}
 
-	var research []models.Research
+	var researches []models.Research
+
 	for _, e := range entries {
 		item, ok := e.(map[string]interface{})
 		if !ok {
@@ -270,7 +272,25 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 			cited = int(v)
 		}
 
-		research = append(research, models.Research{
+		authors := []string{}
+
+		if a, ok := item["author"].([]interface{}); ok {
+			for _, x := range a {
+				if am, ok := x.(map[string]interface{}); ok {
+					if name, ok := am["authname"].(string); ok && name != "" {
+						authors = append(authors, name)
+					}
+				}
+			}
+		}
+
+		if len(authors) == 0 {
+			if creator, ok := item["dc:creator"].(string); ok && creator != "" {
+				authors = append(authors, creator)
+			}
+		}
+
+		researches = append(researches, models.Research{
 			Title:     fmt.Sprint(item["dc:title"]),
 			Journal:   fmt.Sprint(item["prism:publicationName"]),
 			Year:      year,
@@ -279,11 +299,12 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 			Pages:     toPtr(item["prism:pageRange"]),
 			DOI:       toPtr(item["prism:doi"]),
 			Cited:     cited,
+			Authors:   authors,
 			CreatedAt: time.Now(),
 		})
 	}
 
-	return research, nil
+	return researches, nil
 }
 
 func (s *personnelService) SyncAllFromScopus() (int, error) {

@@ -61,6 +61,8 @@ type TeacherRequest struct {
 type Research struct {
 	ResearchID  int       `json:"research_id"`
 	PersonnelID int       `json:"personnel_id"`
+	ThaiName    string    `json:"thai_name,omitempty"`
+	Authors     []string  `json:"authors"`
 	Title       string    `json:"title"`
 	Journal     string    `json:"journal"`
 	Year        int       `json:"year"`
@@ -70,6 +72,13 @@ type Research struct {
 	DOI         *string   `json:"doi,omitempty"`
 	Cited       int       `json:"cited"`
 	CreatedAt   time.Time `json:"created_at"`
+}
+
+type ResearchAuthor struct {
+	AuthorID    int    `json:"author_id"`
+	ResearchID  int    `json:"research_id"`
+	AuthorName  string `json:"author_name"`
+	AuthorOrder int    `json:"author_order"`
 }
 
 type ResearchQueryParam struct {

@@ -309,16 +309,25 @@ SELECT setval('personnels_personnel_id_seq', (SELECT MAX(personnel_id) FROM pers
 CREATE TABLE IF NOT EXISTS research (
     research_id SERIAL PRIMARY KEY,
     personnel_id INT NOT NULL,
-    title TEXT NOT NULL,                                       
-    journal VARCHAR(255) NOT NULL,              
-    year INT NOT NULL,                         
-    volume VARCHAR(50) NULL,                         
-    issue VARCHAR(50) NULL,                         
-    pages VARCHAR(50) NULL,                          
-    doi TEXT NULL,                          
+    title TEXT NOT NULL,
+    journal VARCHAR(255) NOT NULL,
+    year INT NOT NULL,
+    volume VARCHAR(50),
+    issue VARCHAR(50),
+    pages VARCHAR(50),
+    doi TEXT,
     cited INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (personnel_id) REFERENCES personnels(personnel_id) ON DELETE CASCADE           
+    FOREIGN KEY (personnel_id) REFERENCES personnels(personnel_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS research_authors (
+    author_id SERIAL PRIMARY KEY,
+    research_id INT NOT NULL,
+    author_name TEXT NOT NULL,
+    author_order INT NOT NULL,
+    FOREIGN KEY (research_id) REFERENCES research(research_id) ON DELETE CASCADE,
+    UNIQUE (research_id, author_order)
 );
 
 -- create admission
