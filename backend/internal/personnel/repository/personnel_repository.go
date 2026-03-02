@@ -433,7 +433,8 @@ func (r *personnelRepository) GetAllResearch(param models.ResearchQueryParam) ([
 	query := `
 		SELECT r.research_id, p.personnel_id, p.thai_name, r.title, r.journal,
     	r.year, r.volume, r.issue, r.pages, r.doi, r.cited, r.created_at,
-    	ARRAY_AGG(a.author_name ORDER BY a.author_order) AS authors
+    	COALESCE(ARRAY_AGG(a.author_name ORDER BY a.author_order)
+        FILTER (WHERE a.author_name IS NOT NULL),'{}') AS authors
 		FROM research r
 		LEFT JOIN personnels p ON r.personnel_id = p.personnel_id
 		LEFT JOIN research_authors a ON r.research_id = a.research_id

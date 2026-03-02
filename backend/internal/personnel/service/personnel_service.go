@@ -203,26 +203,93 @@ func (s *personnelService) SyncResearch(personnelID int) ([]models.Research, err
 	return s.repo.GetAllResearch(param)
 }
 
+func (s *personnelService) getAuthorsFromAbstract(eid string) []string {
+	apiKey := os.Getenv("SCOPUS_API_KEY")
+
+	url := fmt.Sprintf(
+		"https://api.elsevier.com/content/abstract/scopus_id/%s",
+		eid,
+	)
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-ELS-APIKey", apiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return []string{}
+	}
+	defer resp.Body.Close()
+
+	var data map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return []string{}
+	}
+
+	root := data["abstracts-retrieval-response"].(map[string]interface{})
+
+	item, ok := root["item"].(map[string]interface{})
+	if ok {
+		bib := item["bibrecord"].(map[string]interface{})
+		head := bib["head"].(map[string]interface{})
+
+		var groups []interface{}
+
+		ag := head["author-group"]
+
+		if arr, ok := ag.([]interface{}); ok {
+			groups = arr
+		} else if obj, ok := ag.(map[string]interface{}); ok {
+			groups = []interface{}{obj}
+		} else {
+			return []string{}
+		}
+
+		var authors []string
+		for _, g := range groups {
+			group := g.(map[string]interface{})
+			list := group["author"].([]interface{})
+
+			for _, a := range list {
+				author := a.(map[string]interface{})
+				name := author["preferred-name"].(map[string]interface{})["ce:indexed-name"].(string)
+				authors = append(authors, name)
+			}
+		}
+
+		if len(authors) > 0 {
+			return authors
+		}
+	}
+
+	if core, ok := root["coredata"].(map[string]interface{}); ok {
+		if creator, ok := core["dc:creator"].(string); ok {
+			return []string{creator}
+		}
+	}
+
+	return []string{}
+}
+
 func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Research, error) {
 	apiKey := os.Getenv("SCOPUS_API_KEY")
 	if apiKey == "" {
 		return nil, fmt.Errorf("missing SCOPUS_API_KEY")
 	}
 
-	url := fmt.Sprintf(
+	searchURL := fmt.Sprintf(
 		"https://api.elsevier.com/content/search/scopus?query=AU-ID(%s)&apiKey=%s",
-		scopusID,
-		apiKey,
+		scopusID, apiKey,
 	)
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(searchURL)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("scopus status %d", resp.StatusCode)
+		return nil, fmt.Errorf("scopus search status %d", resp.StatusCode)
 	}
 
 	var data map[string]interface{}
@@ -230,12 +297,12 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 		return nil, err
 	}
 
-	searchResults, ok := data["search-results"].(map[string]interface{})
+	sr, ok := data["search-results"].(map[string]interface{})
 	if !ok {
 		return []models.Research{}, nil
 	}
 
-	entries, ok := searchResults["entry"].([]interface{})
+	entries, ok := sr["entry"].([]interface{})
 	if !ok || len(entries) == 0 {
 		return []models.Research{}, nil
 	}
@@ -245,7 +312,7 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 			return nil
 		}
 		s := strings.TrimSpace(fmt.Sprint(v))
-		if s == "" {
+		if s == "" || s == "<nil>" {
 			return nil
 		}
 		return &s
@@ -272,23 +339,17 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 			cited = int(v)
 		}
 
-		authors := []string{}
-
-		if a, ok := item["author"].([]interface{}); ok {
-			for _, x := range a {
-				if am, ok := x.(map[string]interface{}); ok {
-					if name, ok := am["authname"].(string); ok && name != "" {
-						authors = append(authors, name)
-					}
-				}
-			}
+		rawID := fmt.Sprint(item["dc:identifier"])
+		eid := strings.TrimPrefix(rawID, "SCOPUS_ID:")
+		if eid == "" || eid == rawID {
+			continue
 		}
 
-		if len(authors) == 0 {
-			if creator, ok := item["dc:creator"].(string); ok && creator != "" {
-				authors = append(authors, creator)
-			}
-		}
+		// fmt.Println("EID =", eid)
+
+		authors := s.getAuthorsFromAbstract(eid)
+
+		// fmt.Println("AUTHORS =", authors)
 
 		researches = append(researches, models.Research{
 			Title:     fmt.Sprint(item["dc:title"]),
