@@ -345,11 +345,7 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 			continue
 		}
 
-		// fmt.Println("EID =", eid)
-
 		authors := s.getAuthorsFromAbstract(eid)
-
-		// fmt.Println("AUTHORS =", authors)
 
 		researches = append(researches, models.Research{
 			Title:     fmt.Sprint(item["dc:title"]),
