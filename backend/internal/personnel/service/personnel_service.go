@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	authrepo "cpsu/internal/auth/repository"
 	"cpsu/internal/personnel/models"
 	"cpsu/internal/personnel/repository"
 
@@ -24,10 +25,10 @@ import (
 type PersonnelService interface {
 	GetAllPersonnels(param models.PersonnelQueryParam) ([]models.Personnels, error)
 	GetPersonnelByID(id int) (*models.Personnels, error)
-	CreatePersonnel(req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
-	UpdatePersonnel(id int, req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
-	UpdateTeacher(id int, req models.TeacherRequest, fileImage *multipart.FileHeader) (*models.Personnels, error)
-	DeletePersonnel(id int) error
+	CreatePersonnel(req models.PersonnelRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Personnels, error)
+	UpdatePersonnel(id int, req models.PersonnelRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Personnels, error)
+	UpdateTeacher(id int, req models.TeacherRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Personnels, error)
+	DeletePersonnel(id int, userID int, ip string, userAgent string) error
 	SyncResearch(personnelID int) ([]models.Research, error)
 	GetResearchFromScopus(scopusID string) ([]models.Research, error)
 	SyncAllFromScopus() (int, error)
@@ -36,6 +37,7 @@ type PersonnelService interface {
 
 type personnelService struct {
 	repo        repository.PersonnelRepository
+	auditRepo   *authrepo.AuditRepository
 	minioClient *minio.Client
 	bucket      string
 	publicBase  string
@@ -43,6 +45,7 @@ type personnelService struct {
 
 func NewPersonnelService(
 	repo repository.PersonnelRepository,
+	auditRepo *authrepo.AuditRepository,
 	endpoint string,
 	accessKey string,
 	secretKey string,
@@ -61,6 +64,7 @@ func NewPersonnelService(
 
 	return &personnelService{
 		repo:        repo,
+		auditRepo:   auditRepo,
 		minioClient: client,
 		bucket:      bucket,
 		publicBase:  publicBaseURL,
@@ -75,7 +79,8 @@ func (s *personnelService) GetPersonnelByID(id int) (*models.Personnels, error) 
 	return s.repo.GetPersonnelByID(id)
 }
 
-func (s *personnelService) CreatePersonnel(req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error) {
+func (s *personnelService) CreatePersonnel(req models.PersonnelRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Personnels, error) {
+
 	if fileImage != nil {
 		url, err := s.uploadFile(fileImage)
 		if err != nil {
@@ -83,10 +88,26 @@ func (s *personnelService) CreatePersonnel(req models.PersonnelRequest, fileImag
 		}
 		req.FileImage = url
 	}
-	return s.repo.CreatePersonnel(req)
+
+	created, err := s.repo.CreatePersonnel(req)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.auditRepo.LogAudit(
+		userID, "create", "personnel",
+		strconv.Itoa(created.PersonnelID),
+		map[string]interface{}{
+			"thai_name": created.ThaiName,
+		},
+		ip, userAgent,
+	)
+
+	return created, nil
 }
 
-func (s *personnelService) UpdatePersonnel(id int, req models.PersonnelRequest, fileImage *multipart.FileHeader) (*models.Personnels, error) {
+func (s *personnelService) UpdatePersonnel(id int, req models.PersonnelRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Personnels, error) {
+
 	if fileImage != nil {
 		url, err := s.uploadFile(fileImage)
 		if err != nil {
@@ -94,10 +115,25 @@ func (s *personnelService) UpdatePersonnel(id int, req models.PersonnelRequest, 
 		}
 		req.FileImage = url
 	}
-	return s.repo.UpdatePersonnel(id, req)
+
+	updated, err := s.repo.UpdatePersonnel(id, req)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.auditRepo.LogAudit(
+		userID, "update", "personnel", strconv.Itoa(id),
+		map[string]interface{}{
+			"thai_name": req.ThaiName,
+		},
+		ip, userAgent,
+	)
+
+	return updated, nil
 }
 
-func (s *personnelService) UpdateTeacher(id int, req models.TeacherRequest, fileImage *multipart.FileHeader) (*models.Personnels, error) {
+func (s *personnelService) UpdateTeacher(id int, req models.TeacherRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Personnels, error) {
+
 	if fileImage != nil {
 		url, err := s.uploadFile(fileImage)
 		if err != nil {
@@ -127,11 +163,40 @@ func (s *personnelService) UpdateTeacher(id int, req models.TeacherRequest, file
 		ScopusID:             req.ScopusID,
 	}
 
-	return s.repo.UpdatePersonnel(id, personnelReq)
+	updated, err := s.repo.UpdatePersonnel(id, personnelReq)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.auditRepo.LogAudit(
+		userID, "update", "personnel", strconv.Itoa(id),
+		map[string]interface{}{
+			"thai_name": req.ThaiName,
+		},
+		ip, userAgent,
+	)
+
+	return updated, nil
 }
 
-func (s *personnelService) DeletePersonnel(id int) error {
-	return s.repo.DeletePersonnel(id)
+func (s *personnelService) DeletePersonnel(id int, userID int, ip string, userAgent string) error {
+
+	err := s.repo.DeletePersonnel(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.auditRepo.LogAudit(
+		userID,
+		"delete",
+		"personnel",
+		strconv.Itoa(id),
+		map[string]interface{}{},
+		ip,
+		userAgent,
+	)
+
+	return nil
 }
 
 func (s *personnelService) uploadFile(fileHeader *multipart.FileHeader) (string, error) {

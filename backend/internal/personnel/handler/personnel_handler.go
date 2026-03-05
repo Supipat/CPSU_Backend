@@ -76,23 +76,15 @@ func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
 
 	fileImage, _ := c.FormFile("file_image")
 
-	createdPersonnel, err := h.personnelService.CreatePersonnel(req, fileImage)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	createdPersonnel, err := h.personnelService.CreatePersonnel(req, fileImage, userID, ip, userAgent)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "create", "personnel",
-		strconv.Itoa(createdPersonnel.PersonnelID),
-		map[string]interface{}{
-			"thai_name": createdPersonnel.ThaiName,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusCreated, createdPersonnel)
 }
@@ -127,7 +119,11 @@ func (h *PersonnelHandler) UpdatePersonnel(c *gin.Context) {
 
 	fileImage, _ := c.FormFile("file_image")
 
-	updatedPersonnel, err := h.personnelService.UpdatePersonnel(id, req, fileImage)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	updatedPersonnel, err := h.personnelService.UpdatePersonnel(id, req, fileImage, userID, ip, userAgent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "personnel ID not found"})
@@ -159,7 +155,11 @@ func (h *PersonnelHandler) UpdateTeacher(c *gin.Context) {
 
 	fileImage, _ := c.FormFile("file_image")
 
-	updatedTeacher, err := h.personnelService.UpdateTeacher(id, req, fileImage)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	updatedTeacher, err := h.personnelService.UpdateTeacher(id, req, fileImage, userID, ip, userAgent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "teacher ID not found"})
@@ -168,18 +168,6 @@ func (h *PersonnelHandler) UpdateTeacher(c *gin.Context) {
 		}
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "update", "personnel",
-		strconv.Itoa(updatedTeacher.PersonnelID),
-		map[string]interface{}{
-			"thai_name": updatedTeacher.ThaiName,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusOK, updatedTeacher)
 }
@@ -191,7 +179,11 @@ func (h *PersonnelHandler) DeletePersonnel(c *gin.Context) {
 		return
 	}
 
-	err = h.personnelService.DeletePersonnel(id)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	err = h.personnelService.DeletePersonnel(id, userID, ip, userAgent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "personnel not found"})
@@ -200,17 +192,6 @@ func (h *PersonnelHandler) DeletePersonnel(c *gin.Context) {
 		}
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "delete", "personnel", strconv.Itoa(id),
-		map[string]interface{}{
-			"personnel_id": id,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "personnel deleted successfully"})
 }

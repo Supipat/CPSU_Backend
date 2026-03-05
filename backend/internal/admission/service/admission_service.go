@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"mime/multipart"
 	"path/filepath"
+	"strconv"
 
 	"cpsu/internal/admission/models"
 	"cpsu/internal/admission/repository"
+
+	authrepo "cpsu/internal/auth/repository"
 
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
@@ -17,13 +20,14 @@ import (
 type AdmissionService interface {
 	GetAllAdmission(param models.AdmissionQueryParam) ([]models.Admission, error)
 	GetAdmissionByID(id int) (*models.Admission, error)
-	CreateAdmission(req models.AdmissionRequest, fileImage *multipart.FileHeader) (*models.Admission, error)
-	UpdateAdmission(id int, req models.AdmissionRequest, fileImage *multipart.FileHeader) (*models.Admission, error)
-	DeleteAdmission(id int) error
+	CreateAdmission(req models.AdmissionRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Admission, error)
+	UpdateAdmission(id int, req models.AdmissionRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Admission, error)
+	DeleteAdmission(id int, userID int, ip string, userAgent string) error
 }
 
 type admissionService struct {
 	repo        repository.AdmissionRepository
+	auditRepo   *authrepo.AuditRepository
 	minioClient *minio.Client
 	bucket      string
 	publicBase  string
@@ -31,6 +35,7 @@ type admissionService struct {
 
 func NewAdmissionService(
 	repo repository.AdmissionRepository,
+	auditRepo *authrepo.AuditRepository,
 	endpoint string,
 	accessKey string,
 	secretKey string,
@@ -49,6 +54,7 @@ func NewAdmissionService(
 
 	return &admissionService{
 		repo:        repo,
+		auditRepo:   auditRepo,
 		minioClient: client,
 		bucket:      bucket,
 		publicBase:  publicBaseURL,
@@ -63,10 +69,7 @@ func (s *admissionService) GetAdmissionByID(id int) (*models.Admission, error) {
 	return s.repo.GetAdmissionByID(id)
 }
 
-func (s *admissionService) CreateAdmission(
-	req models.AdmissionRequest,
-	fileImage *multipart.FileHeader,
-) (*models.Admission, error) {
+func (s *admissionService) CreateAdmission(req models.AdmissionRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Admission, error) {
 
 	if fileImage != nil {
 		url, err := s.uploadFile(fileImage)
@@ -76,14 +79,24 @@ func (s *admissionService) CreateAdmission(
 		req.FileImage = url
 	}
 
-	return s.repo.CreateAdmission(req)
+	created, err := s.repo.CreateAdmission(req)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.auditRepo.LogAudit(
+		userID, "create", "admission",
+		strconv.Itoa(created.AdmissionID),
+		map[string]interface{}{
+			"round": created.Round,
+		},
+		ip, userAgent,
+	)
+
+	return created, nil
 }
 
-func (s *admissionService) UpdateAdmission(
-	id int,
-	req models.AdmissionRequest,
-	fileImage *multipart.FileHeader,
-) (*models.Admission, error) {
+func (s *admissionService) UpdateAdmission(id int, req models.AdmissionRequest, fileImage *multipart.FileHeader, userID int, ip string, userAgent string) (*models.Admission, error) {
 
 	if fileImage != nil {
 		url, err := s.uploadFile(fileImage)
@@ -93,13 +106,37 @@ func (s *admissionService) UpdateAdmission(
 		req.FileImage = url
 	}
 
-	return s.repo.UpdateAdmission(id, req)
+	updated, err := s.repo.UpdateAdmission(id, req)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.auditRepo.LogAudit(
+		userID, "update", "admission", strconv.Itoa(id),
+		map[string]interface{}{
+			"round": req.Round,
+		},
+		ip, userAgent,
+	)
+
+	return updated, nil
 }
 
-func (s *admissionService) DeleteAdmission(id int) error {
-	return s.repo.DeleteAdmission(id)
-}
+func (s *admissionService) DeleteAdmission(id int, userID int, ip string, userAgent string) error {
 
+	err := s.repo.DeleteAdmission(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.auditRepo.LogAudit(
+		userID, "delete", "admission", strconv.Itoa(id),
+		map[string]interface{}{},
+		ip, userAgent,
+	)
+
+	return nil
+}
 func (s *admissionService) uploadFile(fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -128,7 +165,6 @@ func (s *admissionService) uploadFile(fileHeader *multipart.FileHeader) (string,
 		return "", err
 	}
 
-	// URL ถาวร (Public Bucket)
 	imageURL := fmt.Sprintf(
 		"%s/%s/%s",
 		s.publicBase,

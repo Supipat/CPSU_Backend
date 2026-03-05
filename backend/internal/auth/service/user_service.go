@@ -56,8 +56,9 @@ func (s *UserService) DeleteUser(targetUserID int, actorUserID int, ipAddress st
 	}
 
 	_ = s.AuditRepo.LogAudit(
-		actorUserID, "DELETE_USER", "user",
-		strconv.Itoa(targetUserID), nil,
+		actorUserID, "delete", "user",
+		strconv.Itoa(targetUserID),
+		map[string]interface{}{},
 		ipAddress, userAgent,
 	)
 

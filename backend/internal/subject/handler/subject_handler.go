@@ -9,14 +9,11 @@ import (
 	"cpsu/internal/subject/models"
 	"cpsu/internal/subject/service"
 
-	"cpsu/internal/auth/repository"
-
 	"github.com/gin-gonic/gin"
 )
 
 type SubjectHandler struct {
 	subjectService service.SubjectService
-	auditRepo      *repository.AuditRepository
 }
 
 func NewSubjectHandler(subjectService service.SubjectService) *SubjectHandler {
@@ -68,23 +65,15 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 		return
 	}
 
-	createdSubject, err := h.subjectService.CreateSubject(req)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	createdSubject, err := h.subjectService.CreateSubject(req, userID, ip, userAgent)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "create", "subject",
-		createdSubject.SubjectID,
-		map[string]interface{}{
-			"thai_subject": createdSubject.ThaiSubject,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusCreated, createdSubject)
 }
@@ -103,7 +92,11 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 		return
 	}
 
-	updatedSubject, err := h.subjectService.UpdateSubject(id, req)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	updatedSubject, err := h.subjectService.UpdateSubject(id, req, userID, ip, userAgent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "subject not found"})
@@ -112,18 +105,6 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 		}
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "update", "subject",
-		updatedSubject.SubjectID,
-		map[string]interface{}{
-			"thai_subject": updatedSubject.ThaiSubject,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusOK, updatedSubject)
 }
@@ -136,7 +117,11 @@ func (h *SubjectHandler) DeleteSubject(c *gin.Context) {
 		return
 	}
 
-	err = h.subjectService.DeleteSubject(id)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	err = h.subjectService.DeleteSubject(id, userID, ip, userAgent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "subject not found"})
@@ -145,17 +130,6 @@ func (h *SubjectHandler) DeleteSubject(c *gin.Context) {
 		}
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "delete", "subject", strconv.Itoa(id),
-		map[string]interface{}{
-			"subject_id": id,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "subject deleted successfully"})
 }

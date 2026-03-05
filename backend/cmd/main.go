@@ -102,11 +102,11 @@ func main() {
 	userHandler := userHandler.NewUserHandler(userService)
 
 	newsRepo := newsRepo.NewNewsRepository(db.GetDB())
-	newsService := newsService.NewNewsService(newsRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
+	newsService := newsService.NewNewsService(newsRepo, auditLogRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
 	newsHandler := newsHandler.NewNewsHandler(newsService)
 
 	courseRepo := courseRepo.NewCourseRepository(db.GetDB())
-	courseService := courseService.NewCourseService(courseRepo)
+	courseService := courseService.NewCourseService(courseRepo, auditLogRepo)
 	courseHandler := courseHandler.NewCourseHandler(courseService)
 
 	structureRepo := structureRepo.NewCourseStructureRepository(db.GetDB())
@@ -118,20 +118,20 @@ func main() {
 	roadmapHandler := roadmapHandler.NewRoadmapHandler(roadmapService)
 
 	subjectRepo := subjectRepo.NewSubjectRepository(db.GetDB())
-	subjectService := subjectService.NewSubjectService(subjectRepo)
+	subjectService := subjectService.NewSubjectService(subjectRepo, auditLogRepo)
 	subjectHandler := subjectHandler.NewSubjectHandler(subjectService)
 
 	personnelRepo := personnelRepo.NewPersonnelRepository(db.GetDB())
-	personnelService := personnelService.NewPersonnelService(personnelRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
+	personnelService := personnelService.NewPersonnelService(personnelRepo, auditLogRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
 	personnelHandler := personnelHandler.NewPersonnelHandler(personnelService)
 	service.SyncScopus(personnelService)
 
 	admissionRepo := admissionRepo.NewAdmissionRepository(db.GetDB())
-	admissionService := admissionService.NewAdmissionService(admissionRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
+	admissionService := admissionService.NewAdmissionService(admissionRepo, auditLogRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
 	admissionHandler := admissionHandler.NewAdmissionHandler(admissionService)
 
 	calendarRepo := calendarRepo.NewCalendarRepository(db.GetDB())
-	calendarService := calendarService.NewCalendarService(calendarRepo)
+	calendarService := calendarService.NewCalendarService(calendarRepo, auditLogRepo)
 	calendarHandler := calendarHandler.NewCalendarHandler(calendarService)
 
 	go func() {
@@ -209,6 +209,19 @@ func main() {
 
 	admin := protected.Group("/admin")
 	{
+
+		userAdmin := admin.Group("/user")
+		{
+			userAdmin.GET("", permissionMiddleware.RequirePermission("users:read"), userHandler.GetAllUser)
+			userAdmin.POST("", permissionMiddleware.RequirePermission("users:create"), userHandler.CreateUser)
+			userAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("users:delete"), userHandler.DeleteUser)
+		}
+
+		permissionAdmin := admin.Group("/permission/user")
+		{
+			permissionAdmin.POST("/:id", permissionMiddleware.RequirePermission("roles:assign"), roleHandler.AssignRole)
+		}
+
 		newsAdmin := admin.Group("/news")
 		{
 			newsAdmin.GET("", permissionMiddleware.RequirePermission("news:read"), newsHandler.GetAllNews)
@@ -216,18 +229,6 @@ func main() {
 			newsAdmin.POST("", permissionMiddleware.RequirePermission("news:create"), newsHandler.CreateNews)
 			newsAdmin.PUT("/:id", permissionMiddleware.RequirePermission("news:update"), newsHandler.UpdateNews)
 			newsAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("news:delete"), newsHandler.DeleteNews)
-		}
-
-		userAdmin := admin.Group("/user")
-		{
-			userAdmin.GET("", permissionMiddleware.RequirePermission("users:read"), userHandler.GetAllUser)
-			userAdmin.POST("", permissionMiddleware.RequirePermission("users:create"), userHandler.CreateUser)
-			userAdmin.PUT("/:id", permissionMiddleware.RequirePermission("users:delete"), userHandler.DeleteUser)
-		}
-
-		permissionAdmin := admin.Group("/permission/user")
-		{
-			permissionAdmin.POST("/:id", permissionMiddleware.RequirePermission("roles:assign"), roleHandler.AssignRole)
 		}
 
 		courseAdmin := admin.Group("/course")

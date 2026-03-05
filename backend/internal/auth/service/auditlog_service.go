@@ -44,17 +44,17 @@ func (s *AuditService) GetAllAuditLog(ctx context.Context) ([]models.AuditLogRes
 func Description(a models.AuditLog) string {
 	switch a.Action {
 	case "login":
-		return "คุณเข้าสู่ระบบแล้ว"
+		return "เข้าสู่ระบบ"
 	case "logout":
-		return "คุณออกจากระบบแล้ว"
+		return "ออกจากระบบ"
 	case "create":
-		return "คุณเพิ่มข้อมูลใหม่แล้ว"
+		return "เพิ่มข้อมูลใหม่"
 	case "update":
-		return "คุณแก้ไขข้อมูลแล้ว"
+		return "แก้ไขข้อมูล"
 	case "delete":
-		return "คุณลบข้อมูลแล้ว"
+		return "ลบข้อมูล"
 	case "assign_role":
-		return "คุณให้สิทธิ์ผู้ใช้งานแล้ว"
+		return "ให้สิทธิ์ผู้ใช้งาน"
 	default:
 		return "มีการดำเนินการในระบบ"
 	}

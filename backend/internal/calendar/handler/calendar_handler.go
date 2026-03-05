@@ -67,23 +67,15 @@ func (h *CalendarHandler) CreateCalendar(c *gin.Context) {
 		return
 	}
 
-	createdCalendar, err := h.calendarService.CreateCalendar(req)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	createdCalendar, err := h.calendarService.CreateCalendar(req, userID, ip, userAgent)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "create", "calendar",
-		strconv.Itoa(createdCalendar.CalenderID),
-		map[string]interface{}{
-			"title": createdCalendar.Title,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusCreated, createdCalendar)
 }
@@ -102,7 +94,11 @@ func (h *CalendarHandler) UpdateCalendar(c *gin.Context) {
 		return
 	}
 
-	updatedCalendar, err := h.calendarService.UpdateCalendar(id, req)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	updatedCalendar, err := h.calendarService.UpdateCalendar(id, req, userID, ip, userAgent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "calendar not found"})
@@ -111,18 +107,6 @@ func (h *CalendarHandler) UpdateCalendar(c *gin.Context) {
 		}
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "update", "calendar",
-		strconv.Itoa(updatedCalendar.CalenderID),
-		map[string]interface{}{
-			"title": updatedCalendar.Title,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusOK, updatedCalendar)
 }
@@ -135,7 +119,11 @@ func (h *CalendarHandler) DeleteCalendar(c *gin.Context) {
 		return
 	}
 
-	err = h.calendarService.DeleteCalendar(id)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	err = h.calendarService.DeleteCalendar(id, userID, ip, userAgent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "calendar not found"})
@@ -144,17 +132,6 @@ func (h *CalendarHandler) DeleteCalendar(c *gin.Context) {
 		}
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "delete", "calendar", strconv.Itoa(id),
-		map[string]interface{}{
-			"calendar_id": id,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "calendar deleted successfully"})
 }

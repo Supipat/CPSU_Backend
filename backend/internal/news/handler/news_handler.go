@@ -68,6 +68,7 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 	content := c.PostForm("content")
 	typeIDStr := c.PostForm("type_id")
 	detailURL := c.PostForm("detail_url")
+
 	coverImage, _ := c.FormFile("cover_image")
 
 	typeID, err := strconv.Atoi(typeIDStr)
@@ -87,25 +88,18 @@ func (h *NewsHandler) CreateNews(c *gin.Context) {
 		fileImages = form.File["images"]
 	}
 
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
 	created, err := h.newsService.CreateNews(
-		title, content, typeID, "", detailURL, coverImage, fileImages,
+		title, content, typeID, "", detailURL, coverImage, fileImages, userID, ip, userAgent,
 	)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "create", "news",
-		strconv.Itoa(created.NewsID),
-		map[string]interface{}{
-			"title": created.Title,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusCreated, created)
 }
@@ -141,23 +135,15 @@ func (h *NewsHandler) UpdateNews(c *gin.Context) {
 		fileImages = form.File["images"]
 	}
 
-	updated, err := h.newsService.UpdateNews(id, title, content, typeID, "", detailURL, coverImage, fileImages)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	updated, err := h.newsService.UpdateNews(id, title, content, typeID, "", detailURL, coverImage, fileImages, userID, ip, userAgent)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "update", "news",
-		strconv.Itoa(updated.NewsID),
-		map[string]interface{}{
-			"title": updated.Title,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusOK, updated)
 }
@@ -170,7 +156,11 @@ func (h *NewsHandler) DeleteNews(c *gin.Context) {
 		return
 	}
 
-	err = h.newsService.DeleteNews(id)
+	userID := c.GetInt("user_id")
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	err = h.newsService.DeleteNews(id, userID, ip, userAgent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "news ID not found"})
@@ -179,17 +169,6 @@ func (h *NewsHandler) DeleteNews(c *gin.Context) {
 		}
 		return
 	}
-
-	userID := c.GetInt("user_id")
-
-	_ = h.auditRepo.LogAudit(
-		userID, "delete", "news", strconv.Itoa(id),
-		map[string]interface{}{
-			"news_id": id,
-		},
-		c.ClientIP(),
-		c.GetHeader("User-Agent"),
-	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "News deleted successfully"})
 }

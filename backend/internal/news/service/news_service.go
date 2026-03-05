@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"mime/multipart"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"cpsu/internal/news/models"
 	"cpsu/internal/news/repository"
+	newsrepo "cpsu/internal/news/repository"
+
+	authrepo "cpsu/internal/auth/repository"
 
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
@@ -19,20 +23,22 @@ import (
 type NewsService interface {
 	GetAllNews(param models.NewsQueryParam) ([]models.News, error)
 	GetNewsByID(id int) (*models.News, error)
-	CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error)
-	UpdateNews(id int, title, content string, type_id int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error)
-	DeleteNews(id int) error
+	CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader, userID int, ip string, userAgent string) (*models.News, error)
+	UpdateNews(id int, title, content string, type_id int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader, userID int, ip string, userAgent string) (*models.News, error)
+	DeleteNews(id int, userID int, ip string, userAgent string) error
 }
 
 type newsService struct {
-	repo        repository.NewsRepository
+	repo        newsrepo.NewsRepository
+	auditRepo   *authrepo.AuditRepository
 	minioClient *minio.Client
 	bucket      string
 	publicBase  string
 }
 
 func NewNewsService(
-	repo repository.NewsRepository,
+	repo newsrepo.NewsRepository,
+	auditRepo *authrepo.AuditRepository,
 	endpoint string,
 	accessKey string,
 	secretKey string,
@@ -51,6 +57,7 @@ func NewNewsService(
 
 	return &newsService{
 		repo:        repo,
+		auditRepo:   auditRepo,
 		minioClient: client,
 		bucket:      bucket,
 		publicBase:  publicBaseURL,
@@ -79,7 +86,7 @@ func (s *newsService) GetNewsByID(id int) (*models.News, error) {
 	return s.repo.GetNewsByID(id)
 }
 
-func (s *newsService) CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error) {
+func (s *newsService) CreateNews(title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader, userID int, ip string, userAgent string) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
@@ -119,10 +126,19 @@ func (s *newsService) CreateNews(title, content string, typeID int, typeName, de
 		return nil, err
 	}
 
+	_ = s.auditRepo.LogAudit(
+		userID, "create", "news", strconv.Itoa(created.NewsID),
+		map[string]interface{}{
+			"title": created.Title,
+		},
+		ip,
+		userAgent,
+	)
+
 	return s.repo.GetNewsByID(created.NewsID)
 }
 
-func (s *newsService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader) (*models.News, error) {
+func (s *newsService) UpdateNews(id int, title, content string, typeID int, typeName, detailURL string, coverImage *multipart.FileHeader, images []*multipart.FileHeader, userID int, ip string, userAgent string) (*models.News, error) {
 	if strings.TrimSpace(title) == "" || strings.TrimSpace(content) == "" {
 		return nil, errors.New("title and content are required")
 	}
@@ -167,13 +183,35 @@ func (s *newsService) UpdateNews(id int, title, content string, typeID int, type
 		return nil, err
 	}
 
+	_ = s.auditRepo.LogAudit(
+		userID,
+		"update",
+		"news",
+		strconv.Itoa(id),
+		map[string]interface{}{
+			"title": title,
+		},
+		ip,
+		userAgent,
+	)
+
 	return s.repo.GetNewsByID(id)
 }
 
-func (s *newsService) DeleteNews(id int) error {
-	return s.repo.DeleteNews(id)
-}
+func (s *newsService) DeleteNews(id int, userID int, ip string, userAgent string) error {
 
+	err := s.repo.DeleteNews(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.auditRepo.LogAudit(
+		userID, "delete", "news", strconv.Itoa(id),
+		map[string]interface{}{}, ip, userAgent,
+	)
+
+	return nil
+}
 func (s *newsService) UploadImages(fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
