@@ -104,7 +104,7 @@ INSERT INTO news_images(news_id,file_image) VALUES
 ((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
     'http://localhost:9000/images/news/reward2nd4.jpg'),
 ((SELECT news_id FROM news WHERE title = 'งานสานสัมพันธ์ภาคคอมพิวเตอร์' LIMIT 1),
-    'http://localhost:9000/images/news/cpsu_event.png');
+    'http://localhost:9000/images/news/cpsu_event.jpg');
 
 -- create courses
 
