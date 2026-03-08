@@ -156,28 +156,34 @@ func (r *personnelRepository) CreatePersonnel(req models.PersonnelRequest) (*mod
 	}
 	defer tx.Rollback()
 
-	var academicID *int
-	if req.AcademicPositionID != nil {
-		academicID = req.AcademicPositionID
-	} else if req.ThaiAcademicPosition != nil || req.EngAcademicPosition != nil {
-		var id int
-		err = tx.QueryRow(`SELECT academic_position_id FROM academic_position WHERE thai_academic_position = $1 AND eng_academic_position = $2`, req.ThaiAcademicPosition, req.EngAcademicPosition).Scan(&id)
+	var departmentID *int
+
+	if req.DepartmentPositionID != nil {
+		departmentID = req.DepartmentPositionID
+	} else if req.DepartmentPositionName != nil {
+
+		var depID int
+		err = tx.QueryRow(`
+		SELECT department_position_id FROM department_position WHERE department_position_name = $1`, *req.DepartmentPositionName).Scan(&depID)
 		if err == sql.ErrNoRows {
-			err = tx.QueryRow(`INSERT INTO academic_position (thai_academic_position, eng_academic_position) VALUES($1,$2) RETURNING academic_position_id`, req.ThaiAcademicPosition, req.EngAcademicPosition).Scan(&id)
+			err = tx.QueryRow(`
+			INSERT INTO department_position (department_position_name) VALUES ($1) RETURNING department_position_id`, *req.DepartmentPositionName).Scan(&depID)
 			if err != nil {
 				return nil, err
 			}
+
 		} else if err != nil {
 			return nil, err
 		}
-		academicID = &id
+
+		departmentID = &depID
 	}
 
-	var academicPositionID interface{}
-	if academicID != nil {
-		academicPositionID = *academicID
+	var departmentPositionID interface{}
+	if departmentID != nil {
+		departmentPositionID = *departmentID
 	} else {
-		academicPositionID = nil
+		departmentPositionID = nil
 	}
 
 	var newID int
@@ -188,7 +194,7 @@ func (r *personnelRepository) CreatePersonnel(req models.PersonnelRequest) (*mod
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		RETURNING personnel_id
 	`,
-		req.TypePersonnel, req.DepartmentPositionID, academicPositionID,
+		req.TypePersonnel, departmentPositionID, req.AcademicPositionID,
 		req.ThaiName, req.EngName, req.Education, req.RelatedFields,
 		req.Email, req.Website, req.FileImage, req.ScopusID,
 	).Scan(&newID)
@@ -210,28 +216,34 @@ func (r *personnelRepository) UpdatePersonnel(id int, req models.PersonnelReques
 	}
 	defer tx.Rollback()
 
-	var academicID *int
-	if req.AcademicPositionID != nil {
-		academicID = req.AcademicPositionID
-	} else if req.ThaiAcademicPosition != nil || req.EngAcademicPosition != nil {
-		var aid int
-		err = tx.QueryRow(`SELECT academic_position_id FROM academic_position WHERE thai_academic_position = $1 AND eng_academic_position = $2`, req.ThaiAcademicPosition, req.EngAcademicPosition).Scan(&aid)
+	var departmentID *int
+
+	if req.DepartmentPositionID != nil {
+		departmentID = req.DepartmentPositionID
+	} else if req.DepartmentPositionName != nil {
+
+		var depID int
+		err = tx.QueryRow(`
+		SELECT department_position_id FROM department_position WHERE department_position_name = $1`, req.DepartmentPositionName).Scan(&depID)
 		if err == sql.ErrNoRows {
-			err = tx.QueryRow(`INSERT INTO academic_position (thai_academic_position, eng_academic_position) VALUES($1,$2) RETURNING academic_position_id`, req.ThaiAcademicPosition, req.EngAcademicPosition).Scan(&aid)
+			err = tx.QueryRow(`
+			INSERT INTO department_position (department_position_name) VALUES ($1) RETURNING department_position_id`, req.DepartmentPositionName).Scan(&depID)
 			if err != nil {
 				return nil, err
 			}
+
 		} else if err != nil {
 			return nil, err
 		}
-		academicID = &aid
+
+		departmentID = &depID
 	}
 
-	var academicPositionID interface{}
-	if academicID != nil {
-		academicPositionID = *academicID
+	var departmentPositionID interface{}
+	if departmentID != nil {
+		departmentPositionID = *departmentID
 	} else {
-		academicPositionID = nil
+		departmentPositionID = nil
 	}
 
 	var updatedID int
@@ -242,7 +254,7 @@ func (r *personnelRepository) UpdatePersonnel(id int, req models.PersonnelReques
 		WHERE personnel_id=$12
 		RETURNING personnel_id
 	`,
-		req.TypePersonnel, req.DepartmentPositionID, academicPositionID,
+		req.TypePersonnel, departmentPositionID, req.AcademicPositionID,
 		req.ThaiName, req.EngName, req.Education, req.RelatedFields,
 		req.Email, req.Website, req.FileImage, req.ScopusID, id,
 	).Scan(&updatedID)

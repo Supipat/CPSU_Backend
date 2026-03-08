@@ -53,28 +53,26 @@ func (h *PersonnelHandler) GetPersonnelByID(c *gin.Context) {
 }
 
 func (h *PersonnelHandler) CreatePersonnel(c *gin.Context) {
-	departmentPositionID, err := strconv.Atoi(c.PostForm("department_position_id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid department_position_id"})
-		return
-	}
 
 	req := models.PersonnelRequest{
-		TypePersonnel:        c.PostForm("type_personnel"),
-		DepartmentPositionID: departmentPositionID,
-		ThaiAcademicPosition: strPtr(c.PostForm("thai_academic_position")),
-		EngAcademicPosition:  strPtr(c.PostForm("eng_academic_position")),
-		ThaiName:             c.PostForm("thai_name"),
-		EngName:              c.PostForm("eng_name"),
-		Education:            strPtr(c.PostForm("education")),
-		RelatedFields:        strPtr(c.PostForm("related_fields")),
-		Email:                strPtr(c.PostForm("email")),
-		Website:              strPtr(c.PostForm("website")),
-		ScopusID:             strPtr(c.PostForm("scopus_id")),
-		AcademicPositionID:   intPtr(c.PostForm("academic_position_id")),
+		TypePersonnel:          c.PostForm("type_personnel"),
+		DepartmentPositionID:   intPtr(c.PostForm("department_position_id")),
+		DepartmentPositionName: strPtr(c.PostForm("department_position_name")),
+		ThaiAcademicPosition:   strPtr(c.PostForm("thai_academic_position")),
+		EngAcademicPosition:    strPtr(c.PostForm("eng_academic_position")),
+		ThaiName:               c.PostForm("thai_name"),
+		EngName:                c.PostForm("eng_name"),
+		Education:              strPtr(c.PostForm("education")),
+		RelatedFields:          strPtr(c.PostForm("related_fields")),
+		Email:                  strPtr(c.PostForm("email")),
+		Website:                strPtr(c.PostForm("website")),
+		ScopusID:               strPtr(c.PostForm("scopus_id")),
+		AcademicPositionID:     intPtr(c.PostForm("academic_position_id")),
 	}
-
-	fileImage, _ := c.FormFile("file_image")
+	fileImage, err := c.FormFile("file_image")
+	if err != nil {
+		fileImage = nil
+	}
 
 	userID := c.GetInt("user_id")
 	ip := c.ClientIP()
@@ -96,28 +94,26 @@ func (h *PersonnelHandler) UpdatePersonnel(c *gin.Context) {
 		return
 	}
 
-	departmentPositionID, err := strconv.Atoi(c.PostForm("department_position_id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid department_position_id"})
-		return
-	}
-
 	req := models.PersonnelRequest{
-		TypePersonnel:        c.PostForm("type_personnel"),
-		DepartmentPositionID: departmentPositionID,
-		ThaiAcademicPosition: strPtr(c.PostForm("thai_academic_position")),
-		EngAcademicPosition:  strPtr(c.PostForm("eng_academic_position")),
-		ThaiName:             c.PostForm("thai_name"),
-		EngName:              c.PostForm("eng_name"),
-		Education:            strPtr(c.PostForm("education")),
-		RelatedFields:        strPtr(c.PostForm("related_fields")),
-		Email:                strPtr(c.PostForm("email")),
-		Website:              strPtr(c.PostForm("website")),
-		ScopusID:             strPtr(c.PostForm("scopus_id")),
-		AcademicPositionID:   intPtr(c.PostForm("academic_position_id")),
+		TypePersonnel:          c.PostForm("type_personnel"),
+		DepartmentPositionID:   intPtr(c.PostForm("department_position_id")),
+		DepartmentPositionName: strPtr(c.PostForm("department_position_name")),
+		ThaiAcademicPosition:   strPtr(c.PostForm("thai_academic_position")),
+		EngAcademicPosition:    strPtr(c.PostForm("eng_academic_position")),
+		ThaiName:               c.PostForm("thai_name"),
+		EngName:                c.PostForm("eng_name"),
+		Education:              strPtr(c.PostForm("education")),
+		RelatedFields:          strPtr(c.PostForm("related_fields")),
+		Email:                  strPtr(c.PostForm("email")),
+		Website:                strPtr(c.PostForm("website")),
+		ScopusID:               strPtr(c.PostForm("scopus_id")),
+		AcademicPositionID:     intPtr(c.PostForm("academic_position_id")),
 	}
 
-	fileImage, _ := c.FormFile("file_image")
+	fileImage, err := c.FormFile("file_image")
+	if err != nil {
+		fileImage = nil
+	}
 
 	userID := c.GetInt("user_id")
 	ip := c.ClientIP()
@@ -153,7 +149,10 @@ func (h *PersonnelHandler) UpdateTeacher(c *gin.Context) {
 		ScopusID:      strPtr(c.PostForm("scopus_id")),
 	}
 
-	fileImage, _ := c.FormFile("file_image")
+	fileImage, err := c.FormFile("file_image")
+	if err != nil {
+		fileImage = nil
+	}
 
 	userID := c.GetInt("user_id")
 	ip := c.ClientIP()

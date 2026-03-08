@@ -149,7 +149,7 @@ func (s *personnelService) UpdateTeacher(id int, req models.TeacherRequest, file
 
 	personnelReq := models.PersonnelRequest{
 		TypePersonnel:        existing.TypePersonnel,
-		DepartmentPositionID: existing.DepartmentPositionID,
+		DepartmentPositionID: &existing.DepartmentPositionID,
 		AcademicPositionID:   existing.AcademicPositionID,
 		ThaiAcademicPosition: existing.ThaiAcademicPosition,
 		EngAcademicPosition:  existing.EngAcademicPosition,

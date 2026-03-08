@@ -298,6 +298,16 @@ INSERT INTO academic_position(thai_academic_position,eng_academic_position) VALU
 ('อ.ดร.','Dr.'),
 ('อ.','');
 
+-- ('ศ.ดร.','Prof.Dr.'),
+-- ('ศ.','Prof.'),
+-- ('รศ.ดร.','Assoc.Prof.Dr.'), 1
+-- ('รศ.','Assoc.Prof.'),
+-- ('ผศ.ดร.','Asst.Prof.Dr.'), 2
+-- ('ผศ.','Asst.Prof.'), 3
+-- ('อ.ดร.','Dr.'), 4
+-- ('อ.',''),
+-- ('ดร.','Dr.');
+
 COPY personnels(type_personnel,department_position_id,academic_position_id,thai_name,eng_name,education,related_fields,email,website,file_image,scopus_id)
 FROM '/docker-entrypoint-initdb.d/csv/personnel/personnels.csv'
 WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
