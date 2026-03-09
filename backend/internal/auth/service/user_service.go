@@ -3,7 +3,6 @@ package service
 import (
 	"cpsu/internal/auth/models"
 	"cpsu/internal/auth/repository"
-	"cpsu/internal/auth/utils"
 	"strconv"
 )
 
@@ -27,12 +26,8 @@ func (s *UserService) GetAllUser(param models.UserQueryParam) ([]models.UserResp
 }
 
 func (s *UserService) CreateUser(req models.UserRequest, ipAddress string, userAgent string) error {
-	hashedPassword, err := utils.HashPassword(req.Password)
-	if err != nil {
-		return err
-	}
 
-	userID, err := s.UserRepo.CreateUser(req.Username, req.Email, hashedPassword)
+	userID, err := s.UserRepo.CreateUser(req.Username, req.Email)
 	if err != nil {
 		return err
 	}

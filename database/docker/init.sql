@@ -393,7 +393,7 @@ INSERT INTO users(username, email) VALUES
 ('aonpong_p','aonpong_p@su.ac.th'),
 ('kanawong_r','kanawong_r@su.ac.th'),
 ('muangon_w','muangon_w@su.ac.th'),
-('waijanya_s','waijanya_s@su.ac.th'),
+-- ('waijanya_s','waijanya_s@su.ac.th'),
 ('pongpinigpinyo_s','pongpinigpinyo_s@su.ac.th'),
 ('chaowalit_o','chaowalit_o@su.ac.th'),
 ('tangjui_n','tangjui_n@su.ac.th'),
@@ -414,6 +414,7 @@ INSERT INTO users(username, email) VALUES
 
 -- test Admin
 INSERT INTO users(username, email, password_hash) VALUES
+('waijanya_s','waijanya_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('supapanchai_r','supapanchai_r@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('saengson_s','saengson_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
 

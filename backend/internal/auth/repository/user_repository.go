@@ -102,16 +102,16 @@ func (r *UserRepository) GetAllUser(param models.UserQueryParam) ([]models.UserR
 	return result, nil
 }
 
-func (r *UserRepository) CreateUser(username, email, passwordHash string) (int, error) {
+func (r *UserRepository) CreateUser(username, email string) (int, error) {
 	query := `
-		INSERT INTO users (username, email, password_hash, is_active)
-		VALUES ($1, $2, $3, true)
+		INSERT INTO users (username, email, is_active)
+		VALUES ($1, $2, true)
 		RETURNING user_id
 	`
 
 	var userID int
 	err := r.db.QueryRow(
-		query, username, email, passwordHash,
+		query, username, email,
 	).Scan(&userID)
 
 	if err != nil {
