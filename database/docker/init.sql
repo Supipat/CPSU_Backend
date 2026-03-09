@@ -403,8 +403,8 @@ INSERT INTO users(username, email) VALUES
 ('rodhetbhai_s','rodhetbhai_s@su.ac.th'),
 ('hongwitayakorn_a','hongwitayakorn_a@su.ac.th'),
 -- Admin, Staff
-('luangsamankul_p','luangsamankul_p@su.ac.th'),
-('sonsanguan_w','sonsanguan_w@su.ac.th'),
+-- ('luangsamankul_p','luangsamankul_p@su.ac.th'),
+-- ('sonsanguan_w','sonsanguan_w@su.ac.th'),
 ('tatong_k','tatong_k@su.ac.th'),
 ('jancharoen_k','jancharoen_k@su.ac.th'),
 ('chaysirikhae_t','chaysirikhae_t@su.ac.th'),
@@ -414,6 +414,8 @@ INSERT INTO users(username, email) VALUES
 
 -- test Admin
 INSERT INTO users(username, email, password_hash) VALUES
+('sonsanguan_w','sonsanguan_w@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('luangsamankul_p','luangsamankul_p@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('waijanya_s','waijanya_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('supapanchai_r','supapanchai_r@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('saengson_s','saengson_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
