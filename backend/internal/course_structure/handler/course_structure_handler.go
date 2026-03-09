@@ -58,11 +58,31 @@ func (h *CourseStructureHandler) GetCourseStructureByID(c *gin.Context) {
 }
 
 func (h *CourseStructureHandler) CreateCourseStructure(c *gin.Context) {
-	var req models.CourseStructureRequest
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	courseID := c.PostForm("course_id")
+
+	file, err := c.FormFile("detail")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
 		return
+	}
+
+	openedFile, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer openedFile.Close()
+
+	detail, err := h.courseStructureService.UploadExcel(openedFile)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	req := models.CourseStructureRequest{
+		CourseID: courseID,
+		Detail:   detail,
 	}
 
 	created, err := h.courseStructureService.CreateCourseStructure(req)
@@ -82,10 +102,30 @@ func (h *CourseStructureHandler) UpdateCourseStructure(c *gin.Context) {
 		return
 	}
 
-	var req models.CourseStructureRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	courseID := c.PostForm("course_id")
+
+	file, err := c.FormFile("detail")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
 		return
+	}
+
+	openedFile, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer openedFile.Close()
+
+	detail, err := h.courseStructureService.UploadExcel(openedFile)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	req := models.CourseStructureRequest{
+		CourseID: courseID,
+		Detail:   detail,
 	}
 
 	updated, err := h.courseStructureService.UpdateCourseStructure(id, req)
