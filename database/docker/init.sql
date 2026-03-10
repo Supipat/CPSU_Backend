@@ -387,8 +387,8 @@ INSERT INTO users(username, email) VALUES
 ('tantatsanawong_p','tantatsanawong_p@su.ac.th'),
 ('sitdhisanguan_k','sitdhisanguan_k@su.ac.th'),
 ('seepanomwan_k','seepanomwan_k@su.ac.th'),
-('praditwong_k','praditwong_k@su.ac.th'),
-('promrit_n','promrit_n@su.ac.th'),
+-- ('praditwong_k','praditwong_k@su.ac.th'),
+-- ('promrit_n','promrit_n@su.ac.th'),
 ('soonklang_t','soonklang_t@su.ac.th'),
 ('aonpong_p','aonpong_p@su.ac.th'),
 ('kanawong_r','kanawong_r@su.ac.th'),
@@ -401,7 +401,7 @@ INSERT INTO users(username, email) VALUES
 ('wasara','wasara@cp.su.ac.th'), --*
 ('arampongsanuwat_s','arampongsanuwat_s@su.ac.th'),
 ('rodhetbhai_s','rodhetbhai_s@su.ac.th'),
-('hongwitayakorn_a','hongwitayakorn_a@su.ac.th'),
+-- ('hongwitayakorn_a','hongwitayakorn_a@su.ac.th'),
 -- Admin, Staff
 -- ('luangsamankul_p','luangsamankul_p@su.ac.th'),
 -- ('sonsanguan_w','sonsanguan_w@su.ac.th'),
@@ -417,6 +417,9 @@ INSERT INTO users(username, email, password_hash) VALUES
 ('sonsanguan_w','sonsanguan_w@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('luangsamankul_p','luangsamankul_p@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('waijanya_s','waijanya_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('promrit_n','promrit_n@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('praditwong_k','praditwong_k@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('hongwitayakorn_a','hongwitayakorn_a@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('supapanchai_r','supapanchai_r@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('saengson_s','saengson_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
 
