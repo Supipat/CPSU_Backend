@@ -338,7 +338,7 @@ CREATE TABLE IF NOT EXISTS research_authors (
 
 CREATE TABLE IF NOT EXISTS admission (
     admission_id SERIAL PRIMARY KEY,
-    round VARCHAR(25) NOT NULL,
+    round TEXT NOT NULL,
     detail TEXT NOT NULL,
     file_image TEXT NOT NULL
 );
