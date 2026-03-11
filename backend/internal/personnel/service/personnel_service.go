@@ -291,34 +291,54 @@ func (s *personnelService) getAuthorsFromAbstract(eid string) []string {
 		return []string{}
 	}
 
-	root := data["abstracts-retrieval-response"].(map[string]interface{})
+	root, ok := data["abstracts-retrieval-response"].(map[string]interface{})
+	if !ok {
+		return []string{}
+	}
 
 	item, ok := root["item"].(map[string]interface{})
 	if ok {
+
 		bib := item["bibrecord"].(map[string]interface{})
 		head := bib["head"].(map[string]interface{})
 
-		var groups []interface{}
-
 		ag := head["author-group"]
+
+		var groups []interface{}
 
 		if arr, ok := ag.([]interface{}); ok {
 			groups = arr
 		} else if obj, ok := ag.(map[string]interface{}); ok {
 			groups = []interface{}{obj}
-		} else {
-			return []string{}
 		}
 
 		var authors []string
-		for _, g := range groups {
-			group := g.(map[string]interface{})
-			list := group["author"].([]interface{})
 
-			for _, a := range list {
-				author := a.(map[string]interface{})
-				name := author["preferred-name"].(map[string]interface{})["ce:indexed-name"].(string)
-				authors = append(authors, name)
+		for _, g := range groups {
+
+			group := g.(map[string]interface{})
+			a := group["author"]
+
+			var authorList []interface{}
+
+			if arr, ok := a.([]interface{}); ok {
+				authorList = arr
+			} else if obj, ok := a.(map[string]interface{}); ok {
+				authorList = []interface{}{obj}
+			}
+
+			for _, x := range authorList {
+
+				author := x.(map[string]interface{})
+				pn := author["preferred-name"].(map[string]interface{})
+
+				if name, ok := pn["ce:indexed-name"].(string); ok {
+					authors = append(authors, name)
+				} else {
+					given := fmt.Sprint(pn["ce:given-name"])
+					sur := fmt.Sprint(pn["ce:surname"])
+					authors = append(authors, strings.TrimSpace(given+" "+sur))
+				}
 			}
 		}
 
@@ -410,7 +430,11 @@ func (s *personnelService) GetResearchFromScopus(scopusID string) ([]models.Rese
 			continue
 		}
 
+		fmt.Println("EID:", eid)
+
 		authors := s.getAuthorsFromAbstract(eid)
+
+		fmt.Println("Authors:", authors)
 
 		researches = append(researches, models.Research{
 			Title:     fmt.Sprint(item["dc:title"]),
