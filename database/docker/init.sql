@@ -422,8 +422,7 @@ INSERT INTO users(username, email, password_hash) VALUES
 ('supapanchai_r','supapanchai_r@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('saengson_s','saengson_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('admin','admin@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('staff','staff@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('teacher','teacher@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
+('staff','staff@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
 
 -- create role
 
@@ -482,8 +481,7 @@ WHERE u.username IN (
     'wasara',
     'arampongsanuwat_s',
     'rodhetbhai_s',
-    'hongwitayakorn_a',
-    'teacher'
+    'hongwitayakorn_a'
 );
 
 INSERT INTO user_roles (user_id, role_id, assigned_by)
