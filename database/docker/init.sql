@@ -408,8 +408,7 @@ INSERT INTO users(username, email) VALUES
 ('tatong_k','tatong_k@su.ac.th'),
 ('jancharoen_k','jancharoen_k@su.ac.th'),
 ('chaysirikhae_t','chaysirikhae_t@su.ac.th'),
-('yahom_s','yahom_s@su.ac.th'),
-('khanthamala_a','khanthamala_a@su.ac.th'); --*
+('yahom_s','yahom_s@su.ac.th');
 
 
 -- test Admin
@@ -421,7 +420,10 @@ INSERT INTO users(username, email, password_hash) VALUES
 ('praditwong_k','praditwong_k@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('hongwitayakorn_a','hongwitayakorn_a@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('supapanchai_r','supapanchai_r@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('saengson_s','saengson_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
+('saengson_s','saengson_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('admin','admin@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('staff','staff@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('teacher','teacher@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
 
 -- create role
 
@@ -480,7 +482,8 @@ WHERE u.username IN (
     'wasara',
     'arampongsanuwat_s',
     'rodhetbhai_s',
-    'hongwitayakorn_a'
+    'hongwitayakorn_a',
+    'teacher'
 );
 
 INSERT INTO user_roles (user_id, role_id, assigned_by)
@@ -494,7 +497,7 @@ WHERE u.username IN (
     'jancharoen_k',
     'chaysirikhae_t',
     'yahom_s',
-    'khanthamala_a'
+    'staff'
 );
 
 INSERT INTO user_roles (user_id, role_id, assigned_by)
@@ -505,7 +508,8 @@ JOIN users assigner ON assigner.username = 'sonsanguan_w'
 WHERE u.username IN (
     'sonsanguan_w',
     'supapanchai_r',
-    'saengson_s'
+    'saengson_s',
+    'admin'
 );
 
 -- create permissions
