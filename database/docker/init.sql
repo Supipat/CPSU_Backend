@@ -403,26 +403,24 @@ INSERT INTO users(username, email) VALUES
 ('rodhetbhai_s','rodhetbhai_s@su.ac.th'),
 -- ('hongwitayakorn_a','hongwitayakorn_a@su.ac.th'),
 -- Admin, Staff
--- ('luangsamankul_p','luangsamankul_p@su.ac.th'),
+('luangsamankul_p','luangsamankul_p@su.ac.th'),
 -- ('sonsanguan_w','sonsanguan_w@su.ac.th'),
 ('tatong_k','tatong_k@su.ac.th'),
 ('jancharoen_k','jancharoen_k@su.ac.th'),
 ('chaysirikhae_t','chaysirikhae_t@su.ac.th'),
-('yahom_s','yahom_s@su.ac.th');
+('yahom_s','yahom_s@su.ac.th'),
+('khanthamala','khanthamala_a@su.ac.th');
 
 
 -- test Admin
 INSERT INTO users(username, email, password_hash) VALUES
 ('sonsanguan_w','sonsanguan_w@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('luangsamankul_p','luangsamankul_p@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('waijanya_s','waijanya_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('promrit_n','promrit_n@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('praditwong_k','praditwong_k@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('hongwitayakorn_a','hongwitayakorn_a@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('supapanchai_r','supapanchai_r@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('saengson_s','saengson_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('admin','admin@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('staff','staff@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
+('rootadmin','rootadmin@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
+('admin','admin@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
 
 -- create role
 
@@ -439,8 +437,8 @@ CREATE INDEX idx_roles_name ON roles(name);
 -- insert roles
 
 INSERT INTO roles (name, description) VALUES
-('admin', 'Administrator with full system access'),
-('staff', 'Can create and edit content'),
+('rootadmin', 'Administrator with full system access'),
+('admin', 'Can create and edit content'),
 ('teacher', 'Edit personal information');
 
 
@@ -454,6 +452,25 @@ CREATE TABLE user_roles (
 
 CREATE INDEX idx_user_roles_user ON user_roles(user_id);
 CREATE INDEX idx_user_roles_role ON user_roles(role_id);
+
+INSERT INTO user_roles (user_id, role_id, assigned_by)
+SELECT u.user_id, r.role_id, assigner.user_id
+FROM users u
+JOIN roles r ON r.name = 'rootadmin'
+JOIN users assigner ON assigner.username = 'sonsanguan_w'
+WHERE u.username IN (
+    'sonsanguan_w',
+    'rootadmin'
+);
+
+INSERT INTO user_roles (user_id, role_id, assigned_by)
+SELECT u.user_id, r.role_id, assigner.user_id
+FROM users u
+JOIN roles r ON r.name = 'admin'
+JOIN users assigner ON assigner.username = 'sonsanguan_w'
+WHERE u.username IN (
+    'admin'
+);
 
 INSERT INTO user_roles (user_id, role_id, assigned_by)
 SELECT u.user_id, r.role_id, assigner.user_id
@@ -482,32 +499,6 @@ WHERE u.username IN (
     'arampongsanuwat_s',
     'rodhetbhai_s',
     'hongwitayakorn_a'
-);
-
-INSERT INTO user_roles (user_id, role_id, assigned_by)
-SELECT u.user_id, r.role_id, assigner.user_id
-FROM users u
-JOIN roles r ON r.name = 'staff'
-JOIN users assigner ON assigner.username = 'sonsanguan_w'
-WHERE u.username IN (
-    'luangsamankul_p',
-    'tatong_k',
-    'jancharoen_k',
-    'chaysirikhae_t',
-    'yahom_s',
-    'staff'
-);
-
-INSERT INTO user_roles (user_id, role_id, assigned_by)
-SELECT u.user_id, r.role_id, assigner.user_id
-FROM users u
-JOIN roles r ON r.name = 'admin'
-JOIN users assigner ON assigner.username = 'sonsanguan_w'
-WHERE u.username IN (
-    'sonsanguan_w',
-    'supapanchai_r',
-    'saengson_s',
-    'admin'
 );
 
 -- create permissions
@@ -613,13 +604,13 @@ CREATE INDEX idx_role_perms_perm ON role_permissions(permission_id);
 -- Admin: ทุก permissions
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT
-    (SELECT role_id FROM roles WHERE name = 'admin'),
+    (SELECT role_id FROM roles WHERE name = 'rootadmin'),
     permission_id FROM permissions;
 
 -- Staff: ทุก permissions (ยกเว้น Roles permissions)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT
-    (SELECT role_id FROM roles WHERE name = 'staff'),
+    (SELECT role_id FROM roles WHERE name = 'admin'),
     permission_id FROM permissions
 WHERE name IN (
     'news:read', 'news:read_id', 'news:create', 'news:update', 'news:delete',
