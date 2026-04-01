@@ -23,6 +23,7 @@ func (r *UserRepository) GetAllUser(param models.UserQueryParam) ([]models.UserR
 		FROM users u
 		LEFT JOIN user_roles ur ON u.user_id = ur.user_id
 		LEFT JOIN roles r ON ur.role_id = r.role_id
+		WHERE u.deleted_at IS NULL
 	`
 
 	conditions := []string{}
@@ -48,7 +49,7 @@ func (r *UserRepository) GetAllUser(param models.UserQueryParam) ([]models.UserR
 	}
 
 	if len(conditions) > 0 {
-		query += " WHERE " + strings.Join(conditions, " AND ")
+		query += " AND " + strings.Join(conditions, " AND ")
 	}
 
 	sortColumn := "u.user_id"

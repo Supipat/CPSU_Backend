@@ -364,8 +364,8 @@ INSERT INTO calendar(title,detail,start_date,end_date) VALUES
 
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NULL,
     is_active BOOLEAN DEFAULT true,
     email_verified BOOLEAN DEFAULT true,
@@ -374,6 +374,15 @@ CREATE TABLE users (
     last_login TIMESTAMP,
     deleted_at TIMESTAMP NULL
 );
+
+-- unique เฉพาะ user ที่ยังไม่ถูกลบ
+CREATE UNIQUE INDEX unique_username_active
+ON users (LOWER(username))
+WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX unique_email_active
+ON users (LOWER(email))
+WHERE deleted_at IS NULL;
 
 -- Index สำหรับ login
 CREATE INDEX idx_users_username ON users(username);
