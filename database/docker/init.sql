@@ -37,74 +37,11 @@ INSERT INTO news(title,content,type_id,detail_url,cover_image) VALUES
     'คู่มือแนะนำ การลงทะเบียนรายวิชาเรียน การเพิ่ม - ถอน - การเปลี่ยนกลุ่มเรียน ในรายวิชาเดิม การถอนรายวิชาโดยติดสัญลักษณ์ W ช่องทางการชำระค่าธรรมเนียมการศึกษา เอกสารแนบเบิกค่าเล่าเรียน การลาพักการศึกษา นักศึกษาที่คาดว่าจะสำเร็จการศึกษา การขอหนังสือสำคัญทางการศึกษา การติดต่อเจ้าหน้าที่งานทะเบียนและประมวลผล ช่องทางติดต่อคณะวิชา กองกิจการนักศึกษา การให้บริการสำหรับนักศึกษา วิทยาเขตสารสนเทศเพชรบุรี สำนักดิจิทัลเทคโนโลยี หอสมุด มหาวิทยาลัยศิลปากร ประกันอุบัติเหตุส่วนบุคคล ศูนย์บริการสุขภาพ คณะเภสัชศาสตร์ บริการด้านสุขภาพร่างกาย เครื่องแบบนักศึกษา / บัตรนักศึกษาอิเล็กทรอนิกส์',
     (SELECT type_id FROM news_types WHERE type_name = 'ข่าวประชาสัมพันธ์' LIMIT 1),
     'https://drive.google.com/file/d/1FnJRketlluku27HQqs-mVPnxMJ5wFxqZ/view?usp=sharing&fbclid=IwZXh0bgNhZW0CMTAAAR3M6TbS4tN1DUSa-z2NaM1ekAOELZp7TnsIhJWC6g_dvfz-sD_b0La0S7U_aem_K5_Zhi2eLKhIpJxaeszOlQ',
-    'http://localhost:9000/images/news/manual.jpg'),
-('เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล',
-    'เปิดรับสมัครแล้ว! ภาควิชาคอมพิวเตอร์ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร เปิดรับสมัครนักศึกษาระดับบัณฑิตศึกษา ปริญญาโท - ปริญญาเอก หลักสูตร IT สำหรับคนทำงาน สู่ผู้เชี่ยวชาญด้านวิจัยและนวัตกรรม เน้นเรียนรู้กระบวนทำวิจัยเพื่อแก้ปัญหาจริง มีทุนผู้ช่วยวิจัยและทุนนำเสนอผลงานในงานประชุมวิชาการ มีทั้งภาคปกติ (เรียนวันธรรมดา) และโครงการพิเศษ (เรียน ส อา) มี 3 แผนการเรียนให้เลือก Data Science, Project Management, DevOps เปิดรับสมัครรอบ 1 วันที่ 16 ธ.ค. 67 - 21 ก.พ. 68 เปิดรับสมัครรอบ 2 วันี่ต่ 3 มี.ค. 68 - 7 พ.ค. 68 สมัครง่าย ๆ ผ่านช่องทางออนไลน์ได้ที่ https://graduate.su.ac.th มีข้อสงสัยสอบถามเพิ่มเติมได้ที่ เพจ Facebook : https://www.facebook.com/computingsu/ หรือ โทร 034-272-923',
-    (SELECT type_id FROM news_types WHERE type_name = 'ข่าวประชาสัมพันธ์' LIMIT 1),
-    'https://graduate.su.ac.th',
-    'http://localhost:9000/images/news/degree1.jpg'),
-('เปิดรับสมัครทุนการศึกษา คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร สำหรับนักศึกษาระดับปริญญาตรี ภาคการศึกษาต้น ปีการศึกษา 2568',
-    'เปิดรับสมัครทุนการศึกษา! คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร สำหรับนักศึกษาระดับปริญญาตรี ภาคการศึกษาต้น ปีการศึกษา 2568 เปิดรับสมัคร: ตั้งแต่วันที่ 1 กรกฎาคม - 29 สิงหาคม 2568 คุณสมบัติผู้สมัคร: 1.เป็นนักศึกษาระดับปริญญาตรี ของคณะวิทยาศาสตร์ 2.ขาดแคลนทุนทรัพย์ และมีเกรดเฉลี่ยสะสมไม่ต่ำกว่า 2.00 3.นักศึกษาที่กู้ยืม กยศ./กรอ. สามารถสมัครได้',
-    (SELECT type_id FROM news_types WHERE type_name = 'ทุนการศึกษา' LIMIT 1),
-    'https://drive.su.ac.th/s/tHXDdo3mpJ9L45d',
-    'http://localhost:9000/images/news/scholarship.jpg'),
-('ขอแสดงความยินดีกับ ผู้ช่วยศาสตราจารย์ ดร.อรวรรณ เชาวลิต อาจารย์ประจำภาควิชาคอมพิวเตอร์',
-    'คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร ขอแสดงความยินดีกับ ผู้ช่วยศาสตราจารย์ ดร.อรวรรณ เชาวลิต ภาควิชาคอมพิวเตอร์ ในโอกาสที่ตีพิมพ์ผลงานวิจัยในวารสาร ICIC Express Letters, Part B: Applications ในฐานข้อมูล Scopus (ScimagoJR, Quartile 4) เรื่อง Multivariate time series forecasting Thailand soybean meal price with deep learning models ICIC Express Letters, Part B: Applications 2025, 16(3), 317-323. http://www.icicelb.org/ellb/contents/2025/3/elb-16-03-10.pdf SDG 8 DECENT WORK AND ECONOMIC GROWTH',
-    (SELECT type_id FROM news_types WHERE type_name = 'รางวัลที่ได้รับ' LIMIT 1),
-    'http://www.icicelb.org/ellb/contents/2025/3/elb-16-03-10.pdf',
-    'http://localhost:9000/images/news/reward-orawan.jpg'),
-('ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์ ดร.ปัญญนัท อ้นพงษ์ เนื่องในโอกาสได้รับการแต่งตั้งให้ดำรงตำแหน่งทางวิชาการ',
-    'ภาควิชาคอมพิวเตอร์ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์ ดร.ปัญญนัท อ้นพงษ์ เนื่องในโอกาสได้รับการแต่งตั้งให้ดำรงตำแหน่งทางวิชาการ ตำแหน่ง “ผู้ช่วยศาสตราจารย์” ในสาขาวิชาเทคโนโลยีสารสนเทศ',
-    (SELECT type_id FROM news_types WHERE type_name = 'รางวัลที่ได้รับ' LIMIT 1),
-    'https://www.facebook.com/ScienceSilpakornUniversity/posts/คณะวิทยาศาสตร์-มหาวิทยาลัยศิลปากร-ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์-ดรปัญญนัท/982826210555894/',
-    'http://localhost:9000/images/news/reward-panyanut.jpg'),
-('ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล',
-    'ภาควิชาคอมพิวเตอร์ ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล ที่ได้รับรางวัล Best Presentation ในงาน The 6th Asia Joint Conference on Computing (AJCC 2025) ณ เมือง Osaka ประเทศญี่ปุ่นจาก Paper หัวข้อ "Intention Classification of Chinese Topics on Thai Facebook Pages Using Transformer Models with Emotional Features" อาจารย์ที่ปรึกษา อ.ดร.สัจจาภรณ์ ไวจรรยา และ ผศ.ดร.ณัฐโชติ พรหมฤทธิ์',
-    (SELECT type_id FROM news_types WHERE type_name = 'รางวัลที่ได้รับ' LIMIT 1),
-    'https://www.facebook.com/computingsu/posts/-ภาควิชาคอมพิวเตอร์-ขอแสดงความยินดีกับ-นายภากร-กัทชลี-นักศึกษา-ปริญญาเอก-หลักสูต/122207080106177331/',
-    'http://localhost:9000/images/news/reward-phakon1.jpg'),
-('ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร',
-    'ภาควิชาคอมพิวเตอร์ ขอแสดงความยินดีกับนักศึกษาและอาจารย์ที่ปรึกษา ที่เข้าร่วมนำเสนอผลงานและได้รับรางวัลในงาน การประชุมวิชาการระดับปริญญาตรีด้านคอมพิวเตอร์ภูมิภาคเอเชีย ครั้งที่ 13 (The 13th Asia Undergraduate Conference on Computing: AUCC 2025) ในระหว่างวันที่ 19 - 21 กุมภาพันธ์ พ.ศ. 2568 ณ มหาวิทยาลัยราชภัฏอุตรดิตถ์ จังหวัดอุตรดิตถ์ รางวัลรองชนะเลิศอันดับ 1 Track นวัตกรรม กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร (Development of examination Management system for the Faculty of Science)" ซึ่งผลงานนี้ได้มีการนำไปใช้จริงทดแทนระบบเดิม ในการจัดสอบของคณะฯ เมื่อช่วงสอบกลางภาคการศึกษาที่ผ่านมา นักศึกษาที่เข้านำเสนอ - นาย ณัฐพิสิษ กังวานธรรมกุล - นาย นัทธพงศ์ เป็กทอง - นาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ อาจารย์ที่ปรึกษา ผศ.ดร.ณัฐโชติ พรหมฤทธิ์ และ อ.ดร.สัจจาภรณ์ ไวจรรยา',
-    (SELECT type_id FROM news_types WHERE type_name = 'รางวัลที่ได้รับ' LIMIT 1),
-    'https://www.facebook.com/computingsu/posts/-ภาควิชาคอมพิวเตอร์-ขอแสดงความยินดีกับนักศึกษาและอาจารย์ที่ปรึกษา-ที่เข้าร่วมนำเ/122194936622177331/',
-    'http://localhost:9000/images/news/reward2nd1.jpg'),
-('งานสานสัมพันธ์ภาคคอมพิวเตอร์',
-    'เตรียมตัวให้พร้อม! งานสานสัมพันธ์ภาคคอมพิวเตอร์กำลังจะเริ่มขึ้น! เจอกันวันที่ 28 กุมภาพันธ์ 2568 ณ ลานจอดรถตึก 4 เวลา 17:30 - 21:30 น. ธีม: ย้อนยุค ไม่จำกัดช่วงเวลา! จะเป็นยุคหิน มนุษย์ถ้ำ อารยธรรมโบราณ หรือยุคใดก็ได้ จัดเต็มมาให้สุด! มีรางวัลแต่งกายยอดเยี่ยม 3 รางวัล!ใครแต่งตัวเข้าธีมและโดดเด่นที่สุด มีสิทธิ์คว้ารางวัลไปเลย! สนุกไปกับการแสดงสุดพิเศษ, เกมสุดมันส์, ลุ้นรางวัล และดนตรีสดปิดท้าย! ใครลงชื่อไว้แล้ว เจอกันแน่นอน! เตรียมชุดให้พร้อม แล้วมาสนุกไปด้วยกัน!',
-    (SELECT type_id FROM news_types WHERE type_name = 'กิจกรรมของภาควิชา' LIMIT 1),
-    '',
-    'http://localhost:9000/images/news/cpsu_event.jpg');
+    'http://localhost:9000/images/news/manual.jpg');
 
 INSERT INTO news_images(news_id,file_image) VALUES
 ((SELECT news_id FROM news WHERE title = 'คู่มือแนะนำนักศึกษาใหม่ ปีการศึกษา 2568' LIMIT 1),
-    'http://localhost:9000/images/news/manual.jpg'),
-((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'http://localhost:9000/images/news/degree1.jpg'),
-((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'http://localhost:9000/images/news/degree2.jpg'),
-((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'http://localhost:9000/images/news/degree3.jpg'),
-((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครปริญญาโทและปริญญาเอกสาขาเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'http://localhost:9000/images/news/degree4.jpg'),
-((SELECT news_id FROM news WHERE title = 'เปิดรับสมัครทุนการศึกษา คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร สำหรับนักศึกษาระดับปริญญาตรี ภาคการศึกษาต้น ปีการศึกษา 2568' LIMIT 1),
-    'http://localhost:9000/images/news/scholarship.jpg'),
-((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ ผู้ช่วยศาสตราจารย์ ดร.อรวรรณ เชาวลิต อาจารย์ประจำภาควิชาคอมพิวเตอร์' LIMIT 1),
-    'http://localhost:9000/images/news/reward-orawan.jpg'),
-((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับผู้ช่วยศาสตราจารย์ ดร.ปัญญนัท อ้นพงษ์ เนื่องในโอกาสได้รับการแต่งตั้งให้ดำรงตำแหน่งทางวิชาการ' LIMIT 1),
-    'http://localhost:9000/images/news/reward-panyanut.jpg'),
-((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'http://localhost:9000/images/news/reward-phakon1.jpg'),
-((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ นายภากร กัทชลี นักศึกษา ปริญญาเอก หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล' LIMIT 1),
-    'http://localhost:9000/images/news/reward-phakon2.jpg'),
-((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'http://localhost:9000/images/news/reward2nd1.jpg'),
-((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'http://localhost:9000/images/news/reward2nd2.jpg'),
-((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'http://localhost:9000/images/news/reward2nd3.jpg'),
-((SELECT news_id FROM news WHERE title = 'ขอแสดงความยินดีกับ  นายณัฐพิสิษ กังวานธรรมกุล,นายนัทธพงศ์ เป็กทองและนาย พิรพัฒน์ ยิ่งแก้ว นักศึกษาสาขาวิชาเทคโนโลยีสารสนเทศ กับผลงาน "การพัฒนาระบบอํานวยการสอบ คณะวิทยาศาสตร์ มหาวิทยาลัยศิลปากร' LIMIT 1),
-    'http://localhost:9000/images/news/reward2nd4.jpg'),
-((SELECT news_id FROM news WHERE title = 'งานสานสัมพันธ์ภาคคอมพิวเตอร์' LIMIT 1),
-    'http://localhost:9000/images/news/cpsu_event.jpg');
+    'http://localhost:9000/images/news/manual.jpg');
 
 -- create courses
 
@@ -396,38 +333,33 @@ INSERT INTO users(username, email) VALUES
 ('tantatsanawong_p','tantatsanawong_p@su.ac.th'),
 ('sitdhisanguan_k','sitdhisanguan_k@su.ac.th'),
 ('seepanomwan_k','seepanomwan_k@su.ac.th'),
--- ('praditwong_k','praditwong_k@su.ac.th'),
--- ('promrit_n','promrit_n@su.ac.th'),
+('praditwong_k','praditwong_k@su.ac.th'),
+('promrit_n','promrit_n@su.ac.th'),
 ('soonklang_t','soonklang_t@su.ac.th'),
 ('aonpong_p','aonpong_p@su.ac.th'),
 ('kanawong_r','kanawong_r@su.ac.th'),
 ('muangon_w','muangon_w@su.ac.th'),
--- ('waijanya_s','waijanya_s@su.ac.th'),
+('waijanya_s','waijanya_s@su.ac.th'),
 ('pongpinigpinyo_s','pongpinigpinyo_s@su.ac.th'),
 ('chaowalit_o','chaowalit_o@su.ac.th'),
 ('tangjui_n','tangjui_n@su.ac.th'),
 ('pansri_b','pansri_b@su.ac.th'),
-('wasara','wasara@cp.su.ac.th'), --*
+('wasara','wasara@su.ac.th'),
 ('arampongsanuwat_s','arampongsanuwat_s@su.ac.th'),
 ('rodhetbhai_s','rodhetbhai_s@su.ac.th'),
--- ('hongwitayakorn_a','hongwitayakorn_a@su.ac.th'),
--- Admin, Staff
+('hongwitayakorn_a','hongwitayakorn_a@su.ac.th'),
+-- RootAdmin, Admin
 ('luangsamankul_p','luangsamankul_p@su.ac.th'),
--- ('sonsanguan_w','sonsanguan_w@su.ac.th'),
+('sonsanguan_w','sonsanguan_w@su.ac.th'),
 ('tatong_k','tatong_k@su.ac.th'),
 ('jancharoen_k','jancharoen_k@su.ac.th'),
 ('chaysirikhae_t','chaysirikhae_t@su.ac.th'),
 ('yahom_s','yahom_s@su.ac.th'),
 ('khanthamala','khanthamala_a@su.ac.th');
 
+-- insert user
 
--- test Admin
 INSERT INTO users(username, email, password_hash) VALUES
-('sonsanguan_w','sonsanguan_w@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('waijanya_s','waijanya_s@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('promrit_n','promrit_n@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('praditwong_k','praditwong_k@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
-('hongwitayakorn_a','hongwitayakorn_a@su.ac.th','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('rootadmin','rootadmin@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue'),
 ('admin','admin@gmail.com','$2a$12$4M9WxFsEO32LtVqOVEU37OYJ1/0Hp4cq8.X.E6KI5qP9eYNHos2ue');
 
@@ -610,13 +542,13 @@ CREATE INDEX idx_role_perms_perm ON role_permissions(permission_id);
 
 -- insert role permissions
 
--- Admin: ทุก permissions
+-- RootAdmin: ทุก permissions
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT
     (SELECT role_id FROM roles WHERE name = 'rootadmin'),
     permission_id FROM permissions;
 
--- Staff: ทุก permissions (ยกเว้น Roles permissions)
+-- Admin: ทุก permissions (ยกเว้น Roles permissions)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT
     (SELECT role_id FROM roles WHERE name = 'admin'),
