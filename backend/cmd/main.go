@@ -57,6 +57,10 @@ import (
 	calendarHandler "cpsu/internal/calendar/handler"
 	calendarRepo "cpsu/internal/calendar/repository"
 	calendarService "cpsu/internal/calendar/service"
+
+	documentHandler "cpsu/internal/document/handler"
+	documentRepo "cpsu/internal/document/repository"
+	documentService "cpsu/internal/document/service"
 )
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
@@ -134,6 +138,10 @@ func main() {
 	calendarService := calendarService.NewCalendarService(calendarRepo, auditLogRepo)
 	calendarHandler := calendarHandler.NewCalendarHandler(calendarService)
 
+	documentRepo := documentRepo.NewDocumentRepository(db.GetDB())
+	documentService := documentService.NewDocumentService(documentRepo, auditLogRepo, cfg.MinioEndpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioBucket, cfg.MinioUseSSL, cfg.MinioPublicBaseURL)
+	documentHandler := documentHandler.NewDocumentHandler(documentService)
+
 	go func() {
 		for {
 			time.Sleep(10 * time.Second)
@@ -199,6 +207,9 @@ func main() {
 
 		public.GET("/calendar", calendarHandler.GetAllCalendars)
 		public.GET("/calendar/:id", calendarHandler.GetCalendarByID)
+
+		public.GET("/document", documentHandler.GetAllDocument)
+		public.GET("/document/:id", documentHandler.GetDocumentByID)
 	}
 
 	protected := r.Group("/api/v1")
@@ -293,6 +304,15 @@ func main() {
 			calendarAdmin.POST("", permissionMiddleware.RequirePermission("calendar:create"), calendarHandler.CreateCalendar)
 			calendarAdmin.PUT("/:id", permissionMiddleware.RequirePermission("calendar:update"), calendarHandler.UpdateCalendar)
 			calendarAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("calendar:delete"), calendarHandler.DeleteCalendar)
+		}
+
+		documentAdmin := admin.Group("/document")
+		{
+			documentAdmin.GET("", permissionMiddleware.RequirePermission("document:read"), documentHandler.GetAllDocument)
+			documentAdmin.GET("/:id", permissionMiddleware.RequirePermission("document:read_id"), documentHandler.GetDocumentByID)
+			documentAdmin.POST("", permissionMiddleware.RequirePermission("document:create"), documentHandler.CreateDocument)
+			documentAdmin.PUT("/:id", permissionMiddleware.RequirePermission("document:update"), documentHandler.UpdateDocument)
+			documentAdmin.DELETE("/:id", permissionMiddleware.RequirePermission("document:delete"), documentHandler.DeleteDocument)
 		}
 
 		AuditLogAdmin := admin.Group("/logs")

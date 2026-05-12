@@ -297,6 +297,109 @@ INSERT INTO calendar(title,detail,start_date,end_date) VALUES
 ('test1','test1','2025-10-29', '2025-11-05'),
 ('test2','test2','2025-11-09', '2025-11-09');
 
+-- create document
+
+CREATE TABLE IF NOT EXISTS document_types (
+    type_id SERIAL PRIMARY KEY,
+    type_name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS document (
+    document_id SERIAL PRIMARY KEY,
+    type_id INT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    file TEXT NOT NULL,
+    FOREIGN KEY (type_id) REFERENCES document_types(type_id) ON DELETE CASCADE
+);
+
+INSERT INTO document_types(type_name) VALUES
+('แบบฟอร์มทั่วไป'),
+('แบบฟอร์มโครงงานปริญญานิพนธ์(1)'),
+('แบบฟอร์มโครงงานปริญญานิพนธ์(2)');
+
+INSERT INTO document(type_id,title,description,file) VALUES
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องขอตรวจสอบคะแนนสอบ','',
+    'http://localhost:9000/images/document/score_form.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องขอใช้สถานที่','',
+    'http://localhost:9000/images/document/place_form.pdf'), 
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องขอผ่อนผันการชำระเงินค่าลงทะเบียน','',
+    'http://localhost:9000/images/document/register.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องขอเปลี่ยนสาขาวิชาเอก','',
+    'http://localhost:9000/images/document/major_form.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องขอขาดเรียนและขาดสอบ','',
+    'http://localhost:9000/images/document/absent.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'สำรองที่นั่ง','',
+    'http://localhost:9000/images/document/booking.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องขอกลับเข้าศึกษา','',
+    'http://localhost:9000/images/document/booking.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องทั่วไป','',
+    'http://localhost:9000/images/document/MSK112.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องทั่วไป คณะวิทยาศาสตร์','',
+    'http://localhost:9000/images/document/general_form.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มทั่วไป' LIMIT 1),
+    'คำร้องขอลงทะเบียน/เพิ่ม/ถอน ช้าเป็นกรณีพิเศษ','',
+    'http://localhost:9000/images/document/MSK106.pdf'),
+
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(1)' LIMIT 1),
+    'CP00X','แบบแจ้งความประสงค์แลกเปลี่ยนกลุ่มโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CP00X.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(1)' LIMIT 1),
+    'CS01S/IT01S','แบบคําร้องขอเสนอหัวข้อโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS01S-IT01S.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(1)' LIMIT 1),
+    'CS01D/IT01D Template','ไฟล์ต้นแบบเอกสารประกอบการเสนอหัวข้อโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS01D-IT01D-Template.dotx'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(1)' LIMIT 1),
+    'CS01D/IT01D Example','ตัวอย่างเอกสารประกอบการเสนอหัวข้อโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS01D-IT01D-Example.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(1)' LIMIT 1),
+    'CS02S/IT02S','แบบคําร้องขอสอบข้อเสนอโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS02S-IT02S.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(1)' LIMIT 1),
+    'CS02D/IT02D Template','ไฟล์ต้นแบบเอกสารประกอบการสอบข้อเสนอโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS02D-IT02D-Template.dotx'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(1)' LIMIT 1),
+    'CS02R/IT02R','แบบประเมินผลการสอบข้อเสนอโครงงานปริญญานิพพนธ์',
+    'http://localhost:9000/images/document/CS02R-IT02R.pdf'),
+
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'CS03S/IT03S','แบบคําร้องขอสอบติดตามความก้าวหน้าโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS03S-IT03S.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'CS03D/IT03D Template','ไฟล์ต้นแบบเอกสารประกอบการสอบติดตามความก้าวหน้าโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS03D-IT03D-Template.dotx'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'CS03R/IT03R','แบบประเมินผลการสอบติดตามความก้าวหน้าโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS03R-IT03R.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'CS04S/IT04S','แบบคำร้องขอสอบนำเสนอโครงงานปริญญานิพนธ์ที่เสร็จสมบูรณ์',
+    'http://localhost:9000/images/document/CS04S-IT04S.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'CS04D/IT04D Template','ไฟล์ต้นแบบเอกสารประกอบการสอบโครงงานปริญญานิพนธ์ที่เสร็จสมบูรณ์',
+    'http://localhost:9000/images/document/CS04D-IT04D-Template.dotx'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'CS04R/IT04R','แบบประเมินผลการสอบนำเสนอโครงงานปริญญานิพนธ์ที่เสร็จสมบูรณ์',
+    'http://localhost:9000/images/document/CS04R-IT04R.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'CS05D/IT05D Template','ไฟล์ต้นแบบเอกสารโครงงานปริญญานิพนธ์ที่เสร็จสมบูรณ์',
+    'http://localhost:9000/images/document/CS05D-IT05D-Template.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'CS05C/IT05C','แบบฟอร์มการส่งตรวจรูปแบบเล่มโครงงานปริญญานิพนธ์',
+    'http://localhost:9000/images/document/CS05C-IT05C.pdf'),
+((SELECT type_id FROM document_types WHERE type_name = 'แบบฟอร์มโครงงานปริญญานิพนธ์(2)' LIMIT 1),
+    'ไฟล์ต้นแบบโปสเตอร์ (Poster Template)','',
+    'http://localhost:9000/images/document/Poster-Template.ppt');
+
 -- create user
 
 CREATE TABLE users (
@@ -519,6 +622,13 @@ INSERT INTO permissions (name, description, resource, action) VALUES
 ('calendar:update', 'Can update calendar', 'calendar', 'update'),
 ('calendar:delete', 'Can delete calendar', 'calendar', 'delete'),
 
+-- document
+('document:read', 'Can view document', 'document', 'read'),
+('document:read_id', 'Can view document id', 'document', 'read'),
+('document:create', 'Can create new document', 'document', 'create'),
+('document:update', 'Can update document', 'document', 'update'),
+('document:delete', 'Can delete document', 'document', 'delete'),
+
 -- users
 ('users:read', 'Can view users', 'users', 'read'),
 ('users:create', 'Can create new users', 'users', 'create'),
@@ -563,6 +673,7 @@ WHERE name IN (
     'scopus:read', 'research:read',
     'admission:read', 'admission:read_id', 'admission:create', 'admission:update', 'admission:delete',
     'calendar:read', 'calendar:read_id', 'calendar:create', 'calendar:update', 'calendar:delete'
+    'document:read', 'document:read_id', 'document:create', 'document:update', 'document:delete'
 );
 
 -- Teacher your_personnel:update
